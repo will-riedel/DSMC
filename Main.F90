@@ -5,7 +5,7 @@ MODULE CONTAIN
 !*******************PARALLEL VARIBLES**********************
 !-----------------------------------------------------------------------
     ! Parallel Assembly/Solver Variables
-    INTEGER:: Nparts, Neqn_Global
+    ! INTEGER:: Nparts, Neqn_Global
 !-----------------------------------------------------------------------
 !*******************DYNAMIC ARRAYS*************************
 !-----------------------------------------------------------------------
@@ -38,6 +38,31 @@ MODULE CONTAIN
     REAL(8):: Initial_Time, Final_Time, Error_Offset, Scaling_Factor, Time_Error_Threshold
     REAL(8):: Delta_Time
     INTEGER:: Stencil_Width, Jacobian_Size
+
+
+
+
+!-----------------------------------------------------------------------
+!*******************INITIAL PARAMETERS*************************
+!-----------------------------------------------------------------------
+    REAL(8)::n,ns,Fn
+    INTEGER::n_cells_x,n_cells_y
+    INTEGER::dt_to_save
+    REAL(8)::t_final,dt
+    REAL(8)::dx_0,dx_factor,dy_factor
+    LOGICAL::include_source,close_inlet,close_outlet,include_gun_boundaries,use_homogenous_grid,restart_simulation
+    CHARACTER(80)::dir_cur
+    INTEGER::it_restart
+
+!-----------------------------------------------------------------------
+!*******************DYNAMIC ARRAYS*************************
+!-----------------------------------------------------------------------
+
+
+!-----------------------------------------------------------------------
+!*******************MISC. VARIBLES*************************
+!-----------------------------------------------------------------------
+
 END MODULE CONTAIN
 
 
@@ -62,25 +87,14 @@ MODULE PROPERTIES
     REAL(8), PARAMETER:: eps_p = 1.d0
     REAL(8), PARAMETER:: p = 760.d0
 
-! electron properties
-    REAL(8), PARAMETER:: m_e = 9.10938188d-31
-    REAL(8), PARAMETER:: mu_e = 4.4d5/p*1.d-4*phi_0*tau_0/(L_0**2)
-    REAL(8), PARAMETER:: T_e = 10000.d0
-    REAL(8), PARAMETER:: v_e = Sqrt( (8.d0*k_b*T_e)/(Pi*m_e) )*Tau_0/L_0
-    REAL(8), PARAMETER:: D_e = mu_e*(k_b*T_e/E_charge)/Phi_0
 
 ! positive ion properties
-    REAL(8), PARAMETER:: m_i = 1.67262178d-27 * 28.d0
+    REAL(8), PARAMETER:: m_p= 1.67262178d-27
     REAL(8), PARAMETER:: mu_i = 1.45d3/p*1.d-4*phi_0*tau_0/(L_0**2)
     REAL(8), PARAMETER:: T_i = 350.d0
     REAL(8), PARAMETER:: v_i = Sqrt( (8.d0*k_b*T_i)/(Pi*m_i) )*Tau_0/L_0
     REAL(8), PARAMETER:: D_i = mu_i*(k_b*T_e/E_charge)/Phi_0
 
-! reactions
-    REAL(8), PARAMETER:: A = 12.d2*L_0
-    REAL(8), PARAMETER:: B = 342.d2*L_0/Phi_0
-    REAL(8), PARAMETER:: Beta = 1.d-13*Tau_0*n_0
-    REAL(8), PARAMETER:: Gamma = 5.0d-2
 
 END MODULE PROPERTIES
 
@@ -153,18 +167,23 @@ SUBROUTINE OUTPUT_TO_SCREEN
     ! This Suboutine Prints Out Relevant Domain Info
     WRITE(*,*)
     WRITE(*,*) ' ********   ANALYSIS INFORMATION ********'
-    WRITE(*,*) ' processor rank =', myrank
-    WRITE(*,*) ' number of nodes in x =', nnodes_x
-    WRITE(*,*) ' number of nodes in y=', nnodes_y
-    WRITE(*,*) ' total number of nodes =', nnodes
-    WRITE(*,*) ' number of bcs   =', nboundary
-    WRITE(*,*) ' number of ics   =', ninitial
-    WRITE(*,*) ' number of flux bcs   =', nflux_part+nflux_phi
-    WRITE(*,*) ' number of equations =', neqn
-    WRITE(*,*) ' number of dofs =', ndof
-    WRITE(*,*) 'Initial_time = ',Initial_time
-    WRITE(*,*) 'Final_time = ',Final_time
-    WRITE(*,*)
+    ! WRITE(*,*) ' processor rank =', myrank
+    ! WRITE(*,*) ' number of nodes in x =', nnodes_x
+    ! WRITE(*,*) ' number of nodes in y=', nnodes_y
+    ! WRITE(*,*) ' total number of nodes =', nnodes
+    ! WRITE(*,*) ' number of bcs   =', nboundary
+    ! WRITE(*,*) ' number of ics   =', ninitial
+    ! WRITE(*,*) ' number of flux bcs   =', nflux_part+nflux_phi
+    ! WRITE(*,*) ' number of equations =', neqn
+    ! WRITE(*,*) ' number of dofs =', ndof
+
+
+    WRITE(*,*) 'n=',n
+    WRITE(*,*) 't_final=',t_final
+    WRITE(*,*) 'include_source=',include_source
+    WRITE(*,*) 'use_homogenous_grid=',use_homogenous_grid
+    WRITE(*,*) 'dir_cur = ',dir_cur
+
 END SUBROUTINE OUTPUT_TO_SCREEN
 
 
@@ -176,25 +195,13 @@ END SUBROUTINE OUTPUT_TO_SCREEN
 SUBROUTINE INPUT_PARAMETERS_READIN
     USE CONTAIN
     IMPLICIT NONE
-    CHARACTER(80):: Header_name(19), line
+    CHARACTER(80):: Header_name(18), line
 !-----------------------------------------------------------------------
 !*******************INITIALIZE CHARACTER*******************
 !-----------------------------------------------------------------------
-    ! Header_name = (/ '*STENCIL_WIDTH', '*RF', '*NPARTS  ', &
-    !      '*PRINT', '*TIME_ORDER', '*EPSILON_ABS', &
-    !      '*INIT_TIME   ', '*FINALTIME   ', '*DELTA_TIME '/)
-    ! Header_name = (/    '*STENCIL_WIDTH_', &
-    !                     '*RF____________', &
-    !                     '*NPARTS________', &
-    !                     '*PRINT_________', &
-    !                     '*TIME_ORDER____', &
-    !                     '*EPSILON_ABS___', &
-    !                     '*INIT_TIME_____', &
-    !                     '*FINALTIME_____', &
-    !                     '*DELTA_TIME____'/)
 
-    Header_name = (/    '*DELTA_TIME____', &
-                        '*N_INITIAL_____', &
+    ! this isn't strictly necessary, I'm listing the headers directly
+    Header_name = (/    '*N_INITIAL_____', &
                         '*FN____________', &
                         '*N_CELLS_X_____', &
                         '*N_CELLLS_Y____', &
@@ -211,17 +218,7 @@ SUBROUTINE INPUT_PARAMETERS_READIN
                         '*DY_FACTOR_____', &
                         '*RESTART_SIM___', &
                         '*DIR_RESTART___', &
-                        '*RESTART_INDEX_'/)
-
-    ! Header_name = (/    '*STENCIL_WIDTH', &
-    !                     '*RF', &
-    !                     '*NPARTS', &
-    !                     '*PRINT', &
-    !                     '*TIME_ORDER', &
-    !                     '*EPSILON_ABS', &
-    !                     '*INIT_TIME', &
-    !                     '*FINALTIME', &
-    !                     '*DELTA_TIME'/)
+                        '*RESTART_INDEX_'/)         
 
 !-----------------------------------------------------------------------
 !*******************OPEN FILE******************************
@@ -232,43 +229,86 @@ SUBROUTINE INPUT_PARAMETERS_READIN
 !-----------------------------------------------------------------------
     WRITE(*,*) 'got here'
     DO
-       READ(100,*) line
-       IF (line == Header_name(1)) THEN
-          ! Read Stencil Width for Scheme
-          READ(100,*) Stencil_Width
-       ELSE IF (line == Header_name(2)) THEN
-          ! RF Check
-          READ(100,*) RF
-       ELSE IF (line == Header_name(3)) THEN
-          ! Number of Subdomains
-          READ(100,*) Nparts
-       ELSE IF (line == Header_name(4)) THEN
-          ! Print Output Every (Print) Timesteps
-          READ(100,*) Print
-       ELSE IF (line == Header_name(5)) THEN
-          ! Runge-Kutta Temporal Order
-          READ(100,*) Runge_Kutta_Order
-       ELSE IF (line == Header_name(6)) THEN
-          ! Dormand-Prince Order Parameter
-          READ(100,*) Time_Error_Threshold
-       ELSE IF (line == Header_name(7)) THEN
-          ! Initial Starting Time of Simulation
-          READ(100,*) Initial_Time
-       ELSE IF (line == Header_name(8)) THEN
-          ! Maximum Number of Newton Subiterations
-          READ(100,*) Final_Time
-       ELSE IF (line == Header_name(9)) THEN
-          ! Residual Tolerance Threshold
-          READ(100,*) Delta_time
+        READ(100,*) line
+        IF      (line == '*N_INITIAL_____') THEN
+          ! initial density
+          READ(100,*) n
+        ELSE IF (line == '*NS_INITIAL____') THEN
+          ! density of the source
+          READ(100,*) Fn
+        ELSE IF (line == '*FN____________') THEN
+          ! number of particles represented by each superparticle
+          READ(100,*) Fn
+        ELSE IF (line == '*N_CELLS_X_____') THEN
+          ! number of cells in the x direction (if using homogeneous grid)
+          READ(100,*) n_cells_x
+        ELSE IF (line == '*N_CELLLS_Y____') THEN
+          ! number of cells in the y direction (if using homogeneous grid)
+          READ(100,*) n_cells_y
+        ELSE IF (line == '*T_FINAL_______') THEN
+          ! end time of the simulation
+          READ(100,*) t_final
+        ELSE IF (line == '*DT____________') THEN
+          ! timestep
+          READ(100,*) dt
+        ELSE IF (line == '*DT_TO_SAVE____') THEN
+          ! how often to save simulation data (every 'dt-to-save'th timestep)
+          READ(100,*) dt_to_save
+        ELSE IF (line == '*INCLUDE_SOURCE') THEN
+          ! whether to include source at inlet
+          READ(100,*) include_source
+        ELSE IF (line == '*CLOSE_INLET___') THEN
+          ! whether to put boundary at inlet (after any source is turned off)
+          READ(100,*) close_inlet
+        ELSE IF (line == '*CLOSE_OUTLET__') THEN
+          ! whether to put boundary at the outlet
+          READ(100,*) close_outlet
+        ELSE IF (line == '*INCLUDE_GUN_BC') THEN
+          ! include the boundaries of the gun geometry
+          READ(100,*) include_gun_boundaries
+        ELSE IF (line == '*USE_HOMOG_GRID') THEN
+          ! whether to use a homogeneous grid or the geometric one
+          READ(100,*) use_homogenous_grid
+        ELSE IF (line == '*DX_INIT_______') THEN
+          ! initial cell-size (at center of inlet)
+          READ(100,*) dx_0
+        ELSE IF (line == '*DX_FACTOR_____') THEN
+          ! relative cell-size at the outlet in the x-direction
+          READ(100,*) dx_factor
+        ELSE IF (line == '*DY_FACTOR_____') THEN
+          ! relative cell-size at edges in the y-direction
+          READ(100,*) dy_factor
+        ELSE IF (line == '*RESTART_SIM___') THEN
+          ! whether or not to restart a partially-completed simulation
+          READ(100,*) restart_simulation
+        ELSE IF (line == '*DIR_RESTART___') THEN
+          ! directory of current data
+          READ(100,*) dir_cur
+        ELSE IF (line == '*RESTART_INDEX_') THEN
+          ! index to restart from
+          READ(100,*) it_restart
           EXIT
        ELSE
           ! Error Analyzing Input
           WRITE(*,*) 'Error Analyzing Input_Parameters by Processor' &
                , Myrank
           WRITE(*,*) line
-          ! CALL MPI_FINALIZE(ierr)
           STOP
        END IF
     END DO
     CLOSE(100)
 END SUBROUTINE INPUT_PARAMETERS_READIN
+
+
+
+SUBROUTINE INITIALIZE
+    USE CONTAIN
+    IMPLICIT NONE
+    ! This suboutine initializes various matrices/parameters in the simulation
+    
+
+END SUBROUTINE INITIALIZE
+
+
+
+
