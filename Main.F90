@@ -58,24 +58,28 @@ MODULE CONTAIN
 !*******************DYNAMIC ARRAYS*************************
 !-----------------------------------------------------------------------
 REAL(8), ALLOCATABLE, DIMENSION(:):: x_cells_vec, y_cells_vec, dx_cells_vec, dy_cells_vec, i_range, t_vec
-REAL(8), ALLOCATABLE, DIMENSION(:):: N_total,n_candidate_pairs_total,n_accepted_pairs_total,n_collisions_total,N_added_total
+INTEGER, ALLOCATABLE, DIMENSION(:):: N_total,n_candidate_pairs_total,n_accepted_pairs_total,n_collisions_total,N_added_total
 REAL(8), ALLOCATABLE, DIMENSION(:):: counter_vec
 REAL(8), ALLOCATABLE, DIMENSION(:,:):: Vc, x_walls, vr_max, x_vec,v_vec, i_cell_vec, Npc_slice,ncp_remainder
 REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_prev,v_vec_prev, xs_vec,vs_vec,xs_vec_prev,vs_vec_prev
+LOGICAL,ALLOCATABLE, DIMENSION(:):: reflected_in, reflected_out, in_column, in_cell
+INTEGER,ALLOCATABLE, DIMENSION(:):: i_counting, i_column, i_cur
+
 
 !-----------------------------------------------------------------------
 !*******************MISC. VARIBLES*************************
 !-----------------------------------------------------------------------
     REAL(8):: m_g,d_g,vth,c_s,vr_max_0,v_avg, xmin,xmax,ymin,ymax,ymid, alpha_x,n_inf, V_total, t_collisions,t_BC,t_loop
     REAL(8):: ws,ts,hs,Vs,xs_min,xs_max,ys_min,ys_max,t, n_candidate_pairs_real
-    INTEGER:: nmax, nx, ny, N_all, nt, n_saved, nw, N_expected, N_array, Num_s, N_entered, cx,cy
+    INTEGER:: nmax, nx, ny, N_all, nt, n_saved, nw, N_expected, N_array, Num_s, N_entered, cx,cy, ii
     INTEGER:: n_candidate_pairs,n_accepted_pairs,Npc_cur, num_walls
     REAL(8), DIMENSION(2,2):: x_lim
-    INTEGER, DIMENSION(2):: n_cells_vec
+    INTEGER, DIMENSION(2):: n_cells_vec, i_pair
 
-    REAL(8):: a,b,c
+    REAL(8):: a1,b1,c1
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: a_mat,b_mat,c_mat
     REAL(8), ALLOCATABLE, DIMENSION(:):: a_vec,b_vec,c_vec
+    INTEGER, ALLOCATABLE, DIMENSION(:):: i_temp_vec
     
     ! INTEGER, ALLOCATABLE, DIMENSION(:):: i_range
 
@@ -133,24 +137,35 @@ PROGRAM MAIN
 
 
     ! ALLOCATE(a_vec(10))
-    ! ALLOCATE(b_vec(10))
+    ! ALLOCATE(b_vec(2))
+    ! ALLOCATE(c_vec(10))
+    ! ALLOCATE(i_temp_vec(10))
+    ! ALLOCATE(b_mat(10,2))
     ! DO i = 1,10 
     !     a_vec(i) = i
     ! END DO
+
+    ! ! n_vec = (/ (i,i=1,10) /)
 
     ! ! ! b_vec(a_vec>5) = 1
     ! ! FORALL(i=1:10,a_vec(i)>5)
     ! !     b_vec(i)=1
     ! ! END FORALL
 
-    ! WHERE (a_vec>5)
-    !     b_vec = 1
-    ! ELSEWHERE
-    !     b_vec = 0
-    ! END WHERE
+    ! ! WHERE (a_vec>5)
+    ! !     b_vec = 1
+    ! !     b_mat(:,1) = 1
+    ! ! ELSEWHERE
+    ! !     b_vec = 0
+    ! !     b_mat(:,1) = 5
+    ! ! END WHERE
+
+    ! ! b_vec = a_vec((/i,2/))
 
     ! WRITE(*,*) "a_vec=",INT(a_vec)
     ! WRITE(*,*) "b_vec=",INT(b_vec)
+    ! WRITE(*,*) "i_temp_vec=",INT(i_temp_vec)
+    ! WRITE(*,*) "c_vec=",INT(c_vec)
 
 !-----------------------------------------------------------------------
 !*******************READ INPUT FILE************************
@@ -173,12 +188,12 @@ PROGRAM MAIN
 !        timestep = timestep + 1
 !        ! Solve/Form Matrices Using PETSc
 !        CALL PETSC
-    DO i = it_restart+2,nt
+    DO ii = it_restart+2,nt
     ! DO i = it_restart+2,50
         ! print current step
-        t = t_vec(i)
-        IF (MOD(i,dt_to_save) == 0) THEN
-            WRITE(*,*) i,", t=",t,", N=",N_all,' ------------------------'
+        t = t_vec(ii)
+        IF (MOD(ii,dt_to_save) == 0) THEN
+            WRITE(*,*) ii,", t=",t,", N=",N_all,' ------------------------'
         END IF
 
         IF ( (t>ts) .and. (include_source .EQV. .true.) ) THEN
@@ -195,8 +210,8 @@ PROGRAM MAIN
         ! Boundary Condition implementation -------------------------------------------
         ! (removing exiting particles should be absorbed into BC implementation)
         IF (N_all > 0) THEN
-            CALL SPECULAR_REFLECTION(x_vec,x_vec_prev,v_vec,v_vec_prev,N_all,x_walls,num_walls,xmin,xmax,0)
-            ! CALL SPECULAR_REFLECTION('SIM_PARTICLES___')
+            ! CALL SPECULAR_REFLECTION(x_vec,x_vec_prev,v_vec,v_vec_prev,N_all,x_walls,num_walls,xmin,xmax,0)
+            CALL SPECULAR_REFLECTION('SIM_PARTICLES___',N_array,0)
         END IF
 
         ! Input from Source/Reservoir -------------------------------------------------
@@ -205,20 +220,23 @@ PROGRAM MAIN
             N_added_total(i) = N_entered            
         END IF
 
-        ! Update Cell Index -----------------------------------------------------------
-        CALL UPDATE_CELL_INDEX
+        IF (N_all > 0) THEN
+            ! Update Cell Index -----------------------------------------------------------
+            CALL UPDATE_CELL_INDEX
 
-        ! Collisions ------------------------------------------------------------------
-        ! Just do separate collisions subroutine here
-        CALL RUN_COLLISIONS
+            ! Collisions ------------------------------------------------------------------
+            ! Just do separate collisions subroutine here
+            CALL RUN_COLLISIONS
+        END IF
         
 
 
         ! update and save current data ---------------------------------------------
 
 
-
     END DO
+    WRITE(*,*) "n_candidate_pairs =",SUM(n_candidate_pairs_total)
+    WRITE(*,*) "n_accepted_pairs =",SUM(n_accepted_pairs_total)
 
     WRITE(*,*) '------ done ------'
 
@@ -229,36 +247,36 @@ END PROGRAM MAIN
 
 
 
-SUBROUTINE linspace(z, l, k, n)
-    IMPLICIT NONE
-    !// Argument declarations
-    REAL(8), DIMENSION(n)::z
-    REAL(8)::l,k
-    INTEGER::n
-    INTEGER::i
-    REAL(8)::d
-    d = (k-l)/n
-    z(1) = l
-    DO i = 2, n-1
-        z(i) = z(i-1) + d
-    END DO
-    z(1) = l
-    z(n) = k
-    RETURN
-END SUBROUTINE linspace
+! SUBROUTINE linspace(z, l, k, n)
+!     IMPLICIT NONE
+!     !// Argument declarations
+!     REAL(8), DIMENSION(n)::z
+!     REAL(8)::l,k
+!     INTEGER::n
+!     INTEGER::i
+!     REAL(8)::d
+!     d = (k-l)/n
+!     z(1) = l
+!     DO i = 2, n-1
+!         z(i) = z(i-1) + d
+!     END DO
+!     z(1) = l
+!     z(n) = k
+!     RETURN
+! END SUBROUTINE linspace
 
-SUBROUTINE LOG2INT(int_vec,log_vec,n)
-    IMPLICIT NONE
-    INTEGER,DIMENSION(n)::int_vec
-    LOGICAL,DIMENSION(n)::log_vec
-    INTEGER::n,i
+! SUBROUTINE LOG2INT(int_vec,log_vec,n)
+!     IMPLICIT NONE
+!     INTEGER,DIMENSION(n)::int_vec
+!     LOGICAL,DIMENSION(n)::log_vec
+!     INTEGER::n,i
 
-    WHERE(log_vec .eqv. .true.)
-        int_vec = 1
-    ELSEWHERE
-        int_vec = 0
-    END WHERE
-END SUBROUTINE LOG2INT
+!     WHERE(log_vec .eqv. .true.)
+!         int_vec = 1
+!     ELSEWHERE
+!         int_vec = 0
+!     END WHERE
+! END SUBROUTINE LOG2INT
 
 
 ! generate random numbers with normal distribution (only in 1 for now)
@@ -481,7 +499,9 @@ SUBROUTINE INITIALIZE
         n_inf = 1/(dx_0*alpha_x)
         nmax = INT(n_inf*(1-EXP(-alpha_x*xmax)))
         ALLOCATE(i_range(nmax+1))
-        CALL linspace(i_range,0.d0,REAL(nmax,8),nmax+1)
+        ! CALL linspace(i_range,0.d0,REAL(nmax,8),nmax+1)
+        i_range = (/ (i,i=0,nmax) /)
+
         ALLOCATE( x_cells_vec(nmax+1) )
         ALLOCATE( y_cells_vec(1) )
         x_cells_vec = -1/alpha_x*LOG(1-i_range/n_inf)
@@ -569,11 +589,20 @@ SUBROUTINE INITIALIZE
     ALLOCATE(x_vec_prev(N_array,ndim))
     ALLOCATE(v_vec_prev(N_array,3))
 
+    ALLOCATE(reflected_out(N_array))
+    ALLOCATE(reflected_in(N_array))
+    ALLOCATE(in_column(N_array))
+    ALLOCATE(in_cell(N_array))
+    ALLOCATE(i_counting(N_array))
+    i_counting = (/ (i,i=1,N_array) /)
+
     ALLOCATE(xs_vec(Num_s,ndim))
     ALLOCATE(xs_vec_prev(Num_s,ndim))
     ALLOCATE(vs_vec(Num_s,3))
     ALLOCATE(vs_vec_prev(Num_s,3))
     ALLOCATE(counter_vec(Num_s))
+
+
 
 
     ALLOCATE(vr_max(nx,ny))
@@ -639,45 +668,56 @@ END SUBROUTINE UPDATE_CELL_INDEX
 
 
 
-! SUBROUTINE SPECULAR_REFLECTION(string_in)
-SUBROUTINE SPECULAR_REFLECTION(xr_vec,xr_vec_prev,vr_vec,vr_vec_prev,N_all,xr_walls,num_walls,xmin,xmax,counter)
-    ! USE CONTAIN
+SUBROUTINE SPECULAR_REFLECTION(string_in,Num_r,counter)
+! SUBROUTINE SPECULAR_REFLECTION(xr_vec,xr_vec_prev,vr_vec,vr_vec_prev,N_all,xr_walls,num_walls,xmin,xmax,counter)
+    USE CONTAIN
     USE PROPERTIES
     IMPLICIT NONE
-    ! CHARACTER(16):: string_in
-    REAL(8),DIMENSION(N_all,ndim):: xr_vec,xr_vec_prev, x_coll, xr_vec_new
-    REAL(8),DIMENSION(N_all,3):: vr_vec,vr_vec_prev, vr_vec_new
-    REAL(8),DIMENSION(num_walls,4)::xr_walls
-    LOGICAL,DIMENSION(N_all,num_walls):: collision_occured
-    REAL(8),DIMENSION(N_all,num_walls):: collision_dt
-    REAL(8),DIMENSION(N_all):: x0,y0,xt,yt,m,b,xc,yc, dt_cross
-    LOGICAL,DIMENSION(N_all):: reflected_in, reflected_out, first_collision
-    INTEGER,DIMENSION(N_all):: i_cross, i_first
-    REAL(8):: xw1,xw2,yw1,yw2,xmin,xmax, temp
-    INTEGER:: N_all,num_walls,counter, i
+    ! REAL(8),DIMENSION(Num_r,ndim):: xr_vec,xr_vec_prev, x_coll, xr_vec_new
+    ! REAL(8),DIMENSION(Num_r,3):: vr_vec,vr_vec_prev, vr_vec_new
+    ! REAL(8),DIMENSION(num_walls,4)::xr_walls
+    ! LOGICAL,DIMENSION(Num_r,num_walls):: collision_occured
+    ! REAL(8),DIMENSION(Num_r,num_walls):: collision_dt
+    ! REAL(8),DIMENSION(Num_r):: x0,y0,xt,yt,m,b,xc,yc, dt_cross
+    ! LOGICAL,DIMENSION(Num_r):: reflected_in, reflected_out, first_collision
+    ! INTEGER,DIMENSION(Num_r):: i_cross, i_first
+    ! REAL(8):: xw1,xw2,yw1,yw2,xmin,xmax, temp
+    ! INTEGER:: Num_r,num_walls,counter, i
 
-    ! IF (string_in == 'SOURCE_PARTICLES') THEN
-    !     xr_vec = xs_vec
-    !     xr_vec_prev = xs_vec_prev
-    !     vr_vec = vs_vec
-    !     vr_vec_prev = vs_vec_prev
-    !     Num_r = Num_s
-    !     xr_walls = x_walls(5:)
-    ! ELSE IF (string_in == 'SIM_PARTICLES___') THEN
-    !     xr_vec = x_vec
-    !     xr_vec_prev = x_vec_prev
-    !     vr_vec = v_vec
-    !     vr_vec_prev = v_vec_prev
-    !     Num_r = N_all
-    !     xr_walls = x_walls
-    ! ELSE
-    !     WRITE(*,*) "Error identifying source/sim particles for specular reflection"
-    ! END IF
+    CHARACTER(16):: string_in
+    REAL(8),DIMENSION(Num_r,ndim):: xr_vec,xr_vec_prev, x_coll, xr_vec_new
+    REAL(8),DIMENSION(Num_r,3):: vr_vec,vr_vec_prev, vr_vec_new
+    REAL(8),DIMENSION(num_walls,4)::xr_walls
+    LOGICAL,DIMENSION(Num_r,num_walls):: collision_occured
+    REAL(8),DIMENSION(Num_r,num_walls):: collision_dt
+    REAL(8),DIMENSION(Num_r):: x0,y0,xt,yt,m,b,xc,yc, dt_cross
+    LOGICAL,DIMENSION(Num_r):: first_collision,crossed
+    INTEGER,DIMENSION(Num_r):: i_cross, i_first
+    REAL(8):: xw1,xw2,yw1,yw2, temp
+    INTEGER:: Num_r,counter, i
+
+    IF (string_in == 'SOURCE_PARTICLES') THEN
+        xr_vec = xs_vec
+        xr_vec_prev = xs_vec_prev
+        vr_vec = vs_vec
+        vr_vec_prev = vs_vec_prev
+        ! xr_walls = x_walls(5:)
+    ELSE IF (string_in == 'SIM_PARTICLES___') THEN
+        xr_vec = x_vec
+        xr_vec_prev = x_vec_prev
+        vr_vec = v_vec
+        vr_vec_prev = v_vec_prev
+        xr_walls = x_walls
+    ELSE
+        WRITE(*,*) "Error identifying source/sim particles for specular reflection"
+    END IF
 
     xr_vec_new = xr_vec
     vr_vec_new = vr_vec
     ! i_refl_out/in?
     collision_occured(:,:) = .false.
+    reflected_in(:) = .false.
+    reflected_out(:) = .false.
 
     collision_dt = collision_dt + 1e10
 
@@ -706,13 +746,20 @@ SUBROUTINE SPECULAR_REFLECTION(xr_vec,xr_vec_prev,vr_vec,vr_vec_prev,N_all,xr_wa
         xc(:) = xw1
 
         ! i_cross = INT( ((x0<xw1) .and. (xw1<xt)) .or. ((x0>xw1).and.(xw1>xt)) )
-        CALL LOG2INT( i_cross, ((x0<xw1).and.(xw1<xt)) .or. ((x0>xw1).and.(xw1>xt)) , N_all )
+        ! CALL LOG2INT( i_cross, ((x0<xw1).and.(xw1<xt)) .or. ((x0>xw1).and.(xw1>xt)) , Num_r )
+        crossed = ((x0<xw1).and.(xw1<xt)) .or. ((x0>xw1).and.(xw1>xt))
         dt_cross = (xc-x0)/vr_vec_prev(:,1)
 
-        collision_occured(i_cross,i) = .true.
-        collision_dt(i_cross,i) = dt_cross(i_cross)
 
-        ! CALL LOG2INT( i_first, (collision_occured(:,i) .eqv. .true.) .and. (collision_dt(:,i) == MINVAL(collision_dt,2)) , N_all)
+        ! collision_occured(i_cross,i) = .true.
+        ! collision_dt(i_cross,i) = dt_cross(i_cross)
+        WHERE (crossed)
+            collision_occured(:,i) = .true.
+            collision_dt(:,i) = dt_cross
+        ELSEWHERE
+        END WHERE
+
+        ! CALL LOG2INT( i_first, (collision_occured(:,i) .eqv. .true.) .and. (collision_dt(:,i) == MINVAL(collision_dt,2)) , Num_r)
         ! xr_vec_new(i_first,1) = 2*xw1 - xr_vec(i_first,1)
         ! vr_vec_new(i_first,1) = -vr_vec(i_first,1)
         ! x_coll(i_first,1) = xc(i_first)
@@ -734,26 +781,40 @@ SUBROUTINE SPECULAR_REFLECTION(xr_vec,xr_vec_prev,vr_vec,vr_vec_prev,N_all,xr_wa
         ELSEWHERE
         END WHERE
 
-        IF ((xw1==xmin).and.(xw2==xmin)) THEN
-            WHERE(first_collision)
-                reflected_in = .true.
-            ELSEWHERE
-            END WHERE
-        ELSE IF ((xw1==xmax).and.(xw2==xmax)) THEN
-            WHERE(first_collision)
-                reflected_out = .true.
-            ELSEWHERE
-            END WHERE
+        IF (string_in == 'SIM_PARTICLES___') THEN
+            IF ((xw1==xmin).and.(xw2==xmin)) THEN
+                WHERE(first_collision)
+                    reflected_in = .true.
+                ELSEWHERE
+                END WHERE
+            ELSE IF ((xw1==xmax).and.(xw2==xmax)) THEN
+                WHERE(first_collision)
+                    reflected_out = .true.
+                ELSEWHERE
+                END WHERE
+            END IF
         END IF
 
         ! other angles/wall-types go here
 
-        xr_vec = xr_vec_new
-        vr_vec = vr_vec_new
+
 
     END DO
 
+    ! xr_vec = xr_vec_new
+    ! vr_vec = vr_vec_new
 
+
+
+    IF (string_in == 'SOURCE_PARTICLES') THEN
+        xs_vec = xr_vec_new
+        vs_vec = vr_vec_new
+    ELSE IF (string_in == 'SIM_PARTICLES___') THEN
+        x_vec = xr_vec_new
+        v_vec = vr_vec_new
+    ELSE
+        WRITE(*,*) "Error identifying source/sim particles for specular reflection"
+    END IF
     
     ! WRITE(*,*) "--- have not included SPECULAR_REFLECTION function yet ---"
 END SUBROUTINE SPECULAR_REFLECTION
@@ -811,38 +872,66 @@ SUBROUTINE RUN_COLLISIONS
     USE PROPERTIES
     IMPLICIT NONE
 
+    REAL(8):: rn, vr
     INTEGER::i,j,k
 
+    cy = 1
 
     DO cx = 1,n_cells_vec(1)
 
-        cy = 1
+        ! CALL LOG2INT( i_column, i_cell_vec(:,1) == cx , N_all)
+        in_column = (i_cell_vec(:,1) == cx)
+        in_cell  = in_column !1D, cy=1
 
         ! collision processing
         n_candidate_pairs = 0
         n_accepted_pairs = 0
-        Npc_cur = COUNT(i_cell_vec(:,1) == cx)
+        Npc_cur = COUNT(in_column)
         Npc_slice(cx,cy) = Npc_cur
+
+
+        ALLOCATE(i_cur(Npc_cur))
+        i_cur = PACK(i_counting , in_column)
+
 
         IF (Npc_cur >= 2) THEN
             n_candidate_pairs_real = .5*Npc_cur*(Npc_cur-1)*Fn*c_s*vr_max(cx,cy)*dt/Vc(cx,cy)   ! number of candidate collision pairs
             n_candidate_pairs_real = n_candidate_pairs_real + ncp_remainder(cx,cy)
             ncp_remainder(cx,cy) = MOD(n_candidate_pairs_real,1.0)
-            n_candidate_pairs = INT(n_candidate_pairs_real)
+            n_candidate_pairs = FLOOR(n_candidate_pairs_real)
 
+            DO k=1,n_candidate_pairs
 
-            FORALL(i = 1:N_all , i_cell_vec(i,1) == cx)
-                    ! ######## this FORALL/WHERE stuff isn't really working out. Can only have assignemnt statements inside ##########
+                CALL RANDOM_NUMBER(rn)
+                i = FLOOR(rn*Npc_cur)
+                j = i
+                DO WHILE (i==j)
+                    CALL RANDOM_NUMBER(rn)
+                    j = FLOOR(rn*Npc_cur)
+                END DO
+                ! i_pair = i_cur((/i,j/)) 
+                i_pair = i_counting( i_cur((/i,j/)) )
 
-                ! DO k = 1,n_candidate_pairs
+                vr = SQRT( (v_vec(i,1)-v_vec(j,1))**2 + (v_vec(i,2)-v_vec(j,2))**2 + (v_vec(i,3)-v_vec(j,3))**2 )
 
-
-                ! END DO
-
-            END FORALL
-
-
+                IF (vr > vr_max(cx,cy)) THEN
+                    vr_max(cx,cy) = vr
+                ENDIF
+                CALL RANDOM_NUMBER(rn)
+                IF (vr/vr_max(cx,cy) > rn) THEN
+                    ! process colllision
+                    n_collisions_total(ii) = n_collisions_total(ii) + 1
+                    n_accepted_pairs = n_accepted_pairs + 1
+                ENDIF
+            END DO
         END IF
+
+        n_candidate_pairs_total(ii) = n_candidate_pairs_total(ii) + n_candidate_pairs
+        n_accepted_pairs_total(ii) = n_accepted_pairs_total(ii) + n_accepted_pairs
+
+
+        DEALLOCATE(i_cur)
+
     END DO
 
 
