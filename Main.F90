@@ -59,19 +59,23 @@ MODULE CONTAIN
 !-----------------------------------------------------------------------
 REAL(8), ALLOCATABLE, DIMENSION(:):: x_cells_vec, y_cells_vec, dx_cells_vec, dy_cells_vec, i_range, t_vec
 REAL(8), ALLOCATABLE, DIMENSION(:):: N_total,n_candidate_pairs_total,n_accepted_pairs_total,n_collisions_total,N_added_total
+REAL(8), ALLOCATABLE, DIMENSION(:):: counter_vec
 REAL(8), ALLOCATABLE, DIMENSION(:,:):: Vc, x_walls, vr_max, x_vec,v_vec, i_cell_vec, Npc_slice,ncp_remainder
 REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_prev,v_vec_prev, xs_vec,vs_vec,xs_vec_prev,vs_vec_prev
 
 !-----------------------------------------------------------------------
 !*******************MISC. VARIBLES*************************
 !-----------------------------------------------------------------------
-    REAL(8):: m_g,d_g,vth,c_s,vr_max_0,v_avg, xmin,xmax,ymin,ymax, alpha_x,n_inf, V_total, t_collisions,t_BC,t_loop,ws,ts, t
-    INTEGER:: nmax, nx, ny, N_all, nt, n_saved, nw, N_expected, N_array
+    REAL(8):: m_g,d_g,vth,c_s,vr_max_0,v_avg, xmin,xmax,ymin,ymax,ymid, alpha_x,n_inf, V_total, t_collisions,t_BC,t_loop
+    REAL(8):: ws,ts,hs,Vs,xs_min,xs_max,ys_min,ys_max,t, n_candidate_pairs_real
+    INTEGER:: nmax, nx, ny, N_all, nt, n_saved, nw, N_expected, N_array, Num_s, N_entered, cx,cy
+    INTEGER:: n_candidate_pairs,n_accepted_pairs,Npc_cur, num_walls
     REAL(8), DIMENSION(2,2):: x_lim
     INTEGER, DIMENSION(2):: n_cells_vec
 
     REAL(8):: a,b,c
-    REAL(8), ALLOCATABLE, DIMENSION(:,:):: a_vec,b_vec,c_vec
+    REAL(8), ALLOCATABLE, DIMENSION(:,:):: a_mat,b_mat,c_mat
+    REAL(8), ALLOCATABLE, DIMENSION(:):: a_vec,b_vec,c_vec
     
     ! INTEGER, ALLOCATABLE, DIMENSION(:):: i_range
 
@@ -128,6 +132,26 @@ PROGRAM MAIN
     REAL(8):: Tot_Time
 
 
+    ! ALLOCATE(a_vec(10))
+    ! ALLOCATE(b_vec(10))
+    ! DO i = 1,10 
+    !     a_vec(i) = i
+    ! END DO
+
+    ! ! ! b_vec(a_vec>5) = 1
+    ! ! FORALL(i=1:10,a_vec(i)>5)
+    ! !     b_vec(i)=1
+    ! ! END FORALL
+
+    ! WHERE (a_vec>5)
+    !     b_vec = 1
+    ! ELSEWHERE
+    !     b_vec = 0
+    ! END WHERE
+
+    ! WRITE(*,*) "a_vec=",INT(a_vec)
+    ! WRITE(*,*) "b_vec=",INT(b_vec)
+
 !-----------------------------------------------------------------------
 !*******************READ INPUT FILE************************
 !-----------------------------------------------------------------------
@@ -140,9 +164,6 @@ PROGRAM MAIN
     ! Timestep = 0
     ! assembly_check = .true.
     CALL INITIALIZE
-    ! IF (Myrank == 0) THEN
-    !    CALL OUTPUT_TO_SCREEN
-    ! END IF
 ! !-----------------------------------------------------------------------
 ! !*******************MAIN LOOP******************************
 ! !-----------------------------------------------------------------------
@@ -173,25 +194,25 @@ PROGRAM MAIN
 
         ! Boundary Condition implementation -------------------------------------------
         ! (removing exiting particles should be absorbed into BC implementation)
-        CALL SPECULAR_REFLECTION('SIM_PARTICLES___')
-        ! CALL SPECULAR_REFLECTION
-
+        IF (N_all > 0) THEN
+            CALL SPECULAR_REFLECTION(x_vec,x_vec_prev,v_vec,v_vec_prev,N_all,x_walls,num_walls,xmin,xmax,0)
+            ! CALL SPECULAR_REFLECTION('SIM_PARTICLES___')
+        END IF
 
         ! Input from Source/Reservoir -------------------------------------------------
         IF (include_source .EQV. .true.) THEN
             CALL INITIALIZE_SOURCE
-            ! xs_vec_prev = xs_vec
-            ! vs_vec_prev = vs_vec
-            ! xs_vec = xs_vec + dt*vs_vec(:,1:2)
+            N_added_total(i) = N_entered            
         END IF
 
-
-        CALL SPECULAR_REFLECTION('SOURCE_PARTICLES')
-        ! CALL SPECULAR_REFLECTION
-
         ! Update Cell Index -----------------------------------------------------------
+        CALL UPDATE_CELL_INDEX
 
         ! Collisions ------------------------------------------------------------------
+        ! Just do separate collisions subroutine here
+        CALL RUN_COLLISIONS
+        
+
 
         ! update and save current data ---------------------------------------------
 
@@ -226,7 +247,47 @@ SUBROUTINE linspace(z, l, k, n)
     RETURN
 END SUBROUTINE linspace
 
+SUBROUTINE LOG2INT(int_vec,log_vec,n)
+    IMPLICIT NONE
+    INTEGER,DIMENSION(n)::int_vec
+    LOGICAL,DIMENSION(n)::log_vec
+    INTEGER::n,i
 
+    WHERE(log_vec .eqv. .true.)
+        int_vec = 1
+    ELSEWHERE
+        int_vec = 0
+    END WHERE
+END SUBROUTINE LOG2INT
+
+
+! generate random numbers with normal distribution (only in 1 for now)
+SUBROUTINE RANDN(y_out,n)
+! SUBROUTINE RANDN(y_out)
+    IMPLICIT NONE
+    ! uses polar form of Box-Muller Transformaton (described here: http://www.design.caltech.edu/erik/Misc/Gaussian.html)
+    ! REAL (8), DIMENSION(n):: x1,x2,w,y1,y2,y_out,i
+    REAL(8), DIMENSION(n):: w,y_out
+    REAL(8):: x1,x2,y1
+    INTEGER:: n,i
+    ! REAL(8):: x1,x2,w,y_out
+
+    DO i=1,n
+        w(i)=1.d10
+        DO WHILE (w(i) >= 1.0)
+            CALL RANDOM_NUMBER(x1)
+            CALL RANDOM_NUMBER(x2)
+            x1 = 2*x1 - 1
+            x2 = 2*x2 - 1
+            w(i) = x1*x1 + x2*x2
+        END DO
+
+        w(i) = SQRT( (-2*LOG(w(i))) / w(i) )
+        y_out(i) = x1*w(i)        ! could also have y_out2 = x2*w
+    END DO
+
+
+END SUBROUTINE RANDN
 
 
 
@@ -305,7 +366,7 @@ SUBROUTINE INPUT_PARAMETERS_READIN
           READ(100,*) n
         ELSE IF (line == '*NS_INITIAL____') THEN
           ! density of the source
-          READ(100,*) Fn
+          READ(100,*) ns
         ELSE IF (line == '*FN____________') THEN
           ! number of particles represented by each superparticle
           READ(100,*) Fn
@@ -466,12 +527,17 @@ SUBROUTINE INITIALIZE
     ! source/reservoir parameters --------------------------------------------------
     ws = 10*vth*dt                                                                  ! width of source cell
     ts = 5.d-4                                                                      ! pulse width of source valve opening
-
+    
+    hs = inlet_height
+    Vs = ws*hs
+    Num_s = INT(ns*Vs/Fn)
+    WRITE(*,*) "Num_s =",Num_s 
 
     ! Set up wall geometry ---------------------------------------------------------
     ! draw boundaries with vertical and horizontal lines (each row is endpoints of wall: (x1,y1,x2,y2))
     ! include vertical walls at inlet/outlet as first two rows
     ALLOCATE(x_walls(4,2))
+    num_walls = 4
     xmin = x_lim(1,1)
     xmax = x_lim(1,2)
     ymin = x_lim(2,1)
@@ -503,6 +569,13 @@ SUBROUTINE INITIALIZE
     ALLOCATE(x_vec_prev(N_array,ndim))
     ALLOCATE(v_vec_prev(N_array,3))
 
+    ALLOCATE(xs_vec(Num_s,ndim))
+    ALLOCATE(xs_vec_prev(Num_s,ndim))
+    ALLOCATE(vs_vec(Num_s,3))
+    ALLOCATE(vs_vec_prev(Num_s,3))
+    ALLOCATE(counter_vec(Num_s))
+
+
     ALLOCATE(vr_max(nx,ny))
     vr_max(:,:) = vr_max_0
 
@@ -519,7 +592,10 @@ SUBROUTINE INITIALIZE
             CALL RANDOM_NUMBER(x_vec)
             x_vec(:,1) = x_vec(:,1)*(xmax-xmin)+xmin
             x_vec(:,2) = x_vec(:,2)*(ymax-ymin)+ymin
-            CALL RANDOM_NUMBER(v_vec)   ! need to convert this to normal distribution #########
+            ! CALL RANDOM_NUMBER(v_vec)   ! need to convert this to normal distribution #########
+            CALL RANDN(v_vec(:,1),N_all)
+            CALL RANDN(v_vec(:,2),N_all)
+            CALL RANDN(v_vec(:,3),N_all)
             v_vec = v_vec*vth
             x_vec(:,2) = 0.5
         END IF
@@ -552,9 +628,10 @@ SUBROUTINE UPDATE_CELL_INDEX
     USE PROPERTIES
     IMPLICIT NONE
 
+    ! note: if (x,y) == (0,0), then just set index to -1000 or something (or 0, since indices start with 1 here)
 
     
-    WRITE(*,*) "--- have not included UPDATE_CELL_INDEX function yet ---"
+    ! WRITE(*,*) "--- have not included UPDATE_CELL_INDEX function yet ---"
 
 END SUBROUTINE UPDATE_CELL_INDEX
 
@@ -562,21 +639,123 @@ END SUBROUTINE UPDATE_CELL_INDEX
 
 
 
-SUBROUTINE SPECULAR_REFLECTION(string_in)
-    USE CONTAIN
+! SUBROUTINE SPECULAR_REFLECTION(string_in)
+SUBROUTINE SPECULAR_REFLECTION(xr_vec,xr_vec_prev,vr_vec,vr_vec_prev,N_all,xr_walls,num_walls,xmin,xmax,counter)
+    ! USE CONTAIN
     USE PROPERTIES
     IMPLICIT NONE
-    CHARACTER(16):: string_in
+    ! CHARACTER(16):: string_in
+    REAL(8),DIMENSION(N_all,ndim):: xr_vec,xr_vec_prev, x_coll, xr_vec_new
+    REAL(8),DIMENSION(N_all,3):: vr_vec,vr_vec_prev, vr_vec_new
+    REAL(8),DIMENSION(num_walls,4)::xr_walls
+    LOGICAL,DIMENSION(N_all,num_walls):: collision_occured
+    REAL(8),DIMENSION(N_all,num_walls):: collision_dt
+    REAL(8),DIMENSION(N_all):: x0,y0,xt,yt,m,b,xc,yc, dt_cross
+    LOGICAL,DIMENSION(N_all):: reflected_in, reflected_out, first_collision
+    INTEGER,DIMENSION(N_all):: i_cross, i_first
+    REAL(8):: xw1,xw2,yw1,yw2,xmin,xmax, temp
+    INTEGER:: N_all,num_walls,counter, i
 
-    IF (string_in == 'SOURCE_PARTICLES') THEN
+    ! IF (string_in == 'SOURCE_PARTICLES') THEN
+    !     xr_vec = xs_vec
+    !     xr_vec_prev = xs_vec_prev
+    !     vr_vec = vs_vec
+    !     vr_vec_prev = vs_vec_prev
+    !     Num_r = Num_s
+    !     xr_walls = x_walls(5:)
+    ! ELSE IF (string_in == 'SIM_PARTICLES___') THEN
+    !     xr_vec = x_vec
+    !     xr_vec_prev = x_vec_prev
+    !     vr_vec = v_vec
+    !     vr_vec_prev = v_vec_prev
+    !     Num_r = N_all
+    !     xr_walls = x_walls
+    ! ELSE
+    !     WRITE(*,*) "Error identifying source/sim particles for specular reflection"
+    ! END IF
 
-    ELSE IF (string_in == 'SIM_PARTICLES___') THEN
+    xr_vec_new = xr_vec
+    vr_vec_new = vr_vec
+    ! i_refl_out/in?
+    collision_occured(:,:) = .false.
 
-    ELSE
-        WRITE(*,*) "Error identifying source/sim particles for specular reflection"
-    END IF
+    collision_dt = collision_dt + 1e10
+
+    DO i = 1,num_walls
+        xw1 = xr_walls(i,1)
+        yw1 = xr_walls(i,2)
+        xw2 = xr_walls(i,3)
+        yw2 = xr_walls(i,4)
+
+        x0 = xr_vec_prev(:,1)
+        y0 = xr_vec_prev(:,2)
+        xt = xr_vec(:,1)
+        yt = xr_vec(:,2)
+        m = vr_vec_prev(:,2)/vr_vec_prev(:,1)
+        b = y0-m*x0
+
+        ! if (xw1=xw2)
+        ! vertical boundary
+        IF (yw2 > yw1) THEN
+            temp = yw1
+            yw1 = yw2
+            yw2 = temp
+        END IF
+
+        yc = m*xw1+b
+        xc(:) = xw1
+
+        ! i_cross = INT( ((x0<xw1) .and. (xw1<xt)) .or. ((x0>xw1).and.(xw1>xt)) )
+        CALL LOG2INT( i_cross, ((x0<xw1).and.(xw1<xt)) .or. ((x0>xw1).and.(xw1>xt)) , N_all )
+        dt_cross = (xc-x0)/vr_vec_prev(:,1)
+
+        collision_occured(i_cross,i) = .true.
+        collision_dt(i_cross,i) = dt_cross(i_cross)
+
+        ! CALL LOG2INT( i_first, (collision_occured(:,i) .eqv. .true.) .and. (collision_dt(:,i) == MINVAL(collision_dt,2)) , N_all)
+        ! xr_vec_new(i_first,1) = 2*xw1 - xr_vec(i_first,1)
+        ! vr_vec_new(i_first,1) = -vr_vec(i_first,1)
+        ! x_coll(i_first,1) = xc(i_first)
+        ! x_coll(i_first,2) = yc(i_first)
+
+        ! IF ((xw1==xmin).and.(xw2==xmin)) THEN
+        !     reflected_in(i_first) = .true.
+        ! ELSE IF (xw1==xmax).and.(xw2==xmax) THEN
+        !     reflected_out(i_first) = .true.
+        ! END IF
+
+
+        first_collision = (collision_occured(:,i) .eqv. .true.) .and. (collision_dt(:,i) == MINVAL(collision_dt,2))
+        WHERE (first_collision) 
+            xr_vec_new(:,1) = 2*xw1 - xr_vec(:,1)
+            vr_vec_new(:,1) = -vr_vec(:,1)
+            x_coll(:,1) = xc
+            x_coll(:,2) = yc
+        ELSEWHERE
+        END WHERE
+
+        IF ((xw1==xmin).and.(xw2==xmin)) THEN
+            WHERE(first_collision)
+                reflected_in = .true.
+            ELSEWHERE
+            END WHERE
+        ELSE IF ((xw1==xmax).and.(xw2==xmax)) THEN
+            WHERE(first_collision)
+                reflected_out = .true.
+            ELSEWHERE
+            END WHERE
+        END IF
+
+        ! other angles/wall-types go here
+
+        xr_vec = xr_vec_new
+        vr_vec = vr_vec_new
+
+    END DO
+
+
     
-    WRITE(*,*) "--- have not included SPECULAR_REFLECTION function yet ---"
+    ! WRITE(*,*) "--- have not included SPECULAR_REFLECTION function yet ---"
 END SUBROUTINE SPECULAR_REFLECTION
 
 
@@ -588,9 +767,88 @@ SUBROUTINE INITIALIZE_SOURCE
     USE PROPERTIES
     IMPLICIT NONE
 
-    
-    WRITE(*,*) "--- have not included INITIALIZE_SOURCE function yet ---"
+    xs_min = xmin - ws
+    xs_max = xmin
+    ymid = (ymin+ymax)/2
+    ys_min = ymid-hs/2
+    ys_max = ymid+hs/2
+    ! CALL RAND(xs_vec)
+    CALL RANDOM_NUMBER(xs_vec(:,1))
+    xs_vec(:,1) = xs_vec(:,1)*(xs_max-xs_min) + xs_min
+    xs_vec(:,2) = 0.5
+
+    ! CALL RANDOM_NUMBER(vs_vec)   ! NEED TO IMPLEMENT NORMAL DISTRIUBUTION #########################
+    CALL RANDN(vs_vec(:,1),Num_s) 
+    CALL RANDN(vs_vec(:,2),Num_s) 
+    CALL RANDN(vs_vec(:,3),Num_s) 
+    vs_vec = vs_vec*vth
+
+
+    ! keep incoming source particles within inlet
+    xs_vec_prev = xs_vec
+    vs_vec_prev = vs_vec
+    xs_vec = xs_vec + dt*vs_vec(:,1:2)
+
+
+    ! (not needed right now)
+    ! CALL SPECULAR_REFLECTION('SOURCE_PARTICLES') ###############
+
+    N_entered = COUNT(xs_vec(:,1) > 0)
+
+
+    IF (N_entered > 0) THEN
+        x_vec( (N_all+1):(N_all+1+N_entered) , : ) = xs_vec
+        v_vec( (N_all+1):(N_all+1+N_entered) , : ) = vs_vec
+        N_all = N_all + N_entered
+    END IF
+
 END SUBROUTINE INITIALIZE_SOURCE
+
+
+
+SUBROUTINE RUN_COLLISIONS
+    USE CONTAIN
+    USE PROPERTIES
+    IMPLICIT NONE
+
+    INTEGER::i,j,k
+
+
+    DO cx = 1,n_cells_vec(1)
+
+        cy = 1
+
+        ! collision processing
+        n_candidate_pairs = 0
+        n_accepted_pairs = 0
+        Npc_cur = COUNT(i_cell_vec(:,1) == cx)
+        Npc_slice(cx,cy) = Npc_cur
+
+        IF (Npc_cur >= 2) THEN
+            n_candidate_pairs_real = .5*Npc_cur*(Npc_cur-1)*Fn*c_s*vr_max(cx,cy)*dt/Vc(cx,cy)   ! number of candidate collision pairs
+            n_candidate_pairs_real = n_candidate_pairs_real + ncp_remainder(cx,cy)
+            ncp_remainder(cx,cy) = MOD(n_candidate_pairs_real,1.0)
+            n_candidate_pairs = INT(n_candidate_pairs_real)
+
+
+            FORALL(i = 1:N_all , i_cell_vec(i,1) == cx)
+                    ! ######## this FORALL/WHERE stuff isn't really working out. Can only have assignemnt statements inside ##########
+
+                ! DO k = 1,n_candidate_pairs
+
+
+                ! END DO
+
+            END FORALL
+
+
+        END IF
+    END DO
+
+
+END SUBROUTINE RUN_COLLISIONS
+
+
 
 
 
