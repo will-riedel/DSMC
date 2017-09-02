@@ -22,7 +22,7 @@ MODULE CONTAIN
     REAL(8), ALLOCATABLE, DIMENSION(:):: counter_vec
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: Vc, x_walls, vr_max, x_vec,v_vec, i_cell_vec, Npc_slice,ncp_remainder
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_prev,v_vec_prev, xs_vec,vs_vec,xs_vec_prev,vs_vec_prev
-    LOGICAL,ALLOCATABLE, DIMENSION(:):: reflected_in, reflected_out, in_column, in_cell, removed_from_sim
+    LOGICAL,ALLOCATABLE, DIMENSION(:):: reflected_in, reflected_out, in_column, in_cell, removed_from_sim, entered_sim
     INTEGER,ALLOCATABLE, DIMENSION(:):: i_counting, i_column, i_cur
 
 
@@ -37,6 +37,7 @@ MODULE CONTAIN
     INTEGER:: N_candidate_pairs,N_accepted_pairs,Npc_cur, num_walls, N_collisions, N_added, N_removed
     REAL(8), DIMENSION(2,2):: x_lim
     INTEGER, DIMENSION(2):: n_cells_vec, i_pair
+    LOGICAL:: file_exists
 
     REAL(8):: a1,b1,c1
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: a_mat,b_mat,c_mat
@@ -92,6 +93,7 @@ PROGRAM MAIN
     USE PROPERTIES
     IMPLICIT NONE
     INTEGER:: i
+    CHARACTER(80)::filename
 
 
     ! WRITE(*,*) "got here"
@@ -130,6 +132,21 @@ PROGRAM MAIN
     ! ! WRITE(*,*) "i_temp_vec=",INT(i_temp_vec)
     ! WRITE(*,*) "c_vec=",INT(c_vec)
 
+    ! ! CALL RANDOM_NUMBER(a1)
+    ! ! WRITE(*,*) a1
+    ! ! ALLOCATE(a_vec(10000))
+    ! ! CALL RANDN(a_vec,10000)
+
+    ! ! INQUIRE(FILE="Output/data/mat.txt",EXIST=file_exists)
+    ! ! IF (file_exists .EQV. .false.) THEN
+    ! OPEN(UNIT=1,FILE="Output/data/mat.txt",FORM="UNFORMATTED")
+    ! WRITE(1) a_vec
+    ! CLOSE(1)
+    ! ! ELSE
+    ! !     WRITE(*,*) "file already exists!"
+    ! ! END IF
+    ! ! DEALLOCATE(a_vec)
+
 !-----------------------------------------------------------------------
 !*******************READ INPUT FILE************************
 !-----------------------------------------------------------------------
@@ -144,14 +161,13 @@ PROGRAM MAIN
 ! !*******************MAIN LOOP******************************
 ! !-----------------------------------------------------------------------
          
-
     DO ii = it_restart+2,nt
     ! DO i = it_restart+2,50
         ! print current step
 
         t = t_vec(ii)
-        IF (MOD(ii,dt_to_save) == 0) THEN
-            WRITE(*,*) ii,", t=",t,", N=",N_simulated,' ------------------------'
+        IF (MOD(ii-1,dt_to_save) == 0) THEN
+            WRITE(*,*) ii-1,", t=",t,", N=",N_simulated,' ------------------------'
         END IF
 
 
@@ -165,36 +181,57 @@ PROGRAM MAIN
 
         ! collisionless motion --------------------------------------------------------
         x_vec = x_vec +dt*v_vec(:,1:2)
+        IF (MOD(ii-1,dt_to_save) == 0) THEN
+            ! WRITE(*,*) "x=",x_vec(1:10,1)
+            ! WRITE(*,*) "xp=",x_vec_prev(1:10,1)
+            ! WRITE(*,*) "v=",v_vec(1:10,1)
+            a1 = COUNT(v_vec(:,1) > 1.d-5)
+            b1 = COUNT(v_vec(:,1) < -1.d-5)
+            c1 = COUNT(ABS(v_vec(:,1)) <= 1.d-5)
+            WRITE(*,*) "a1=",a1
+            WRITE(*,*) "b1=",b1
+            WRITE(*,*) "c1=",c1
+        END IF
 
 
         ! Boundary Condition implementation -------------------------------------------
         ! (removing exiting particles should be absorbed into BC implementation)
         IF (N_simulated > 0) THEN
             ! CALL SPECULAR_REFLECTION(x_vec,x_vec_prev,v_vec,v_vec_prev,N_all,x_walls,num_walls,xmin,xmax,0)
+            ! WRITE(*,*) "--- specular_reflection ---"
             CALL SPECULAR_REFLECTION('SIM_PARTICLES___',N_array,0)
         END IF
 
         ! Input from Source/Reservoir -------------------------------------------------
         IF (include_source .EQV. .true.) THEN
+            ! WRITE(*,*) "--- initialize_source ---"
+
             CALL INITIALIZE_SOURCE
             N_added_total(ii) = N_entered            
         END IF
 
         IF (N_simulated > 0) THEN
             ! Update Cell Index -----------------------------------------------------------
+            ! WRITE(*,*) "--- update_cell_index ---"
             CALL UPDATE_CELL_INDEX
 
             ! Collisions ------------------------------------------------------------------
             ! Just do separate collisions subroutine here
-            CALL RUN_COLLISIONS
+            ! WRITE(*,*) "--- run_collisions ---"
+            ! CALL RUN_COLLISIONS
         END IF
         
 
 
         ! update and save current data ---------------------------------------------
-
+        N_total(ii) = N_simulated
 
     END DO
+
+    filename = "Output/data/mat.txt"
+    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    WRITE(1) v_vec(:,1)
+    CLOSE(1)
 
     N_collisions = SUM(N_collisions_total)
     N_candidate_pairs = SUM(N_candidate_pairs_total)
@@ -224,6 +261,10 @@ PROGRAM MAIN
     ! WRITE(*,*) "computation time (BC's) = ",t_BC
     ! WRITE(*,*) "computation time (collisions) = ",t_collisions
     ! WRITE(*,*) "computation time (looping in collisions)=",t_loop
+
+    ! WRITE(*,*) "i_cell_vec = ",i_cell_vec
+    ! WRITE(*,*) "Npc_slice = ",Npc_slice
+
 
     WRITE(*,*) '------ done ------'
 
@@ -536,7 +577,7 @@ SUBROUTINE INITIALIZE
     nt = INT(tmax/dt)+1
     ALLOCATE(t_vec(nt))
     DO i = 1,nt
-        t_vec(i) = i*dt
+        t_vec(i) = (i-1)*dt
     END DO
 
     ! t0 = time.time() ##########
@@ -552,7 +593,7 @@ SUBROUTINE INITIALIZE
     hs = inlet_height
     Vs = ws*hs
     Num_s = INT(ns*Vs/Fn)
-    WRITE(*,*) "Num_s =",Num_s 
+    ! WRITE(*,*) "Num_s =",Num_s 
 
     ! Set up wall geometry ---------------------------------------------------------
     ! draw boundaries with vertical and horizontal lines (each row is endpoints of wall: (x1,y1,x2,y2))
@@ -596,12 +637,14 @@ SUBROUTINE INITIALIZE
     ALLOCATE(in_cell(N_array))
     ALLOCATE(i_counting(N_array))
     i_counting = (/ (i,i=1,N_array) /)
+    ALLOCATE(i_cur(N_array))
 
     ALLOCATE(xs_vec(Num_s,ndim))
     ALLOCATE(xs_vec_prev(Num_s,ndim))
     ALLOCATE(vs_vec(Num_s,3))
     ALLOCATE(vs_vec_prev(Num_s,3))
     ALLOCATE(counter_vec(Num_s))
+    ALLOCATE(entered_Sim(Num_s))
 
 
 
@@ -653,22 +696,35 @@ SUBROUTINE UPDATE_CELL_INDEX
     ! note: if (x,y) == (0,0), then just set index to -1000 or something (or 0, since indices start with 1 here)
     IF (N_all > 0) THEN
         IF (use_homogenous_grid .EQV. .true.) THEN
-            ! i_cell_vec(1:N_all,1) = CEILING( (x_vec(1:N_all,1)-xmin)/(xmax-xmin)*nx )
-            i_cell_vec(:,1) = CEILING( (x_vec(:,1)-xmin)/(xmax-xmin)*nx )
+            i_cell_vec(1:N_all,1) = CEILING( (x_vec(1:N_all,1)-xmin)/(xmax-xmin)*nx )
+            ! i_cell_vec(:,1) = CEILING( (x_vec(:,1)-xmin)/(xmax-xmin)*nx )
             IF (ny>1) THEN
-                ! i_cell_vec(1:N_all,2) = CEILING( (x_vec(1:N_all,2)-xmin)/(xmax-xmin)*ny )
-                i_cell_vec(:,2) = CEILING( (x_vec(:,2)-xmin)/(xmax-xmin)*ny )
+                i_cell_vec(1:N_all,2) = CEILING( (x_vec(1:N_all,2)-xmin)/(xmax-xmin)*ny )
+                ! i_cell_vec(:,2) = CEILING( (x_vec(:,2)-xmin)/(xmax-xmin)*ny )
             ELSE
-                ! i_cell_vec(1:N_all,2) = 1
-                i_cell_vec(:,2) = 1
+                i_cell_vec(1:N_all,2) = 1
+                ! i_cell_vec(:,2) = 1
             END IF
 
 
         ELSE
             alpha_x  = -LOG(1/dx_factor)/xmax
             n_inf = 1/(dx_0*alpha_x)
-            ! i_cell_vec(1:N_all,1) = CEILING(n_inf*(1-EXP( -alpha_x*x_vec(1:N_all,1) )))
-            i_cell_vec(:,1) = CEILING(n_inf*(1-EXP( -alpha_x*x_vec(:,1) )))
+            i_cell_vec(1:N_all,1) = FLOOR(n_inf*(1-EXP( -alpha_x*x_vec(1:N_all,1) )))+1
+            ! i_cell_vec(:,1) = CEILING(n_inf*(1-EXP( -alpha_x*x_vec(:,1) )))
+
+
+            ! WRITE(*,*) "alpha_x = ",alpha_x
+            ! WRITE(*,*) "1/dx_factor = ",1/dx_factor
+            ! WRITE(*,*) "xmax = ",xmax
+            ! WRITE(*,*) "dx_0 = ",dx_0
+            ! WRITE(*,*) "n_inf = ",n_inf
+
+            ! WRITE(*,*) "val_1 = ",-alpha_x*x_vec(1:20,1)
+            ! WRITE(*,*) "EXP(val_1) = ",EXP( -alpha_x*x_vec(1:20,1) )
+            ! WRITE(*,*) "x_vec= ",x_vec(1:20,1)
+
+
 
             IF (ny > 1) THEN
                 alpha_y = -LOG(1/dy_factor) / (ymax-ymid)
@@ -681,22 +737,22 @@ SUBROUTINE UPDATE_CELL_INDEX
                     neg_offset = ny/2.-.5
                 ENDIF
 
-                ! WHERE (x_vec(1:N_all,2) < ymid)
-                !     i_cell_vec(1:N_all,2) = FLOOR( neg_offset - FLOOR( n_inf*(1-EXP(-alpha_y*(ymid - x_vec(1:N_all,2))))) )
-                ! ELSEWHERE
-                !     i_cell_vec(1:N_all,2) = CEILING( pos_offset - FLOOR( n_inf*(1-EXP(-alpha_y*(x_vec(1:N_all,2) - ymid)))) )
-                ! END WHERE
-                WHERE (x_vec(:,2) < ymid)
-                    i_cell_vec(:,2) = FLOOR( neg_offset - FLOOR( n_inf*(1-EXP(-alpha_y*(ymid - x_vec(:,2))))) )
+                WHERE (x_vec(1:N_all,2) < ymid)
+                    i_cell_vec(1:N_all,2) = FLOOR( neg_offset - FLOOR( n_inf*(1-EXP(-alpha_y*(ymid - x_vec(1:N_all,2))))) )
                 ELSEWHERE
-                    i_cell_vec(:,2) = CEILING( pos_offset - FLOOR( n_inf*(1-EXP(-alpha_y*(x_vec(:,2) - ymid)))) )
+                    i_cell_vec(1:N_all,2) = CEILING( pos_offset - FLOOR( n_inf*(1-EXP(-alpha_y*(x_vec(1:N_all,2) - ymid)))) )
                 END WHERE
+                ! WHERE (x_vec(:,2) < ymid)
+                !     i_cell_vec(:,2) = FLOOR( neg_offset - FLOOR( n_inf*(1-EXP(-alpha_y*(ymid - x_vec(:,2))))) )
+                ! ELSEWHERE
+                !     i_cell_vec(:,2) = CEILING( pos_offset - FLOOR( n_inf*(1-EXP(-alpha_y*(x_vec(:,2) - ymid)))) )
+                ! END WHERE
 
-                ! i_cell_vec(1:N_all,2) = i_cell_vec(1:N_all,2) + 1
-                i_cell_vec(:,2) = i_cell_vec(:,2) + 1
+                i_cell_vec(1:N_all,2) = i_cell_vec(1:N_all,2) + 1
+                ! i_cell_vec(:,2) = i_cell_vec(:,2) + 1
             ELSE
-                ! i_cell_vec(1:N_all,2) = 1
-                i_cell_vec(:,2) = 1
+                i_cell_vec(1:N_all,2) = 1
+                ! i_cell_vec(:,2) = 1
             ENDIF
 
         END IF
@@ -884,6 +940,8 @@ SUBROUTINE SPECULAR_REFLECTION(string_in,Num_r,counter)
         N_removed = N_removed + COUNT(reflected_in)
     END IF
     N_simulated = N_simulated - N_removed
+    ! WRITE(*,*) "N_simulated=",N_simulated
+    ! WRITE(*,*) "N_removed=",N_removed
 
     
 END SUBROUTINE SPECULAR_REFLECTION
@@ -896,6 +954,8 @@ SUBROUTINE INITIALIZE_SOURCE
     USE CONTAIN
     USE PROPERTIES
     IMPLICIT NONE
+    ! INTEGER,ALLOCATABLE, DIMENSION(:):: i_cur
+
 
     xs_min = xmin - ws
     xs_max = xmin
@@ -923,14 +983,26 @@ SUBROUTINE INITIALIZE_SOURCE
     ! (not needed right now)
     ! CALL SPECULAR_REFLECTION('SOURCE_PARTICLES') ###############
 
-    N_entered = COUNT(xs_vec(:,1) > 0)
+    entered_sim = (xs_vec(:,1) > 0)
+    N_entered = COUNT(entered_sim)
+    ! ALLOCATE(i_cur(N_entered))
+    i_cur(:) = 0
+    i_cur(1:N_entered) = PACK(i_counting , entered_sim)
 
+    WRITE(*,*) "got here 2"
+
+    WRITE(*,*) SIZE(i_cur),N_entered,N_all,N_simulated
 
     IF (N_entered > 0) THEN
-        x_vec( (N_all+1):(N_all+1+N_entered) , : ) = xs_vec
-        v_vec( (N_all+1):(N_all+1+N_entered) , : ) = vs_vec
+        x_vec( (N_all+1):(N_all+1+N_entered) , : ) = xs_vec(i_cur,:)
+        v_vec( (N_all+1):(N_all+1+N_entered) , : ) = vs_vec(i_cur,:)
         N_all = N_all + N_entered
+        N_simulated = N_simulated + N_entered
     END IF
+    ! DEALLOCATE(i_cur)
+
+    WRITE(*,*) "got here 3"
+
 
 END SUBROUTINE INITIALIZE_SOURCE
 
@@ -944,6 +1016,7 @@ SUBROUTINE RUN_COLLISIONS
     REAL(8):: rn, vr, cosT,sinT,alpha,alpha2
     INTEGER:: i,j,k
     REAL(8),DIMENSION(3)::normal_vec,v_temp !,v0,v1
+    ! INTEGER,ALLOCATABLE, DIMENSION(:):: i_cur
 
     cy = 1
 
@@ -960,40 +1033,52 @@ SUBROUTINE RUN_COLLISIONS
         Npc_cur = COUNT(in_column)
         Npc_slice(cx,cy) = Npc_cur
 
-
-        ALLOCATE(i_cur(Npc_cur))
-        i_cur = PACK(i_counting , in_column)
-
-        WRITE(*,*) "---"
-        WRITE(*,*) "Npc_cur=",Npc_cur
-        ! WRITE(*,*) "in_column=",in_column
-        WRITE(*,*) "i_cell_vec=",i_cell_vec(:,1)
-        ! WRITE(*,*) "i_cur = ",i_cur
+        ! ALLOCATE(i_cur(Npc_cur))
+        i_cur(1:Npc_cur) = PACK(i_counting , in_column)
 
         IF (Npc_cur >= 2) THEN
-            WRITE(*,*) "---"
-            WRITE(*,*) "Npc_cur=",Npc_cur
-            WRITE(*,*) "c_s=",c_s
-            WRITE(*,*) "vr_max=",vr_max(cx,cy)
-            WRITE(*,*) "Vc=",Vc(cx,cy)
             N_candidate_pairs_real = .5*Npc_cur*(Npc_cur-1)*Fn*c_s*vr_max(cx,cy)*dt/Vc(cx,cy)   ! number of candidate collision pairs
             N_candidate_pairs_real = N_candidate_pairs_real + ncp_remainder(cx,cy)
             ncp_remainder(cx,cy) = MOD(N_candidate_pairs_real,1.0)
             N_candidate_pairs = FLOOR(N_candidate_pairs_real)
+            ! IF (N_candidate_pairs > 1) THEN
+            !     WRITE(*,*) "---"
+            !     WRITE(*,*) "Npc_cur=",Npc_cur
+            !     WRITE(*,*) "Fn=",Fn
+            !     WRITE(*,*) "c_s=",c_s
+            !     WRITE(*,*) "vr_max=",vr_max(cx,cy)
+            !     WRITE(*,*) "dt=",dt
+            !     WRITE(*,*) "Vc=",Vc(cx,cy)
+            !     WRITE(*,*) "i_cur = ",i_cur
+            !     WRITE(*,*) "N_candidate_pairs_real=",N_candidate_pairs_real
+            !     WRITE(*,*) "N_candidate_pairs=",N_candidate_pairs
+            !     WRITE(*,*) "ncp_remainder=",ncp_remainder(cx,cy)
+            ! END IF
+
 
             DO k=1,N_candidate_pairs
 
                 CALL RANDOM_NUMBER(rn)
-                i = FLOOR(rn*Npc_cur)
+                i = FLOOR(rn*Npc_cur)+1
                 j = i
                 DO WHILE (i==j)
                     CALL RANDOM_NUMBER(rn)
-                    j = FLOOR(rn*Npc_cur)
+                    j = FLOOR(rn*Npc_cur)+1
                 END DO
                 ! i_pair = i_cur((/i,j/)) 
                 ! i_pair = i_counting( i_cur((/i,j/)) )
+
+                ! WRITE(*,*) "--- got here, k= ", k, ", Npc_cur=",Npc_cur
+                ! WRITE(*,*) "(i,j) = ",i,j
+                ! WRITE(*,*) "(i_cur(i),i_cur(j) = ",i_cur(i),i_cur(j)
+                ! WRITE(*,*) "size(i_counting) = ",SIZE(i_counting)
+                ! WRITE(*,*) "N_all,N_array = ",N_all,N_array
+
                 i = i_counting(i_cur(i))
                 j = i_counting(i_cur(j))
+
+                ! WRITE(*,*) "--- got here ---"
+
 
                 vr = SQRT( (v_vec(i,1)-v_vec(j,1))**2 + (v_vec(i,2)-v_vec(j,2))**2 + (v_vec(i,3)-v_vec(j,3))**2 )
 
@@ -1013,30 +1098,29 @@ SUBROUTINE RUN_COLLISIONS
                     normal_vec(3) = sinT*SIN(2*Pi*alpha2)
 
                     v_temp = SUM( (v_vec(j,:)-v_vec(i,:))*normal_vec ) * normal_vec
-                    ! v0 = v_vec(i,:)
-                    ! v1 = v_vec(j,:)
-                    ! v_temp = SUM((v1-v0)*normal_vec)*normal_vec
-                    ! v_vec(i,:) = v0 + v_temp
-                    ! v_vec(j,:) = v1 - v_temp
                     v_vec(i,:) = v_vec(i,:) + v_temp
                     v_vec(j,:) = v_vec(j,:)- v_temp
-
-
-
-
-
 
                     N_collisions_total(ii) = N_collisions_total(ii) + 1
                     N_accepted_pairs = N_accepted_pairs + 1
                 ENDIF
+
             END DO
+
+            ! WRITE(*,*) "--- (safe for now) ---"
+
+
         END IF
+
+        ! WRITE(*,*) "--- got here ---"
+
+        
 
         N_candidate_pairs_total(ii) = N_candidate_pairs_total(ii) + N_candidate_pairs
         N_accepted_pairs_total(ii) = N_accepted_pairs_total(ii) + N_accepted_pairs
 
 
-        DEALLOCATE(i_cur)
+        ! DEALLOCATE(i_cur)
 
     END DO
 
