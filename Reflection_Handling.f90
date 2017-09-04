@@ -1,5 +1,4 @@
 SUBROUTINE SPECULAR_REFLECTION(string_in,Num_r,counter)
-! SUBROUTINE SPECULAR_REFLECTION(xr_vec,xr_vec_prev,vr_vec,vr_vec_prev,N_all,xr_walls,num_walls,xmin,xmax,counter)
     USE CONTAIN
     USE PROPERTIES
     IMPLICIT NONE
@@ -78,18 +77,48 @@ SUBROUTINE SPECULAR_REFLECTION(string_in,Num_r,counter)
         xc(:) = xw1
 
         ! i_cross = INT( ((x0<xw1) .and. (xw1<xt)) .or. ((x0>xw1).and.(xw1>xt)) )
-        ! CALL LOG2INT( i_cross, ((x0<xw1).and.(xw1<xt)) .or. ((x0>xw1).and.(xw1>xt)) , Num_r )
         crossed = ((x0<xw1).and.(xw1<xt)) .or. ((x0>xw1).and.(xw1>xt))
         dt_cross = (xc-x0)/vr_vec_prev(:,1)
-
+        !crossed = (ABS(dt_cross) < dt) .and. (dt_cross > 0)
 
         ! collision_occured(i_cross,i) = .true.
         ! collision_dt(i_cross,i) = dt_cross(i_cross)
+        ! WRITE(*,*) "shape(crossed) = ", SHAPE(crossed)
+        ! WRITE(*,*) "shape(coll_occured) = ", SHAPE(collision_occured)
+        ! WRITE(*,*) "shape(colision_dt) = ", SHAPE(collision_dt)
+        ! WRITE(*,*) "shape(dt_cross) = ", SHAPE(dt_cross)
+        collision_occured(:,i) = crossed
         WHERE (crossed)
-            collision_occured(:,i) = .true.
+            ! collision_occured(:,i) = .true.
             collision_dt(:,i) = dt_cross
         ELSEWHERE
         END WHERE
+
+    END DO
+
+    DO i = 1,num_walls
+        xw1 = xr_walls(i,1)
+        yw1 = xr_walls(i,2)
+        xw2 = xr_walls(i,3)
+        yw2 = xr_walls(i,4)
+
+        x0 = xr_vec_prev(:,1)
+        y0 = xr_vec_prev(:,2)
+        xt = xr_vec(:,1)
+        yt = xr_vec(:,2)
+        m = vr_vec_prev(:,2)/vr_vec_prev(:,1)
+        b = y0-m*x0
+
+        ! if (xw1=xw2)
+        ! vertical boundary
+        IF (yw2 > yw1) THEN
+            temp = yw1
+            yw1 = yw2
+            yw2 = temp
+        END IF
+
+        yc = m*xw1+b
+        xc(:) = xw1
 
         ! CALL LOG2INT( i_first, (collision_occured(:,i) .eqv. .true.) .and. (collision_dt(:,i) == MINVAL(collision_dt,2)) , Num_r)
         ! xr_vec_new(i_first,1) = 2*xw1 - xr_vec(i_first,1)
@@ -153,24 +182,29 @@ SUBROUTINE SPECULAR_REFLECTION(string_in,Num_r,counter)
     N_removed = 0
     ! remove(ignore) exiting particles from simulation
     IF (close_outlet .EQV. .false.) THEN
-        WHERE( reflected_out .EQV. .true.)
-            removed_from_sim = .true.
-        ELSEWHERE
-        END WHERE
+        ! WHERE( reflected_out .EQV. .true.)
+        !     removed_from_sim = .true.
+        ! ELSEWHERE
+        ! END WHERE
+        removed_from_sim = (removed_from_sim .or. reflected_out)
         N_removed = N_removed + COUNT(reflected_out)
     END IF
     IF (close_inlet .EQV. .false.) THEN
-        WHERE( reflected_in .EQV. .true.)
-            removed_from_sim = .true.
-        ELSEWHERE
-        END WHERE
+        ! WHERE( reflected_in .EQV. .true.)
+        !     removed_from_sim = .true.
+        ! ELSEWHERE
+        ! END WHERE
+        removed_from_sim = (removed_from_sim .or. reflected_in)
         N_removed = N_removed + COUNT(reflected_in)
     END IF
     N_simulated = N_simulated - N_removed
-    ! WRITE(*,*) "N_simulated=",N_simulated
-    ! WRITE(*,*) "N_removed=",N_removed
 
     CALL CPU_TIME(t_temp)
     t_BC = t_BC + (t_temp-t0_BC)
     
 END SUBROUTINE SPECULAR_REFLECTION
+
+
+
+
+

@@ -9,24 +9,33 @@ SUBROUTINE UPDATE_CELL_INDEX
 
         i_cell_vec_prev = i_cell_vec
 
+
         IF (use_homogenous_grid .EQV. .true.) THEN
-            i_cell_vec(1:N_all,1) = CEILING( (x_vec(1:N_all,1)-xmin)/(xmax-xmin)*nx )
-            ! i_cell_vec(:,1) = CEILING( (x_vec(:,1)-xmin)/(xmax-xmin)*nx )
+
+            i_cell_vec(1:N_all,1) = FLOOR( (x_vec(1:N_all,1)-xmin)/(xmax-xmin)*nx ) + 1
+            DO i=1,N_all
+                IF (i_cell_vec(i,1) > nx) THEN
+                    WRITE(*,*) "x_vec= ",x_vec(i,1)
+                    WRITE(*,*) "val1 = ",(x_vec(i,1)-xmin)/(xmax-xmin)
+                    WRITE(*,*) "val2 = ",FLOOR( (x_vec(i,1)-xmin)/(xmax-xmin)*nx )
+                    WRITE(*,*) "N_all=", N_all
+
+                    WRITE(*,*) "shape(Npc_slice)=", SHAPE(Npc_slice)
+                    WRITE(*,*) "shape(Npc_added)=", SHAPE(Npc_added)
+                    WRITE(*,*) "max(i_cell_vec)=", MAXVAL(i_cell_vec(1:N_all,1))
+                ENDIF
+            END DO
+
             IF (ny>1) THEN
-                i_cell_vec(1:N_all,2) = CEILING( (x_vec(1:N_all,2)-xmin)/(xmax-xmin)*ny )
-                ! i_cell_vec(:,2) = CEILING( (x_vec(:,2)-xmin)/(xmax-xmin)*ny )
+                i_cell_vec(1:N_all,2) = FLOOR( (x_vec(1:N_all,2)-xmin)/(xmax-xmin)*ny ) + 1
             ELSE
                 i_cell_vec(1:N_all,2) = 1
-                ! i_cell_vec(:,2) = 1
             END IF
-
 
         ELSE
             alpha_x  = -LOG(1/dx_factor)/xmax
             n_inf = 1/(dx_0*alpha_x)
             i_cell_vec(1:N_all,1) = FLOOR(n_inf*(1-EXP( -alpha_x*x_vec(1:N_all,1) )))+1
-            ! i_cell_vec(:,1) = CEILING(n_inf*(1-EXP( -alpha_x*x_vec(:,1) )))
-
 
             ! WRITE(*,*) "alpha_x = ",alpha_x
             ! WRITE(*,*) "1/dx_factor = ",1/dx_factor
@@ -37,8 +46,6 @@ SUBROUTINE UPDATE_CELL_INDEX
             ! WRITE(*,*) "val_1 = ",-alpha_x*x_vec(1:20,1)
             ! WRITE(*,*) "EXP(val_1) = ",EXP( -alpha_x*x_vec(1:20,1) )
             ! WRITE(*,*) "x_vec= ",x_vec(1:20,1)
-
-
 
             IF (ny > 1) THEN
                 alpha_y = -LOG(1/dy_factor) / (ymax-ymid)
@@ -56,17 +63,10 @@ SUBROUTINE UPDATE_CELL_INDEX
                 ELSEWHERE
                     i_cell_vec(1:N_all,2) = CEILING( pos_offset - FLOOR( n_inf*(1-EXP(-alpha_y*(x_vec(1:N_all,2) - ymid)))) )
                 END WHERE
-                ! WHERE (x_vec(:,2) < ymid)
-                !     i_cell_vec(:,2) = FLOOR( neg_offset - FLOOR( n_inf*(1-EXP(-alpha_y*(ymid - x_vec(:,2))))) )
-                ! ELSEWHERE
-                !     i_cell_vec(:,2) = CEILING( pos_offset - FLOOR( n_inf*(1-EXP(-alpha_y*(x_vec(:,2) - ymid)))) )
-                ! END WHERE
 
                 i_cell_vec(1:N_all,2) = i_cell_vec(1:N_all,2) + 1
-                ! i_cell_vec(:,2) = i_cell_vec(:,2) + 1
             ELSE
                 i_cell_vec(1:N_all,2) = 1
-                ! i_cell_vec(:,2) = 1
             ENDIF
 
         END IF
@@ -77,13 +77,21 @@ SUBROUTINE UPDATE_CELL_INDEX
         ELSEWHERE
         END WHERE
 
+        WRITE (*,*) "got here 7"
+
 
         ! sort array that stores which particles are in each cell
         CALL CPU_TIME(t0_test)
 
         ! bucket method based on NASA paper (https://www.nas.nasa.gov/assets/pdf/techreports/1990/rnr-90-017.pdf)
         ! 1. one  pass - count Npc_slice, index spots in sorted cell array  (starting indices)
-        ! 2. one pass - assign each particle to it's sorted place
+        ! 2. one pass through cells - find starting index for each cell
+        ! 3. one pass - assign each particle to it's sorted place
+
+
+        
+        ! WRITE(*,*) "cx_cur=", cx_cur
+! problem happens here because there's a cell listed as out of bouncs
 
         ! find how many particles in each cell
         Npc_slice(:,:) = 0
@@ -94,6 +102,8 @@ SUBROUTINE UPDATE_CELL_INDEX
                 Npc_slice(cx_cur,cy) = Npc_slice(cx_cur,cy) + 1
             END IF
         END DO
+                WRITE (*,*) "got here 5"
+
 
         ! find starting index for each cell in sorted arrays
         current_sum = 1
@@ -102,10 +112,13 @@ SUBROUTINE UPDATE_CELL_INDEX
             current_sum = current_sum + Npc_slice(cx_cur,cy)
         END DO
 
+        WRITE (*,*) "got here 6"
+
         ! generate sorted arrays
         x_vec_unsorted = x_vec
         v_vec_unsorted = v_vec
         i_cell_vec_unsorted = i_cell_vec
+        removed_from_sim_unsorted = removed_from_sim
         DO i = 1,N_all
             cx_cur = i_cell_vec(i,1)
             i_sorted = starting_index(cx_cur,cy) + Npc_added(cx_cur,cy)
@@ -120,6 +133,8 @@ SUBROUTINE UPDATE_CELL_INDEX
 
         CALL CPU_TIME(t_temp)
         t_test = t_test + (t_temp-t0_test)
+
+        WRITE (*,*) "got here 8"
 
 
     ENDIF

@@ -24,7 +24,7 @@ MODULE CONTAIN
     INTEGER, ALLOCATABLE, DIMENSION(:,:):: i_cell_vec, i_cell_vec_prev, Npc_slice, starting_index, Npc_added
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_prev,v_vec_prev, xs_vec,vs_vec,xs_vec_prev,vs_vec_prev
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_unsorted,v_vec_unsorted, i_cell_vec_unsorted
-    LOGICAL,ALLOCATABLE, DIMENSION(:):: reflected_in, reflected_out, in_column, in_cell, removed_from_sim, entered_sim
+    LOGICAL,ALLOCATABLE, DIMENSION(:):: reflected_in, reflected_out, in_column, in_cell, removed_from_sim,removed_from_sim_unsorted, entered_sim
     INTEGER,ALLOCATABLE, DIMENSION(:):: i_counting, i_column, i_cur
 
 !-----------------------------------------------------------------------
@@ -129,7 +129,7 @@ PROGRAM MAIN
         v_vec_prev = v_vec
 
         ! collisionless motion --------------------------------------------------------
-        x_vec = x_vec +dt*v_vec(:,1:2)
+        x_vec = x_vec + dt*v_vec(:,1:2)
         ! IF (MOD(ii-1,dt_to_save) == 0) THEN
         !     ! WRITE(*,*) "x=",x_vec(1:10,1)
         !     ! WRITE(*,*) "xp=",x_vec_prev(1:10,1)
@@ -142,7 +142,6 @@ PROGRAM MAIN
         !     WRITE(*,*) "c1=",c1
         ! END IF
 
-        WRITE (*,*) "got here 1"
 
 
         ! Boundary Condition implementation -------------------------------------------
@@ -151,7 +150,6 @@ PROGRAM MAIN
             CALL SPECULAR_REFLECTION('SIM_PARTICLES___',N_array,0)
         END IF
 
-        WRITE (*,*) "got here 2"
 
         ! Input from Source/Reservoir -------------------------------------------------
         IF (include_source .EQV. .true.) THEN
@@ -166,13 +164,11 @@ PROGRAM MAIN
             CALL UPDATE_CELL_INDEX
 
 
-        WRITE (*,*) "got here 4"
 
             ! Collisions ------------------------------------------------------------------
             CALL RUN_COLLISIONS
         END IF
         
-        WRITE (*,*) "got here 5"
 
         ! update and save current data ---------------------------------------------
         N_total(ii) = N_simulated
@@ -274,32 +270,37 @@ SUBROUTINE INITIALIZE
         ! set up equally spaced grid points
         ALLOCATE( x_cells_vec(nx) )
         ALLOCATE( y_cells_vec(ny) )
-        dx = ( x_lim(1,2) - x_lim(1,1) ) / nx
+        ! dx = ( x_lim(1,2) - x_lim(1,1) ) / (nx)
+        dx = ( xmax - xmin ) / (nx)
         DO i = 1 , nx
-            x_cells_vec(i) = x_lim(1,1) + dx*(i-1)
+            ! x_cells_vec(i) = x_lim(1,1) + dx*(i-1)
+            x_cells_vec(i) = xmin + dx*(i-1)
         END DO
-        dy = ( x_lim(2,2) - x_lim(2,1) ) / ny
+        ! dy = ( x_lim(2,2) - x_lim(2,1) ) / (ny)
+        dy = ( ymax - ymin ) / (ny)
         DO i = 1 , ny
-            y_cells_vec(i) = x_lim(2,1) + dy*(i-1)
+            ! y_cells_vec(i) = x_lim(2,1) + dy*(i-1)
+            y_cells_vec(i) = ymin + dy*(i-1)
         END DO
     ELSE
-        xmax = x_lim(1,2)
+        ! xmax = x_lim(1,2)
         alpha_x = -LOG(1./dx_factor)/xmax
         n_inf = 1/(dx_0*alpha_x)
         nmax = INT(n_inf*(1-EXP(-alpha_x*xmax)))
+        nx = nmax+1
+        ! ny = 1
 
-        ALLOCATE(i_range(nmax+1))
-        ALLOCATE( x_cells_vec(nmax+1) )
+        ALLOCATE( i_range(nx) )
+        ALLOCATE( x_cells_vec(nx) )
         ALLOCATE( y_cells_vec(ny) )
 
 
         i_range = (/ (i,i=0,nmax) /)
         x_cells_vec = -1/alpha_x*LOG(1-i_range/n_inf)
         y_cells_vec = 0
-        n_cells_vec(1) = nmax+1
-        n_cells_vec(2) = 1
-        nx = nmax+1
-        ! ny = 1
+        ! n_cells_vec(1) = nmax+1
+        ! n_cells_vec(2) = 1
+
     END IF
 
 
@@ -396,6 +397,7 @@ SUBROUTINE INITIALIZE
     ALLOCATE(reflected_out(N_array))
     ALLOCATE(reflected_in(N_array))
     ALLOCATE(removed_from_sim(N_array))
+    ALLOCATE(removed_from_sim_unsorted(N_array))
 
     ALLOCATE(in_column(N_array))
     ALLOCATE(in_cell(N_array))
@@ -420,6 +422,7 @@ SUBROUTINE INITIALIZE
     reflected_out(:) = .false.
     reflected_in(:) = .false.
     removed_from_sim(:) = .false.
+    removed_from_sim_unsorted(:) = .false.
 
     i_counting = (/ (i,i=1,N_array) /)
     in_column(:) = .false.
@@ -447,7 +450,7 @@ SUBROUTINE INITIALIZE
             CALL RANDN(v_vec(:,2),N_all)
             CALL RANDN(v_vec(:,3),N_all)
             v_vec = v_vec*vth
-            x_vec(:,2) = 0.5
+            ! x_vec(:,2) = 0.5
         END IF
 
         ALLOCATE(N_total(nt))
