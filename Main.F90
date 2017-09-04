@@ -20,7 +20,7 @@ MODULE CONTAIN
     REAL(8), ALLOCATABLE, DIMENSION(:):: x_cells_vec, y_cells_vec, dx_cells_vec, dy_cells_vec, i_range, t_vec
     INTEGER, ALLOCATABLE, DIMENSION(:):: N_total,N_candidate_pairs_total,N_accepted_pairs_total,N_collisions_total,N_added_total
     REAL(8), ALLOCATABLE, DIMENSION(:):: counter_vec
-    REAL(8), ALLOCATABLE, DIMENSION(:,:):: Vc, x_walls, vr_max, x_vec,v_vec, i_cell_vec, Npc_slice,ncp_remainder
+    REAL(8), ALLOCATABLE, DIMENSION(:,:):: Vc, x_walls, vr_max, x_vec,v_vec, i_cell_vec, i_cell_vec_prev, particles_in_cell,Npc_slice,ncp_remainder
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_prev,v_vec_prev, xs_vec,vs_vec,xs_vec_prev,vs_vec_prev
     LOGICAL,ALLOCATABLE, DIMENSION(:):: reflected_in, reflected_out, in_column, in_cell, removed_from_sim, entered_sim
     INTEGER,ALLOCATABLE, DIMENSION(:):: i_counting, i_column, i_cur
@@ -29,14 +29,15 @@ MODULE CONTAIN
 !-----------------------------------------------------------------------
 !*******************MISC. VARIBLES*************************
 !-----------------------------------------------------------------------
-    REAL(8):: m_g,d_g,vth,c_s,vr_max_0,v_avg, xmin,xmax,ymin,ymax,ymid, n_inf, V_total, t_collisions,t_BC,t_loop
+    REAL(8):: m_g,d_g,vth,c_s,vr_max_0,v_avg, xmin,xmax,ymin,ymax,ymid, n_inf, V_total
     REAL(8):: ws,ts,hs,Vs,xs_min,xs_max,ys_min,ys_max,t, N_candidate_pairs_real
     REAL(8):: Nc0,Nc_sim,m_r,collision_ratio
     REAL(8):: alpha_x,alpha_y,neg_offset,pos_offset
-    INTEGER:: nmax, nx, ny, n_cells, N_all,N_simulated, nt, n_saved, nw, N_expected, N_array, Num_s, N_entered, cx,cy, ii
+    REAL (8):: t0,t0_BC,t0_collisions,t0_loop,t_temp,t_final,t_BC,t_collisions,t_loop, t0_test,t_test
+    INTEGER:: nmax, nx, ny, n_cells, N_all,N_simulated, nt, n_saved, nw, N_expected, N_array, Num_s, N_entered, cx,cy,Npc_max, ii
     INTEGER:: N_candidate_pairs,N_accepted_pairs,Npc_cur, num_walls, N_collisions, N_added, N_removed
     REAL(8), DIMENSION(2,2):: x_lim
-    INTEGER, DIMENSION(2):: n_cells_vec, i_pair
+    INTEGER, DIMENSION(2):: n_cells_vec
     LOGICAL:: file_exists
 
     REAL(8):: a1,b1,c1
@@ -94,6 +95,7 @@ PROGRAM MAIN
     IMPLICIT NONE
     INTEGER:: i
     CHARACTER(80)::filename
+    CHARACTER(10)::str_file_num
 
 
     ! WRITE(*,*) "got here"
@@ -181,17 +183,17 @@ PROGRAM MAIN
 
         ! collisionless motion --------------------------------------------------------
         x_vec = x_vec +dt*v_vec(:,1:2)
-        IF (MOD(ii-1,dt_to_save) == 0) THEN
-            ! WRITE(*,*) "x=",x_vec(1:10,1)
-            ! WRITE(*,*) "xp=",x_vec_prev(1:10,1)
-            ! WRITE(*,*) "v=",v_vec(1:10,1)
-            a1 = COUNT(v_vec(:,1) > 1.d-5)
-            b1 = COUNT(v_vec(:,1) < -1.d-5)
-            c1 = COUNT(ABS(v_vec(:,1)) <= 1.d-5)
-            WRITE(*,*) "a1=",a1
-            WRITE(*,*) "b1=",b1
-            WRITE(*,*) "c1=",c1
-        END IF
+        ! IF (MOD(ii-1,dt_to_save) == 0) THEN
+        !     ! WRITE(*,*) "x=",x_vec(1:10,1)
+        !     ! WRITE(*,*) "xp=",x_vec_prev(1:10,1)
+        !     ! WRITE(*,*) "v=",v_vec(1:10,1)
+        !     a1 = COUNT(v_vec(:,1) > 1.d-5)
+        !     b1 = COUNT(v_vec(:,1) < -1.d-5)
+        !     c1 = COUNT(ABS(v_vec(:,1)) <= 1.d-5)
+        !     WRITE(*,*) "a1=",a1
+        !     WRITE(*,*) "b1=",b1
+        !     WRITE(*,*) "c1=",c1
+        ! END IF
 
 
         ! Boundary Condition implementation -------------------------------------------
@@ -218,7 +220,7 @@ PROGRAM MAIN
             ! Collisions ------------------------------------------------------------------
             ! Just do separate collisions subroutine here
             ! WRITE(*,*) "--- run_collisions ---"
-            ! CALL RUN_COLLISIONS
+            CALL RUN_COLLISIONS
         END IF
         
 
@@ -226,18 +228,33 @@ PROGRAM MAIN
         ! update and save current data ---------------------------------------------
         N_total(ii) = N_simulated
 
+
+        ! NOTE: saving with the label (ii-1)
+        IF ( ( MOD(ii-1,dt_to_save) == 0 ) .or. ( ii == nt ) ) THEN
+            CALL SAVE_DATA
+        END IF
+
+
     END DO
 
-    filename = "Output/data/mat.txt"
-    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    WRITE(1) v_vec(:,1)
-    CLOSE(1)
+    ! filename = "Output/data/mat.txt"
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    ! WRITE(1) v_vec(:,1)
+    ! CLOSE(1)
+
+
+    ! WRITE(filename,"('mat_',I7.7,'.txt')") 10
+    ! ! WRITE(str_file_num,'(I0)') 10
+    ! ! filename = "Output/data/mat_" // str_file_num //".txt"
+    ! WRITE(*,*) filename
 
     N_collisions = SUM(N_collisions_total)
     N_candidate_pairs = SUM(N_candidate_pairs_total)
     N_accepted_pairs = SUM(N_accepted_pairs_total)
     N_added = SUM(N_added_total)
     ! t_final = time.time()-t0
+    call CPU_TIME(t_temp)
+    t_final = t_temp-t0
 
     ! calculated collision rate compared to analytical solution (at equilbrium)
     m_r = m_g/2
@@ -257,10 +274,11 @@ PROGRAM MAIN
     ! WRITE(*,*) "n_cells_vec = ",n_cells_vec
     WRITE(*,*) "(nx,ny) = (",((/ nx, ny /)),")"
     WRITE(*,*) "nt = ",nt
-    ! WRITE(*,*) "computation time (total) = ",t_final
-    ! WRITE(*,*) "computation time (BC's) = ",t_BC
-    ! WRITE(*,*) "computation time (collisions) = ",t_collisions
-    ! WRITE(*,*) "computation time (looping in collisions)=",t_loop
+    WRITE(*,*) "computation time (total) = ",t_final
+    WRITE(*,*) "computation time (BC's) = ",t_BC
+    WRITE(*,*) "computation time (collisions) = ",t_collisions
+    WRITE(*,*) "computation time (looping in collisions)=",t_loop
+    WRITE(*,*) "computation time (test)=",t_test
 
     ! WRITE(*,*) "i_cell_vec = ",i_cell_vec
     ! WRITE(*,*) "Npc_slice = ",Npc_slice
@@ -270,41 +288,6 @@ PROGRAM MAIN
 
     STOP
 END PROGRAM MAIN
-
-
-
-
-
-! SUBROUTINE linspace(z, l, k, n)
-!     IMPLICIT NONE
-!     !// Argument declarations
-!     REAL(8), DIMENSION(n)::z
-!     REAL(8)::l,k
-!     INTEGER::n
-!     INTEGER::i
-!     REAL(8)::d
-!     d = (k-l)/n
-!     z(1) = l
-!     DO i = 2, n-1
-!         z(i) = z(i-1) + d
-!     END DO
-!     z(1) = l
-!     z(n) = k
-!     RETURN
-! END SUBROUTINE linspace
-
-! SUBROUTINE LOG2INT(int_vec,log_vec,n)
-!     IMPLICIT NONE
-!     INTEGER,DIMENSION(n)::int_vec
-!     LOGICAL,DIMENSION(n)::log_vec
-!     INTEGER::n,i
-
-!     WHERE(log_vec .eqv. .true.)
-!         int_vec = 1
-!     ELSEWHERE
-!         int_vec = 0
-!     END WHERE
-! END SUBROUTINE LOG2INT
 
 
 ! generate random numbers with normal distribution (only in 1 for now)
@@ -345,16 +328,6 @@ SUBROUTINE OUTPUT_TO_SCREEN
     ! This Suboutine Prints Out Relevant Domain Info
     WRITE(*,*)
     WRITE(*,*) ' ********   ANALYSIS INFORMATION ********'
-    ! WRITE(*,*) ' processor rank =', myrank
-    ! WRITE(*,*) ' number of nodes in x =', nnodes_x
-    ! WRITE(*,*) ' number of nodes in y=', nnodes_y
-    ! WRITE(*,*) ' total number of nodes =', nnodes
-    ! WRITE(*,*) ' number of bcs   =', nboundary
-    ! WRITE(*,*) ' number of ics   =', ninitial
-    ! WRITE(*,*) ' number of flux bcs   =', nflux_part+nflux_phi
-    ! WRITE(*,*) ' number of equations =', neqn
-    ! WRITE(*,*) ' number of dofs =', ndof
-
 
     WRITE(*,*) 'n=',n
     WRITE(*,*) 'tmax=',tmax
@@ -519,6 +492,8 @@ SUBROUTINE INITIALIZE
     nx = n_cells_vec(1)
     ! ny = n_cells_vec(2)
     ny = 1
+    cy  = 1
+    Npc_max = 250
 
     IF (use_homogenous_grid .EQV. .true.) THEN
         ! set up equally spaced grid points
@@ -581,6 +556,10 @@ SUBROUTINE INITIALIZE
     END DO
 
     ! t0 = time.time() ##########
+    CALL CPU_TIME(t0)
+    t_final = 0
+    ! ##############
+    t_test=0
     t_collisions = 0
     t_BC = 0
     t_loop = 0
@@ -625,8 +604,10 @@ SUBROUTINE INITIALIZE
     ALLOCATE(x_vec(N_array,ndim))
     ALLOCATE(v_vec(N_array,3))
     ALLOCATE(i_cell_vec(N_array,2))
+    ALLOCATE(i_cell_vec_prev(N_array,2))
     ALLOCATE(x_vec_prev(N_array,ndim))
     ALLOCATE(v_vec_prev(N_array,3))
+    ALLOCATE(particles_in_cell(nx,Npc_max))
 
     ALLOCATE(reflected_out(N_array))
     ALLOCATE(reflected_in(N_array))
@@ -695,6 +676,9 @@ SUBROUTINE UPDATE_CELL_INDEX
 
     ! note: if (x,y) == (0,0), then just set index to -1000 or something (or 0, since indices start with 1 here)
     IF (N_all > 0) THEN
+
+        i_cell_vec_prev = i_cell_vec
+
         IF (use_homogenous_grid .EQV. .true.) THEN
             i_cell_vec(1:N_all,1) = CEILING( (x_vec(1:N_all,1)-xmin)/(xmax-xmin)*nx )
             ! i_cell_vec(:,1) = CEILING( (x_vec(:,1)-xmin)/(xmax-xmin)*nx )
@@ -763,10 +747,10 @@ SUBROUTINE UPDATE_CELL_INDEX
         ELSEWHERE
         END WHERE
 
-    ENDIF
-    
-    ! WRITE(*,*) "--- have not included UPDATE_CELL_INDEX function yet ---"
 
+        
+
+    ENDIF
 END SUBROUTINE UPDATE_CELL_INDEX
 
 
@@ -800,6 +784,8 @@ SUBROUTINE SPECULAR_REFLECTION(string_in,Num_r,counter)
     INTEGER,DIMENSION(Num_r):: i_cross, i_first
     REAL(8):: xw1,xw2,yw1,yw2, temp
     INTEGER:: Num_r,counter, i
+
+    CALL CPU_TIME(t0_BC)
 
     IF (string_in == 'SOURCE_PARTICLES') THEN
         xr_vec = xs_vec
@@ -943,6 +929,8 @@ SUBROUTINE SPECULAR_REFLECTION(string_in,Num_r,counter)
     ! WRITE(*,*) "N_simulated=",N_simulated
     ! WRITE(*,*) "N_removed=",N_removed
 
+    CALL CPU_TIME(t_temp)
+    t_BC = t_BC + (t_temp-t0_BC)
     
 END SUBROUTINE SPECULAR_REFLECTION
 
@@ -986,22 +974,19 @@ SUBROUTINE INITIALIZE_SOURCE
     entered_sim = (xs_vec(:,1) > 0)
     N_entered = COUNT(entered_sim)
     ! ALLOCATE(i_cur(N_entered))
-    i_cur(:) = 0
+    ! i_cur(:) = 0
     i_cur(1:N_entered) = PACK(i_counting , entered_sim)
 
-    WRITE(*,*) "got here 2"
-
-    WRITE(*,*) SIZE(i_cur),N_entered,N_all,N_simulated
+    ! WRITE(*,*) SIZE(i_cur),N_entered,N_all,N_simulated
 
     IF (N_entered > 0) THEN
-        x_vec( (N_all+1):(N_all+1+N_entered) , : ) = xs_vec(i_cur,:)
-        v_vec( (N_all+1):(N_all+1+N_entered) , : ) = vs_vec(i_cur,:)
+        x_vec( (N_all+1):(N_all+1+N_entered) , : ) = xs_vec(i_cur(1:N_entered),:)
+        v_vec( (N_all+1):(N_all+1+N_entered) , : ) = vs_vec(i_cur(1:N_entered),:)
         N_all = N_all + N_entered
         N_simulated = N_simulated + N_entered
     END IF
     ! DEALLOCATE(i_cur)
 
-    WRITE(*,*) "got here 3"
 
 
 END SUBROUTINE INITIALIZE_SOURCE
@@ -1018,14 +1003,18 @@ SUBROUTINE RUN_COLLISIONS
     REAL(8),DIMENSION(3)::normal_vec,v_temp !,v0,v1
     ! INTEGER,ALLOCATABLE, DIMENSION(:):: i_cur
 
-    cy = 1
+    CALL CPU_TIME(t0_collisions)
+
+    ! cy = 1
 
     ! DO cx = 1,n_cells_vec(1)
     DO cx = 1,nx
+        CALL CPU_TIME(t0_test)
 
         ! CALL LOG2INT( i_column, i_cell_vec(:,1) == cx , N_all)
         in_column = (i_cell_vec(:,1) == cx)
         in_cell  = in_column !1D, cy=1
+
 
         ! collision processing
         N_candidate_pairs = 0
@@ -1035,6 +1024,8 @@ SUBROUTINE RUN_COLLISIONS
 
         ! ALLOCATE(i_cur(Npc_cur))
         i_cur(1:Npc_cur) = PACK(i_counting , in_column)
+        CALL CPU_TIME(t_temp)
+        t_test = t_test + (t_temp-t0_test)
 
         IF (Npc_cur >= 2) THEN
             N_candidate_pairs_real = .5*Npc_cur*(Npc_cur-1)*Fn*c_s*vr_max(cx,cy)*dt/Vc(cx,cy)   ! number of candidate collision pairs
@@ -1055,7 +1046,7 @@ SUBROUTINE RUN_COLLISIONS
             !     WRITE(*,*) "ncp_remainder=",ncp_remainder(cx,cy)
             ! END IF
 
-
+            CALL CPU_TIME(t0_loop)
             DO k=1,N_candidate_pairs
 
                 CALL RANDOM_NUMBER(rn)
@@ -1106,15 +1097,9 @@ SUBROUTINE RUN_COLLISIONS
                 ENDIF
 
             END DO
-
-            ! WRITE(*,*) "--- (safe for now) ---"
-
-
+            CALL CPU_TIME(t_temp)
+            t_loop = t_loop + (t_temp-t0_loop)
         END IF
-
-        ! WRITE(*,*) "--- got here ---"
-
-        
 
         N_candidate_pairs_total(ii) = N_candidate_pairs_total(ii) + N_candidate_pairs
         N_accepted_pairs_total(ii) = N_accepted_pairs_total(ii) + N_accepted_pairs
@@ -1124,11 +1109,143 @@ SUBROUTINE RUN_COLLISIONS
 
     END DO
 
+    CALL CPU_TIME(t_temp)
+    t_collisions = t_collisions + (t_temp-t0_collisions)
 
 END SUBROUTINE RUN_COLLISIONS
 
 
 
+SUBROUTINE SAVE_DATA
+    USE CONTAIN
+    USE PROPERTIES
+    IMPLICIT NONE
+    CHARACTER(80)::filename
 
+    ! save position data
+    WRITE(filename,"('Output/data/x_',I7.7,'.txt')") (ii-1)
+    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    WRITE(1) x_vec
+    ! OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    ! WRITE(1,"(E12.5)") x_vec
+    CLOSE(1)
+
+    ! save velocity data
+    WRITE(filename,"('Output/data/v_',I7.7,'.txt')") (ii-1)
+    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    WRITE(1) v_vec
+    CLOSE(1)
+
+    ! save cell data (this is probably not required)
+    WRITE(filename,"('Output/data/i_',I7.7,'.txt')") (ii-1)
+    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    WRITE(1) i_cell_vec
+    CLOSE(1)
+
+    ! save num_per_cell data? This also seems way unnecessary
+    WRITE(filename,"('Output/data/Npc_',I7.7,'.txt')") (ii-1)
+    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    WRITE(1) Npc_slice
+    CLOSE(1)
+
+
+    ! save miscellaneous data
+    WRITE(filename,"('Output/data/data.txt')")
+    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    WRITE(1,"(A)") "*n_collisions"   
+    WRITE(1,"(I0)") n_collisions
+    WRITE(1,"(A)") "*n_collisions_total"   
+    WRITE(1,"(I0)") n_collisions_total
+    ! WRITE(1,"(A)") "N_candidate_pairs"   
+    ! WRITE(1,"(I0)") N_candidate_pairs
+    ! WRITE(1,"(A)") "N_accepted_pairs"   
+    ! WRITE(1,"(I0)") N_accepted_pairs
+    WRITE(1,"(A)") "*N_candidate_pairs_total"   
+    WRITE(1,"(I0)") N_candidate_pairs_total
+    WRITE(1,"(A)") "*N_accepted_pairs_total"   
+    WRITE(1,"(I0)") N_accepted_pairs_total
+    WRITE(1,"(A)") "*N_added_total"   
+    WRITE(1,"(I0)") N_added_total
+    WRITE(1,"(A)") "*ncp_remainder"   
+    WRITE(1,"(E12.5)") ncp_remainder
+    WRITE(1,"(A)") "*N_added"   
+    WRITE(1,"(I0)") N_added
+    WRITE(1,"(A)") "*N_total"   
+    WRITE(1,"(I0)") N_total
+    WRITE(1,"(A)") "*t_final"   
+    WRITE(1,"(E12.5)") t_final
+    WRITE(1,"(A)") "*t_BC"   
+    WRITE(1,"(E12.5)") t_BC
+    WRITE(1,"(A)") "*t_collisions"   
+    WRITE(1,"(E12.5)") t_collisions
+    WRITE(1,"(A)") "*t_loop"   
+    WRITE(1,"(E12.5)") t_loop
+    WRITE(1,"(A)") "*n"   
+    WRITE(1,"(E12.5)") n
+    WRITE(1,"(A)") "*ns"   
+    WRITE(1,"(E12.5)") ns
+    WRITE(1,"(A)") "*Fn"   
+    WRITE(1,"(E12.5)") Fn
+    WRITE(1,"(A)") "*nx"   
+    WRITE(1,"(I0)") nx
+    WRITE(1,"(A)") "*ny"   
+    WRITE(1,"(I0)") ny
+    WRITE(1,"(A)") "*tmax"   
+    WRITE(1,"(E12.5)") tmax
+    WRITE(1,"(A)") "*nt"   
+    WRITE(1,"(I0)") nt
+    WRITE(1,"(A)") "*dt"   
+    WRITE(1,"(E12.5)") dt
+    WRITE(1,"(A)") "*dt_to_save"   
+    WRITE(1,"(I0)") dt_to_save
+    WRITE(1,"(A)") "*n_saved"   
+    WRITE(1,"(I0)") n_saved
+    WRITE(1,"(A)") "*include_source"   
+    WRITE(1,"(L)") include_source
+    WRITE(1,"(A)") "*close_inlet"   
+    WRITE(1,"(L)") close_inlet
+    WRITE(1,"(A)") "*include_gun_boundaries"   
+    WRITE(1,"(L)") include_gun_boundaries
+    WRITE(1,"(A)") "*use_homogenous_grid"   
+    WRITE(1,"(L)") use_homogenous_grid
+    WRITE(1,"(A)") "*dx_0"   
+    WRITE(1,"(E12.5)") dx_0
+    WRITE(1,"(A)") "*dx_factor"   
+    WRITE(1,"(E12.5)") dx_factor
+    WRITE(1,"(A)") "*dy_factor"   
+    WRITE(1,"(E12.5)") dy_factor
+    WRITE(1,"(A)") "*x_cells_vec"   
+    WRITE(1,"(E12.5)") x_cells_vec
+    WRITE(1,"(A)") "*y_cells_vec"   
+    WRITE(1,"(E12.5)") y_cells_vec
+    WRITE(1,"(A)") "*x_lim"   
+    WRITE(1,"(E12.5)") x_lim
+    WRITE(1,"(A)") "*x_walls"   
+    WRITE(1,"(E12.5)") x_walls
+    WRITE(1,"(A)") "*it_last"   
+    WRITE(1,"(I0)") ii
+    CLOSE(1)
+
+
+
+    ! WRITE(var_cur,"("N_candidate_pairs_total" )")
+    ! WRITE(filename,"('Output/data/',,'.txt')") var_cur
+    ! OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    ! WRITE(1,"(A)") var_cur
+    ! WRITE(1,"(I0)") N_candidate_pairs_total
+    ! CLOSE(1)
+    ! WRITE(filename,"('Output/data/data.txt')")
+    ! OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    ! WRITE(1,"(A)") "N_accepted_pairs_total"   
+    ! WRITE(1,"(I0)") N_accepted_pairs_total
+    ! CLOSE(1)
+
+
+    n_saved = n_saved + 1
+
+    CALL CPU_TIME(t_temp)
+    t_collisions = t_collisions + (t_temp-t0_collisions)
+
+END SUBROUTINE SAVE_DATA
 
 
