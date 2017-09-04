@@ -20,7 +20,8 @@ MODULE CONTAIN
     REAL(8), ALLOCATABLE, DIMENSION(:):: x_cells_vec, y_cells_vec, dx_cells_vec, dy_cells_vec, i_range, t_vec
     INTEGER, ALLOCATABLE, DIMENSION(:):: N_total,N_candidate_pairs_total,N_accepted_pairs_total,N_collisions_total,N_added_total
     REAL(8), ALLOCATABLE, DIMENSION(:):: counter_vec
-    REAL(8), ALLOCATABLE, DIMENSION(:,:):: Vc, x_walls, vr_max, x_vec,v_vec, i_cell_vec, i_cell_vec_prev, particles_in_cell,Npc_slice,ncp_remainder
+    REAL(8), ALLOCATABLE, DIMENSION(:,:):: Vc, x_walls, vr_max, x_vec,v_vec, ncp_remainder
+    INTEGER, ALLOCATABLE, DIMENSION(:,:):: i_cell_vec, i_cell_vec_prev, particles_in_cell, Npc_slice
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_prev,v_vec_prev, xs_vec,vs_vec,xs_vec_prev,vs_vec_prev
     LOGICAL,ALLOCATABLE, DIMENSION(:):: reflected_in, reflected_out, in_column, in_cell, removed_from_sim, entered_sim
     INTEGER,ALLOCATABLE, DIMENSION(:):: i_counting, i_column, i_cur
@@ -493,7 +494,6 @@ SUBROUTINE INITIALIZE
     ! ny = n_cells_vec(2)
     ny = 1
     cy  = 1
-    Npc_max = 250
 
     IF (use_homogenous_grid .EQV. .true.) THEN
         ! set up equally spaced grid points
@@ -600,11 +600,14 @@ SUBROUTINE INITIALIZE
         N_expected = N_all
         N_array = N_expected
     END IF
+    Npc_max = N_array
+
 
     ALLOCATE(x_vec(N_array,ndim))
     ALLOCATE(v_vec(N_array,3))
     ALLOCATE(i_cell_vec(N_array,2))
     ALLOCATE(i_cell_vec_prev(N_array,2))
+    
     ALLOCATE(x_vec_prev(N_array,ndim))
     ALLOCATE(v_vec_prev(N_array,3))
     ALLOCATE(particles_in_cell(nx,Npc_max))
@@ -612,12 +615,10 @@ SUBROUTINE INITIALIZE
     ALLOCATE(reflected_out(N_array))
     ALLOCATE(reflected_in(N_array))
     ALLOCATE(removed_from_sim(N_array))
-    removed_from_sim(:) = .false.
 
     ALLOCATE(in_column(N_array))
     ALLOCATE(in_cell(N_array))
     ALLOCATE(i_counting(N_array))
-    i_counting = (/ (i,i=1,N_array) /)
     ALLOCATE(i_cur(N_array))
 
     ALLOCATE(xs_vec(Num_s,ndim))
@@ -625,8 +626,33 @@ SUBROUTINE INITIALIZE
     ALLOCATE(vs_vec(Num_s,3))
     ALLOCATE(vs_vec_prev(Num_s,3))
     ALLOCATE(counter_vec(Num_s))
-    ALLOCATE(entered_Sim(Num_s))
+    ALLOCATE(entered_sim(Num_s))
 
+    x_vec(:,:) = 0
+    v_vec(:,:) = 0
+    i_cell_vec(:,:) = 0
+    i_cell_vec_prev(:,:) = 0
+
+    x_vec_prev(:,:) = 0
+    v_vec_prev(:,:) = 0
+    particles_in_cell(:,:) = 0
+
+    reflected_out(:) = .false.
+    reflected_in(:) = .false.
+    removed_from_sim(:) = .false.
+
+    i_counting = (/ (i,i=1,N_array) /)
+    in_column(:) = .false.
+    in_cell(:) = .false.
+    i_cur(:) = 0
+
+    xs_vec(:,:) = 0
+    vs_vec(:,:) = 0
+    x_vec_prev(:,:) = 0
+    v_vec_prev(:,:) = 0
+
+    counter_vec(:) = 0
+    entered_sim(:) = .false.
 
 
 
@@ -673,6 +699,7 @@ SUBROUTINE UPDATE_CELL_INDEX
     USE CONTAIN
     USE PROPERTIES
     IMPLICIT NONE
+    INTEGER::i,cx_test,i_test
 
     ! note: if (x,y) == (0,0), then just set index to -1000 or something (or 0, since indices start with 1 here)
     IF (N_all > 0) THEN
@@ -748,7 +775,28 @@ SUBROUTINE UPDATE_CELL_INDEX
         END WHERE
 
 
-        
+        ! reorganize array that stores which particles are in each cell
+        CALL CPU_TIME(t0_test)
+
+        DO i = 1,N_all
+            IF (i_cell_vec(i,1) /= i_cell_vec_prev(i,1)) THEN
+                CALL SWAP_CELL( i , i_cell_vec_prev(i,1), i_cell_vec(i,1) )
+            END IF
+        END DO
+
+        i_test = 1
+        DO cx_test = 1,nx
+            DO WHILE (particles_in_cell(cx_test,i_test) /=0)
+                i_test = i_test+1
+            END DO
+            Npc_slice(cx_test,cy) = i_test-1
+        END DO
+
+
+
+
+        CALL CPU_TIME(t_temp)
+        t_test = t_test + (t_temp-t0_test)
 
     ENDIF
 END SUBROUTINE UPDATE_CELL_INDEX
@@ -1009,7 +1057,6 @@ SUBROUTINE RUN_COLLISIONS
 
     ! DO cx = 1,n_cells_vec(1)
     DO cx = 1,nx
-        CALL CPU_TIME(t0_test)
 
         ! CALL LOG2INT( i_column, i_cell_vec(:,1) == cx , N_all)
         in_column = (i_cell_vec(:,1) == cx)
@@ -1024,8 +1071,6 @@ SUBROUTINE RUN_COLLISIONS
 
         ! ALLOCATE(i_cur(Npc_cur))
         i_cur(1:Npc_cur) = PACK(i_counting , in_column)
-        CALL CPU_TIME(t_temp)
-        t_test = t_test + (t_temp-t0_test)
 
         IF (Npc_cur >= 2) THEN
             N_candidate_pairs_real = .5*Npc_cur*(Npc_cur-1)*Fn*c_s*vr_max(cx,cy)*dt/Vc(cx,cy)   ! number of candidate collision pairs
@@ -1247,5 +1292,41 @@ SUBROUTINE SAVE_DATA
     t_collisions = t_collisions + (t_temp-t0_collisions)
 
 END SUBROUTINE SAVE_DATA
+
+
+
+SUBROUTINE SWAP_CELL(i_to_move, cx_old, cx_new )
+! SUBROUTINE SPECULAR_REFLECTION(xr_vec,xr_vec_prev,vr_vec,vr_vec_prev,N_all,xr_walls,num_walls,xmin,xmax,counter)
+    USE CONTAIN
+    USE PROPERTIES
+    IMPLICIT NONE
+    INTEGER:: i_to_move, cx_old, cx_new, i_test
+
+
+    ! remove from old cell
+    IF (cx_old /= 0) THEN
+
+        i_test = 1
+        DO WHILE (particles_in_cell(cx_old,i_test) /= i_to_move)
+            i_test = i_test+1
+            ! WRITE(*,*) "i_test=",i_test
+        END DO
+        particles_in_cell(cx_old, i_test:(Npc_max-1)) = particles_in_cell(cx_old, (i_test+1):Npc_max)
+        particles_in_cell(cx_old,Npc_max) = 0
+
+    END IF
+
+
+    ! add to new cell
+    i_test = 1
+    DO WHILE (particles_in_cell(cx_new,i_test) /= 0)
+        i_test = i_test+1
+    END DO
+    particles_in_cell(cx_new, i_test) = i_to_move
+
+
+END SUBROUTINE SWAP_CELL
+
+
 
 
