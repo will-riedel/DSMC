@@ -2,7 +2,8 @@
 ####### Novice users should modify entries in this block only ########
 ######################################################################
 
-FORTRAN_SRC1 = Main.F90 Readin.F90 Matrix_Assem+Solver.F90 Equation_Library.F90 Equation_Library_Explicit.F90 Visualization.F90
+# FORTRAN_SRC1 = Main.F90 Readin.F90 Matrix_Assem+Solver.F90 Equation_Library.F90 Equation_Library_Explicit.F90 Visualization.F90
+FORTRAN_SRC1 = Main.F90 Save_data.F90 Run_Collisions.F90 Initialize_Source.F90 Reflection_Handling.F90 Update_Cell_Index.F90 Input_Parameters_Readin.f90 Randn.f90
 
 EXC1 = main
 
@@ -10,14 +11,18 @@ EXC1 = main
 #### More advanced users may want to modify entries in this block ####
 ######################################################################
 
-FC = mpif90
+# FC = mpif90
+FC = gfortran
 
-FCFLAGS = -I$(HPC_PETSC_DIR)/include
-LDFLAGS = -shared-intel
+# FCFLAGS = -I$(HPC_PETSC_DIR)/include
+FCFLAGS = 
+# LDFLAGS = -shared-intel
+LDFLAGS = 
 
 PETSC_LIBS = -L$(HPC_PETSC_LIB) -lpetsc
 
-LIBS = $(PETSC_LIBS)
+# LIBS = $(PETSC_LIBS)
+LIBS = 
 
 F77 = ifort
 
@@ -36,7 +41,7 @@ OBJ1 = $(OBJF1)
 ######################################################################
 
 $(EXC1): $(OBJ1)
-	$(FC) $(LDFLAGS) $(FCFLAGS) -o $(EXC1) $(OBJ1) $(PETSC) $(LIBS)
+	$(FC) $(LDFLAGS) $(FCFLAGS) -o $(EXC1) $(OBJ1) $(LIBS)
 
 depend: $(FORTRAN_SRC1)
 	$(BINDIR)/fmakedepend $(FORTRAN_SRC1)
