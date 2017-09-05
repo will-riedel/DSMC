@@ -14,6 +14,19 @@ SUBROUTINE UPDATE_CELL_INDEX
 
             i_cell_vec(1:N_all,1) = FLOOR( (x_vec(1:N_all,1)-xmin)/(xmax-xmin)*nx ) + 1
 
+            ! DO i=1,N_all
+            !     IF (i_cell_vec(i,1) > nx) THEN
+            !         WRITE(*,*) "x_vec= ",x_vec(i,1)
+            !         WRITE(*,*) "val1 = ",(x_vec(i,1)-xmin)/(xmax-xmin)
+            !         WRITE(*,*) "val2 = ",FLOOR( (x_vec(i,1)-xmin)/(xmax-xmin)*nx )
+            !         WRITE(*,*) "N_all=", N_all
+
+            !         WRITE(*,*) "shape(Npc_slice)=", SHAPE(Npc_slice)
+            !         WRITE(*,*) "shape(Npc_added)=", SHAPE(Npc_added)
+            !         WRITE(*,*) "max(i_cell_vec)=", MAXVAL(i_cell_vec(1:N_all,1))
+            !     ENDIF
+            ! END DO
+
             IF (ny>1) THEN
                 i_cell_vec(1:N_all,2) = FLOOR( (x_vec(1:N_all,2)-xmin)/(xmax-xmin)*ny ) + 1
             ELSE
@@ -92,6 +105,23 @@ SUBROUTINE UPDATE_CELL_INDEX
         ! N_exited = N_simulated - current_sum
 
 
+        ! DO i=1,N_all
+        !     IF (i_cell_vec(i,1) > nx) THEN
+        !         WRITE(*,*) " --- (updating cell index) --- "
+        !         WRITE(*,*) "i = ",i
+        !         WRITE(*,*) "rfs(i) = ",removed_from_sim(i)
+        !         WRITE(*,*) "x_vec= ",x_vec(i,1)
+        !         WRITE(*,*) "x_vec_prev= ",x_vec_prev(i,1)
+        !         WRITE(*,*) "val1 = ",(x_vec(i,1)-xmin)/(xmax-xmin)
+        !         WRITE(*,*) "val2 = ",FLOOR( (x_vec(i,1)-xmin)/(xmax-xmin)*nx )
+        !         WRITE(*,*) "N_all=", N_all
+
+        !         WRITE(*,*) "shape(Npc_slice)=", SHAPE(Npc_slice)
+        !         WRITE(*,*) "shape(Npc_added)=", SHAPE(Npc_added)
+        !         WRITE(*,*) "max(i_cell_vec)=", MAXVAL(i_cell_vec(1:N_all,1))
+        !     ENDIF
+        ! END DO
+
         ! generate sorted arrays
         x_vec_unsorted = x_vec
         v_vec_unsorted = v_vec
@@ -111,8 +141,11 @@ SUBROUTINE UPDATE_CELL_INDEX
 
         END DO
 
+
+
         ! N_simulated = N_simulated - N_exited
         N_simulated = current_sum
+        removed_from_sim(:) = .false.   
 
 
         CALL CPU_TIME(t_temp)

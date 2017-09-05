@@ -16,14 +16,14 @@ SUBROUTINE SPECULAR_REFLECTION(string_in,Num_r,counter)
     CHARACTER(16):: string_in
     REAL(8),DIMENSION(Num_r,ndim):: xr_vec,xr_vec_prev, x_coll, xr_vec_new
     REAL(8),DIMENSION(Num_r,3):: vr_vec,vr_vec_prev, vr_vec_new
-    REAL(8),DIMENSION(num_walls,4)::xr_walls
+    REAL(8),DIMENSION(4,num_walls)::xr_walls
     LOGICAL,DIMENSION(Num_r,num_walls):: collision_occured
     REAL(8),DIMENSION(Num_r,num_walls):: collision_dt
     REAL(8),DIMENSION(Num_r):: x0,y0,xt,yt,m,b,xc,yc, dt_cross
     LOGICAL,DIMENSION(Num_r):: first_collision,crossed
     INTEGER,DIMENSION(Num_r):: i_cross, i_first
     REAL(8):: xw1,xw2,yw1,yw2, temp
-    INTEGER:: Num_r,counter, i
+    INTEGER:: Num_r,counter, i,j
 
     CALL CPU_TIME(t0_BC)
 
@@ -53,10 +53,10 @@ SUBROUTINE SPECULAR_REFLECTION(string_in,Num_r,counter)
     collision_dt = collision_dt + 1e10
 
     DO i = 1,num_walls
-        xw1 = xr_walls(i,1)
-        yw1 = xr_walls(i,2)
-        xw2 = xr_walls(i,3)
-        yw2 = xr_walls(i,4)
+        xw1 = xr_walls(1,i)
+        yw1 = xr_walls(2,i)
+        xw2 = xr_walls(3,i)
+        yw2 = xr_walls(4,i)
 
         x0 = xr_vec_prev(:,1)
         y0 = xr_vec_prev(:,2)
@@ -80,6 +80,18 @@ SUBROUTINE SPECULAR_REFLECTION(string_in,Num_r,counter)
         crossed = ((x0<xw1).and.(xw1<xt)) .or. ((x0>xw1).and.(xw1>xt))
         dt_cross = (xc-x0)/vr_vec_prev(:,1)
         !crossed = (ABS(dt_cross) < dt) .and. (dt_cross > 0)
+        
+        ! DO j = 1,N_simulated
+        !     IF (xr_vec(j,1) > .61) THEN
+        !         WRITE(*,*) " --- (within wall-loop) --"
+        !         WRITE(*,*) "x_wall=",xr_walls(i,:)
+        !         WRITE(*,*) "x0,xw,xt=",x0(j),xw1,xt(j)
+        !         WRITE(*,*) "x = ",xr_vec(j,1)
+        !         WRITE(*,*) "x_prev = ",xr_vec_prev(j,1)
+        !         WRITE(*,*) "collision_occured=",collision_occured(j,:)
+        !         WRITE(*,*) "collision_dt=",collision_dt(j,:)
+        !     ENDIF
+        ! ENDDO
 
         ! collision_occured(i_cross,i) = .true.
         ! collision_dt(i_cross,i) = dt_cross(i_cross)
@@ -97,10 +109,10 @@ SUBROUTINE SPECULAR_REFLECTION(string_in,Num_r,counter)
     END DO
 
     DO i = 1,num_walls
-        xw1 = xr_walls(i,1)
-        yw1 = xr_walls(i,2)
-        xw2 = xr_walls(i,3)
-        yw2 = xr_walls(i,4)
+        xw1 = xr_walls(1,i)
+        yw1 = xr_walls(2,i)
+        xw2 = xr_walls(3,i)
+        yw2 = xr_walls(4,i)
 
         x0 = xr_vec_prev(:,1)
         y0 = xr_vec_prev(:,2)
@@ -165,6 +177,15 @@ SUBROUTINE SPECULAR_REFLECTION(string_in,Num_r,counter)
     ! xr_vec = xr_vec_new
     ! vr_vec = vr_vec_new
 
+    ! DO i = 1,N_simulated
+    !     IF (xr_vec(i,1) > .61) THEN
+    !         WRITE(*,*) " --- (after wall-loop) --"
+    !         WRITE(*,*) "x = ",xr_vec(i,1)
+    !         WRITE(*,*) "x_prev = ",xr_vec_prev(i,1)
+    !         WRITE(*,*) "collision_occured=",collision_occured(i,:)
+    !         WRITE(*,*) "collision_dt=",collision_dt(i,:)
+    !     ENDIF
+    ! ENDDO
 
 
     IF (string_in == 'SOURCE_PARTICLES') THEN
