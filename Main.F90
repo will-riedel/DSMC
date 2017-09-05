@@ -24,7 +24,8 @@ MODULE CONTAIN
     INTEGER, ALLOCATABLE, DIMENSION(:,:):: i_cell_vec, i_cell_vec_prev, Npc_slice, starting_index, Npc_added
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_prev,v_vec_prev, xs_vec,vs_vec,xs_vec_prev,vs_vec_prev
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_unsorted,v_vec_unsorted, i_cell_vec_unsorted
-    LOGICAL,ALLOCATABLE, DIMENSION(:):: reflected_in, reflected_out, in_column, in_cell, removed_from_sim,removed_from_sim_unsorted, entered_sim
+    LOGICAL,ALLOCATABLE, DIMENSION(:):: reflected_in, reflected_out, in_column, in_cell, removed_from_sim, entered_sim
+    LOGICAL,ALLOCATABLE, DIMENSION(:):: removed_from_sim_unsorted
     INTEGER,ALLOCATABLE, DIMENSION(:):: i_counting, i_column, i_cur
 
 !-----------------------------------------------------------------------
@@ -129,7 +130,10 @@ PROGRAM MAIN
         v_vec_prev = v_vec
 
         ! collisionless motion --------------------------------------------------------
-        x_vec = x_vec + dt*v_vec(:,1:2)
+        ! x_vec = x_vec + dt*v_vec(:,1:2)
+        IF (N_simulated > 0) THEN
+            x_vec(1:N_simulated,:) = x_vec(1:N_simulated,:) + dt*v_vec(1:N_simulated,1:2)
+        END IF
         ! IF (MOD(ii-1,dt_to_save) == 0) THEN
         !     ! WRITE(*,*) "x=",x_vec(1:10,1)
         !     ! WRITE(*,*) "xp=",x_vec_prev(1:10,1)
@@ -157,7 +161,6 @@ PROGRAM MAIN
             N_added_total(ii) = N_entered            
         END IF
 
-        WRITE (*,*) "got here 3"
 
         IF (N_simulated > 0) THEN
             ! Update Cell Index -----------------------------------------------------------

@@ -13,18 +13,6 @@ SUBROUTINE UPDATE_CELL_INDEX
         IF (use_homogenous_grid .EQV. .true.) THEN
 
             i_cell_vec(1:N_all,1) = FLOOR( (x_vec(1:N_all,1)-xmin)/(xmax-xmin)*nx ) + 1
-            DO i=1,N_all
-                IF (i_cell_vec(i,1) > nx) THEN
-                    WRITE(*,*) "x_vec= ",x_vec(i,1)
-                    WRITE(*,*) "val1 = ",(x_vec(i,1)-xmin)/(xmax-xmin)
-                    WRITE(*,*) "val2 = ",FLOOR( (x_vec(i,1)-xmin)/(xmax-xmin)*nx )
-                    WRITE(*,*) "N_all=", N_all
-
-                    WRITE(*,*) "shape(Npc_slice)=", SHAPE(Npc_slice)
-                    WRITE(*,*) "shape(Npc_added)=", SHAPE(Npc_added)
-                    WRITE(*,*) "max(i_cell_vec)=", MAXVAL(i_cell_vec(1:N_all,1))
-                ENDIF
-            END DO
 
             IF (ny>1) THEN
                 i_cell_vec(1:N_all,2) = FLOOR( (x_vec(1:N_all,2)-xmin)/(xmax-xmin)*ny ) + 1
@@ -36,16 +24,6 @@ SUBROUTINE UPDATE_CELL_INDEX
             alpha_x  = -LOG(1/dx_factor)/xmax
             n_inf = 1/(dx_0*alpha_x)
             i_cell_vec(1:N_all,1) = FLOOR(n_inf*(1-EXP( -alpha_x*x_vec(1:N_all,1) )))+1
-
-            ! WRITE(*,*) "alpha_x = ",alpha_x
-            ! WRITE(*,*) "1/dx_factor = ",1/dx_factor
-            ! WRITE(*,*) "xmax = ",xmax
-            ! WRITE(*,*) "dx_0 = ",dx_0
-            ! WRITE(*,*) "n_inf = ",n_inf
-
-            ! WRITE(*,*) "val_1 = ",-alpha_x*x_vec(1:20,1)
-            ! WRITE(*,*) "EXP(val_1) = ",EXP( -alpha_x*x_vec(1:20,1) )
-            ! WRITE(*,*) "x_vec= ",x_vec(1:20,1)
 
             IF (ny > 1) THEN
                 alpha_y = -LOG(1/dy_factor) / (ymax-ymid)
@@ -77,7 +55,6 @@ SUBROUTINE UPDATE_CELL_INDEX
         ELSEWHERE
         END WHERE
 
-        WRITE (*,*) "got here 7"
 
 
         ! sort array that stores which particles are in each cell
@@ -96,45 +73,51 @@ SUBROUTINE UPDATE_CELL_INDEX
         ! find how many particles in each cell
         Npc_slice(:,:) = 0
         Npc_added(:,:) = 0
-        DO i = 1,N_all
+        ! DO i = 1,N_all
+        DO i = 1,N_simulated
             cx_cur = i_cell_vec(i,1)
             IF (cx_cur > 0) THEN
                 Npc_slice(cx_cur,cy) = Npc_slice(cx_cur,cy) + 1
             END IF
         END DO
-                WRITE (*,*) "got here 5"
 
 
         ! find starting index for each cell in sorted arrays
-        current_sum = 1
+        current_sum = 0
         DO cx_cur = 1,nx
-            starting_index(cx_cur,cy) = current_sum
+            starting_index(cx_cur,cy) = current_sum+1
             current_sum = current_sum + Npc_slice(cx_cur,cy)
         END DO
 
-        WRITE (*,*) "got here 6"
+        ! N_exited = N_simulated - current_sum
+
 
         ! generate sorted arrays
         x_vec_unsorted = x_vec
         v_vec_unsorted = v_vec
         i_cell_vec_unsorted = i_cell_vec
-        removed_from_sim_unsorted = removed_from_sim
-        DO i = 1,N_all
+        ! removed_from_sim_unsorted = removed_from_sim
+        ! DO i = 1,N_all
+        DO i = 1,N_simulated
             cx_cur = i_cell_vec(i,1)
-            i_sorted = starting_index(cx_cur,cy) + Npc_added(cx_cur,cy)
-            Npc_added(cx_cur,cy) = Npc_added(cx_cur,cy) + 1
+            IF (cx_cur > 0) THEN
+                i_sorted = starting_index(cx_cur,cy) + Npc_added(cx_cur,cy)
+                Npc_added(cx_cur,cy) = Npc_added(cx_cur,cy) + 1
 
-            x_vec(i_sorted,:) = x_vec_unsorted(i,:)
-            v_vec(i_sorted,:) = v_vec_unsorted(i,:)
-            i_cell_vec(i_sorted,:) = i_cell_vec_unsorted(i,:)
+                x_vec(i_sorted,:) = x_vec_unsorted(i,:)
+                v_vec(i_sorted,:) = v_vec_unsorted(i,:)
+                i_cell_vec(i_sorted,:) = i_cell_vec_unsorted(i,:)
+            END IF
 
         END DO
+
+        ! N_simulated = N_simulated - N_exited
+        N_simulated = current_sum
 
 
         CALL CPU_TIME(t_temp)
         t_test = t_test + (t_temp-t0_test)
 
-        WRITE (*,*) "got here 8"
 
 
     ENDIF

@@ -34,8 +34,10 @@ SUBROUTINE INITIALIZE_SOURCE
 
 
     IF (N_entered > 0) THEN
-        x_vec( (N_all+1):(N_all+1+N_entered) , : ) = xs_vec(i_cur(1:N_entered),:)
-        v_vec( (N_all+1):(N_all+1+N_entered) , : ) = vs_vec(i_cur(1:N_entered),:)
+        ! x_vec( (N_all+1):(N_all+1+N_entered) , : ) = xs_vec(i_cur(1:N_entered),:)
+        ! v_vec( (N_all+1):(N_all+1+N_entered) , : ) = vs_vec(i_cur(1:N_entered),:)
+        x_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = xs_vec(i_cur(1:N_entered),:)
+        v_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = vs_vec(i_cur(1:N_entered),:)
         N_all = N_all + N_entered
         N_simulated = N_simulated + N_entered
     END IF
