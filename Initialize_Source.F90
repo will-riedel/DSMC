@@ -3,13 +3,9 @@ SUBROUTINE INITIALIZE_SOURCE
     USE PROPERTIES
     IMPLICIT NONE
 
-    xs_min = xmin - ws
-    xs_max = xmin
-    ymid = (ymin+ymax)/2
-    ys_min = ymid-hs/2
-    ys_max = ymid+hs/2
-    ! CALL RAND(xs_vec)
-    CALL RANDOM_NUMBER(xs_vec(:,1))
+    
+    CALL RANDOM_NUMBER(xs_vec)
+    ! CALL RANDOM_NUMBER(xs_vec(:,1))
     xs_vec(:,1) = xs_vec(:,1)*(xs_max-xs_min) + xs_min
     xs_vec(:,2) = xs_vec(:,2)*(ys_max-ys_min) + ys_min
     ! xs_vec(:,2) = 0.5
@@ -19,7 +15,6 @@ SUBROUTINE INITIALIZE_SOURCE
     CALL RANDN(vs_vec(:,3),Num_s) 
     vs_vec = vs_vec*vth
 
-    ! keep incoming source particles within inlet
     xs_vec_prev = xs_vec
     vs_vec_prev = vs_vec
     xs_vec = xs_vec + dt*vs_vec(:,1:2)
@@ -34,6 +29,7 @@ SUBROUTINE INITIALIZE_SOURCE
 
 
     IF (N_entered > 0) THEN
+        ! WRITE(*,*) "x_entering = ",xs_vec(i_cur(1:N_entered),1)
         ! x_vec( (N_all+1):(N_all+1+N_entered) , : ) = xs_vec(i_cur(1:N_entered),:)
         ! v_vec( (N_all+1):(N_all+1+N_entered) , : ) = vs_vec(i_cur(1:N_entered),:)
         x_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = xs_vec(i_cur(1:N_entered),:)

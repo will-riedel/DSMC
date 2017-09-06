@@ -7,7 +7,7 @@ SUBROUTINE SAVE_DATA
     ! save position data
     WRITE(filename,"('Output/data/x_',I7.7,'.txt')") (ii-1)
     OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    WRITE(1) x_vec
+    WRITE(1) x_vec(1:N_simulated,:)
     ! OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
     ! WRITE(1,"(E12.5)") x_vec
     CLOSE(1)
@@ -15,13 +15,13 @@ SUBROUTINE SAVE_DATA
     ! save velocity data
     WRITE(filename,"('Output/data/v_',I7.7,'.txt')") (ii-1)
     OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    WRITE(1) v_vec
+    WRITE(1) v_vec(1:N_simulated,:)
     CLOSE(1)
 
     ! save cell data (this is probably not required)
     WRITE(filename,"('Output/data/i_',I7.7,'.txt')") (ii-1)
     OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    WRITE(1) i_cell_vec
+    WRITE(1) i_cell_vec(1:N_simulated,:)
     CLOSE(1)
 
     ! save num_per_cell data? This also seems way unnecessary
@@ -29,7 +29,6 @@ SUBROUTINE SAVE_DATA
     OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
     WRITE(1) Npc_slice
     CLOSE(1)
-
 
     ! save miscellaneous data
     WRITE(filename,"('Output/data/data.txt')")
@@ -51,7 +50,7 @@ SUBROUTINE SAVE_DATA
     WRITE(1,"(A)") "*ncp_remainder"   
     WRITE(1,"(E12.5)") ncp_remainder
     WRITE(1,"(A)") "*N_added"   
-    WRITE(1,"(I0)") N_added
+    WRITE(1,"(I0)") SUM(N_added_total)
     WRITE(1,"(A)") "*N_total"   
     WRITE(1,"(I0)") N_total
     WRITE(1,"(A)") "*t_final"   
@@ -125,7 +124,7 @@ SUBROUTINE SAVE_DATA
 
     n_saved = n_saved + 1
 
-    CALL CPU_TIME(t_temp)
-    t_collisions = t_collisions + (t_temp-t0_collisions)
+    ! CALL CPU_TIME(t_temp)
+    ! t_collisions = t_collisions + (t_temp-t0_collisions)
 
 END SUBROUTINE SAVE_DATA
