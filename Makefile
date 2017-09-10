@@ -3,9 +3,9 @@
 ######################################################################
 
 # FORTRAN_SRC1 = Main.F90 Readin.F90 Matrix_Assem+Solver.F90 Equation_Library.F90 Equation_Library_Explicit.F90 Visualization.F90
-FORTRAN_SRC1 = Main.F90 Initialize.f90 Save_data.F90 Run_Collisions.F90 Initialize_Source.F90 Reflection_Handling.F90 Update_Cell_Index.F90 Read_Input_Data.f90 Randn.f90
+FORTRAN_SRC1 = Main.F90 Initialize.F90 Save_Data.F90 Run_Collisions.F90 Initialize_Source.F90 Reflection_Handling.F90 Update_Cell_Index.F90 Read_Input_Data.F90 Randn.F90
 
-EXC1 = main
+EXC1 = Main
 
 ######################################################################
 #### More advanced users may want to modify entries in this block ####

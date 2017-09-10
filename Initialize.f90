@@ -12,6 +12,7 @@ SUBROUTINE INITIALIZE
 
     IF (restart_simulation .EQV. .false.) THEN
         it_restart = -1
+        ! need to set dir_cur differently, it's currently set to the restart_directory input
     END IF
 
 
@@ -219,6 +220,31 @@ SUBROUTINE INITIALIZE
 
 
 
+    ALLOCATE(N_total(nt))
+    ALLOCATE(N_candidate_pairs_total(nt))
+    ALLOCATE(N_accepted_pairs_total(nt))
+    ALLOCATE(N_collisions_total(nt))
+    ALLOCATE(N_added_total(nt))
+    ALLOCATE(Npc_slice(nx,ny))
+    ALLOCATE(starting_index(nx,ny))     ! this will break if you go back to 2D
+
+    ALLOCATE(Npc_added(nx,ny))
+    ALLOCATE(ncp_remainder(nx,ny))
+    ALLOCATE(vr_max(nx,ny))
+    
+    N_total(:) = 0
+    N_candidate_pairs_total(:) = 0
+    N_accepted_pairs_total(:) = 0
+    N_collisions_total(:) = 0
+    N_added_total(:) = 0
+    Npc_slice(:,:) = 0
+    starting_index(:,:) = 0
+
+    Npc_added(:,:) = 0
+    ncp_remainder(:,:) = 0
+    vr_max(:,:) = vr_max_0
+
+
     
 
     IF (restart_simulation .EQV. .false.) THEN
@@ -233,31 +259,66 @@ SUBROUTINE INITIALIZE
             ! x_vec(:,2) = 0.5
         END IF
 
-        ALLOCATE(N_total(nt))
-        ALLOCATE(N_candidate_pairs_total(nt))
-        ALLOCATE(N_accepted_pairs_total(nt))
-        ALLOCATE(N_collisions_total(nt))
-        ALLOCATE(N_added_total(nt))
-        ALLOCATE(Npc_slice(nx,ny))
-        ALLOCATE(starting_index(nx,ny))     ! this will break if you go back to 2D
-
-        ALLOCATE(Npc_added(nx,ny))
-        ALLOCATE(ncp_remainder(nx,ny))
-        ALLOCATE(vr_max(nx,ny))
         
-        N_total(:) = 0
-        N_candidate_pairs_total(:) = 0
-        N_accepted_pairs_total(:) = 0
-        N_collisions_total(:) = 0
-        N_added_total(:) = 0
-        Npc_slice(:,:) = 0
-        starting_index(:,:) = 0
-
-        Npc_added(:,:) = 0
-        ncp_remainder(:,:) = 0
-        vr_max(:,:) = vr_max_0
     ELSE
         ! Add stuff for restarting here (need to be able to load data)
+
+        ! it_restart = it_restart+1
+
+
+        CALL RESTART_PARAMETERS_READIN
+        ! WRITE(*,*) "N_total) = ",N_total
+        ! WRITE(*,*) "N_candidate_pairs_total = ",N_candidate_pairs_total
+        ! ! WRITE(*,*) "N_candidate_pairs_total = ",N_accepted_pairs_total
+        ! WRITE(*,*) "ncp_remainder = ",ncp_remainder
+
+
+        ! WRITE(*,*) "N_simulated = ",N_simulated
+        ! ##########################################################################################
+        ! ##########################################################################################
+        ! ##########################################################################################
+        ! ##########################################################################################
+        ! Sometimes when this runs, N=1002, and it gets a backtrace error. Other times N=0 and it's fine.
+        ! Not sure why either can happen
+
+        ! ##########################################################################################
+        ! ##########################################################################################
+        ! ##########################################################################################
+        ! ##########################################################################################
+        ! ##########################################################################################
+        ! ##########################################################################################
+
+
+
+        ! for now, dir_cur = "Output/data"
+        ! WRITE(filename,"('Output/data/a.txt')")
+        WRITE(filename,"('Output/data/x_',I7.7,'.txt')") (it_restart)
+        OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
+        READ(1) x_vec(1:N_simulated,:)
+        CLOSE(1)
+
+        WRITE(filename,"('Output/data/v_',I7.7,'.txt')") (it_restart)
+        OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
+        READ(1) v_vec(1:N_simulated,:)
+        CLOSE(1)
+
+        WRITE(filename,"('Output/data/i_',I7.7,'.txt')") (it_restart)
+        OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
+        READ(1) i_cell_vec(1:N_simulated,:)
+        CLOSE(1)
+
+        WRITE(filename,"('Output/data/Npc_',I7.7,'.txt')") (it_restart)
+        OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
+        READ(1) Npc_slice
+        CLOSE(1)
+
+
+
+        
+
+
+        
+
     END IF
 
     CALL UPDATE_CELL_INDEX

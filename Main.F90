@@ -41,6 +41,8 @@ MODULE CONTAIN
     REAL(8), DIMENSION(2,2):: x_lim
     INTEGER, DIMENSION(2):: n_cells_vec
     LOGICAL:: file_exists
+    CHARACTER(80)::filename
+
 
 !-----------------------------------------------------------------------
 !*******************TEMPORARY/SCRATCH VARIBLES*************************
@@ -97,14 +99,13 @@ PROGRAM MAIN
     USE PROPERTIES
     IMPLICIT NONE
     INTEGER:: i
-    CHARACTER(80)::filename
-    CHARACTER(10)::str_file_num
+    ! CHARACTER(80)::filename
+    CHARACTER(10)::str_file_num, line
 
-    ! ALLOCATE(a_mat(6,4))
+    ! ALLOCATE(a_mat(6,2))
+    ! ALLOCATE(b_mat(6,2))
     ! a_mat(:,1) = 1
     ! a_mat(:,2) = 2
-    ! a_mat(:,3) = 3
-    ! a_mat(:,4) = 4
     ! WRITE(*,*) "a_mat = ",a_mat
 
     ! ! save position data
@@ -114,6 +115,24 @@ PROGRAM MAIN
     ! ! OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
     ! ! WRITE(1,"(E12.5)") x_vec
     ! CLOSE(1)
+
+
+    ! OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
+    ! READ(1) b_mat
+    ! CLOSE(1)
+    ! WRITE(*,*) "b_mat = ",b_mat
+    ! WRITE(*,*) "shape(b_mat) = ",SHAPE(b_mat)
+
+    ! WRITE(filename,"('Output/data/data.txt')")
+    ! OPEN(UNIT=100,FILE=filename)
+    ! READ(100,*) line
+    ! CLOSE(100)
+
+    ! WRITE(*,*)"line=",line
+    ! WRITE(*,*)"line(3:4)=",line(3:4)
+
+
+
 
 !-----------------------------------------------------------------------
 !*******************READ INPUT FILE************************
@@ -180,7 +199,6 @@ PROGRAM MAIN
             CALL UPDATE_CELL_INDEX
 
 
-
             ! Collisions ------------------------------------------------------------------
             CALL RUN_COLLISIONS
         END IF
@@ -198,16 +216,9 @@ PROGRAM MAIN
 
     END DO
 
-    ! filename = "Output/data/mat.txt"
-    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    ! WRITE(1) v_vec(:,1)
-    ! CLOSE(1)
 
 
-    ! WRITE(filename,"('mat_',I7.7,'.txt')") 10
-    ! ! WRITE(str_file_num,'(I0)') 10
-    ! ! filename = "Output/data/mat_" // str_file_num //".txt"
-    ! WRITE(*,*) filename
+    ! Final processing/printing
 
     N_collisions = SUM(N_collisions_total)
     N_candidate_pairs = SUM(N_candidate_pairs_total)

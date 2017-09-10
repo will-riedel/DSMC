@@ -106,3 +106,132 @@ SUBROUTINE INPUT_PARAMETERS_READIN
     END DO
     CLOSE(100)
 END SUBROUTINE INPUT_PARAMETERS_READIN
+
+
+
+
+
+
+
+
+
+
+SUBROUTINE RESTART_PARAMETERS_READIN
+    USE CONTAIN
+    IMPLICIT NONE
+    CHARACTER(80):: line
+    INTEGER i
+    REAL::temp_real
+!-----------------------------------------------------------------------
+!*******************OPEN FILE******************************
+!-----------------------------------------------------------------------
+    WRITE(filename,"('Output/data/data.txt')")
+    OPEN(UNIT=100,FILE=filename)
+
+!-----------------------------------------------------------------------
+!*******************READ CONTENTS**************************
+!-----------------------------------------------------------------------
+    DO
+        READ(100,*) line
+        IF      (line(1:8) == '*N_total') THEN
+            i = 1
+            DO
+                READ(100,*) line
+                IF (line(1:1) == "*") THEN
+                    N_simulated = N_total(i-1)
+                    EXIT
+                ELSE
+                    READ(line,*) N_total(i)
+                    i = i+1
+                ENDIF
+            END DO
+
+        ELSE IF   (line(1:24) == '*N_candidate_pairs_total') THEN
+            i = 1
+            DO
+                READ(100,*) line
+                IF (line(1:1) == "*") THEN
+                    EXIT
+                ELSE
+                    READ(line,*) N_candidate_pairs_total(i)
+                    i = i+1
+                ENDIF
+            END DO
+
+        ELSE IF   (line(1:23) == '*N_accepted_pairs_total') THEN
+            i = 1
+            DO
+                READ(100,*) line
+                IF (line(1:1) == "*") THEN
+                    EXIT
+                ELSE
+                    READ(line,*) N_accepted_pairs_total(i)
+                    i = i+1
+                ENDIF
+            END DO
+
+        ELSE IF   (line(1:19) == '*n_collisions_total') THEN
+            i = 1
+            DO
+                READ(100,*) line
+                IF (line(1:1) == "*") THEN
+                    EXIT
+                ELSE
+                    READ(line,*) N_collisions_total(i)
+                    i = i+1
+                ENDIF
+            END DO
+
+        ELSE IF   (line(1:14) == '*N_added_total') THEN
+            WRITE(*,*) "recognized N_added_total"
+            i = 1
+            DO
+                READ(100,*) line
+                IF (line(1:1) == "*") THEN
+                    EXIT
+                ELSE
+                    READ(line,*) N_added_total(i)
+                    i = i+1
+                ENDIF
+            END DO
+
+        ELSE IF   (line(1:19) == '*ncp_remainder') THEN
+            READ(100,"(E12.5)") ncp_remainder
+
+        ELSE IF   (line(1:5) == "*t_BC") THEN
+            WRITE(*,*) "recognized t_BC"
+            READ(100,"(E12.5)") t_BC
+
+        ELSE IF   (line(1:13) == "*t_collisions") THEN
+            WRITE(*,*) "recognized t_collisions"
+            READ(100,"(E12.5)") t_collisions
+
+        ELSE IF   (line(1:7) == "*t_loop") THEN
+            WRITE(*,*) "recognized t_loop"
+            READ(100,"(E12.5)") t_loop
+
+        ELSE IF   (line(1:8) == "*n_saved") THEN
+            WRITE(*,*) "recognized n_saved"
+            READ(100,*) t_loop
+
+        ! add in timing variables and other things that need to be carried over
+
+
+        ELSE IF (line(1:4) == '*END') THEN
+            EXIT
+        ELSE
+            ! Error Analyzing Input
+            ! WRITE(*,*) 'Error Analyzing Input_Parameters'
+            ! WRITE(*,*) line
+            ! STOP
+       END IF
+    END DO
+    CLOSE(100)
+END SUBROUTINE RESTART_PARAMETERS_READIN
+
+
+
+
+
+
+
