@@ -245,7 +245,57 @@ SUBROUTINE INITIALIZE
     vr_max(:,:) = vr_max_0
 
 
-    
+
+    ALLOCATE(xr_vec(N_array,ndim))
+    ALLOCATE(xr_vec_prev(N_array,ndim))
+    ALLOCATE(x_coll(N_array,ndim))
+    ALLOCATE(xr_vec_new(N_array,ndim))
+    ALLOCATE(vr_vec(N_array,3))
+    ALLOCATE(vr_vec_prev(N_array,3))
+    ALLOCATE(vr_vec_new(N_array,3))
+    ALLOCATE(xr_walls(4,num_walls))
+    ALLOCATE(collision_occured(N_array,num_walls))
+    ALLOCATE(collision_dt(N_array,num_walls))
+    ALLOCATE(min_collision_dt(N_array))
+    ALLOCATE(x0(N_array))
+    ALLOCATE(y0(N_array))
+    ALLOCATE(xt(N_array))
+    ALLOCATE(yt(N_array))
+    ALLOCATE(m(N_array))
+    ALLOCATE(b(N_array))
+    ALLOCATE(xc(N_array))
+    ALLOCATE(yc(N_array))
+    ALLOCATE(dt_cross(N_array))
+    ALLOCATE(first_collision(N_array))
+    ALLOCATE(crossed(N_array))
+    ALLOCATE(i_cross(N_array))
+    ALLOCATE(i_first(N_array))
+
+    xr_vec(:,:) = 0
+    xr_vec_prev(:,:) = 0
+    x_coll(:,:) = 0
+    xr_vec_new(:,:) = 0
+    vr_vec(:,:) = 0
+    vr_vec_prev(:,:) = 0
+    vr_vec_new(:,:) = 0
+    xr_walls(:,:) = 0
+    collision_occured(:,:) = .false.
+    collision_dt(:,:) = 0
+    x0(:) = 0
+    y0(:) = 0
+    xt(:) = 0
+    yt(:) = 0
+    m(:) = 0
+    b(:) = 0
+    xc(:) = 0
+    yc(:) = 0
+    dt_cross(:) = 0
+    first_collision(:) = .false.
+    crossed(:) = .false.
+    i_cross(:) = 0
+    i_first(:) = 0
+
+
 
     IF (restart_simulation .EQV. .false.) THEN
         IF (N_simulated >= 0) THEN
@@ -261,33 +311,7 @@ SUBROUTINE INITIALIZE
 
         
     ELSE
-        ! Add stuff for restarting here (need to be able to load data)
-
-        ! it_restart = it_restart+1
-
-
         CALL RESTART_PARAMETERS_READIN
-        ! WRITE(*,*) "N_total) = ",N_total
-        ! WRITE(*,*) "N_candidate_pairs_total = ",N_candidate_pairs_total
-        ! ! WRITE(*,*) "N_candidate_pairs_total = ",N_accepted_pairs_total
-        ! WRITE(*,*) "ncp_remainder = ",ncp_remainder
-
-
-        ! WRITE(*,*) "N_simulated = ",N_simulated
-        ! ##########################################################################################
-        ! ##########################################################################################
-        ! ##########################################################################################
-        ! ##########################################################################################
-        ! Sometimes when this runs, N=1002, and it gets a backtrace error. Other times N=0 and it's fine.
-        ! Not sure why either can happen
-
-        ! ##########################################################################################
-        ! ##########################################################################################
-        ! ##########################################################################################
-        ! ##########################################################################################
-        ! ##########################################################################################
-        ! ##########################################################################################
-
 
 
         ! for now, dir_cur = "Output/data"
@@ -312,12 +336,6 @@ SUBROUTINE INITIALIZE
         READ(1) Npc_slice
         CLOSE(1)
 
-
-
-        
-
-
-        
 
     END IF
 

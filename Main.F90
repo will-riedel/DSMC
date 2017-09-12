@@ -28,6 +28,15 @@ MODULE CONTAIN
     LOGICAL,ALLOCATABLE, DIMENSION(:):: removed_from_sim_unsorted
     INTEGER,ALLOCATABLE, DIMENSION(:):: i_counting, i_column, i_cur
 
+    REAL(8),ALLOCATABLE,DIMENSION(:,:):: xr_vec,xr_vec_prev, x_coll, xr_vec_new
+    REAL(8),ALLOCATABLE,DIMENSION(:,:):: vr_vec,vr_vec_prev, vr_vec_new
+    REAL(8),ALLOCATABLE,DIMENSION(:,:)::xr_walls
+    LOGICAL,ALLOCATABLE,DIMENSION(:,:):: collision_occured
+    REAL(8),ALLOCATABLE,DIMENSION(:,:):: collision_dt
+    REAL(8),ALLOCATABLE,DIMENSION(:):: x0,y0,xt,yt,m,b,xc,yc, dt_cross,min_collision_dt
+    LOGICAL,ALLOCATABLE,DIMENSION(:):: first_collision,crossed
+    INTEGER,ALLOCATABLE,DIMENSION(:):: i_cross, i_first
+
 !-----------------------------------------------------------------------
 !*******************MISC. VARIBLES*************************
 !-----------------------------------------------------------------------
@@ -42,6 +51,11 @@ MODULE CONTAIN
     INTEGER, DIMENSION(2):: n_cells_vec
     LOGICAL:: file_exists
     CHARACTER(80)::filename
+
+    CHARACTER(16):: string_in
+    INTEGER:: Num_r,counter
+    REAL(8):: xw1,xw2,yw1,yw2
+
 
 
 !-----------------------------------------------------------------------
@@ -152,7 +166,6 @@ PROGRAM MAIN
             WRITE(*,*) ii-1,", t=",t,", N=",N_simulated,' ------------------------'
         END IF
 
-
         IF ( (t>ts) .and. (include_source .EQV. .true.) ) THEN
             close_inlet = .true.
             include_source = .false.
@@ -166,26 +179,16 @@ PROGRAM MAIN
         IF (N_simulated > 0) THEN
             x_vec(1:N_simulated,:) = x_vec(1:N_simulated,:) + dt*v_vec(1:N_simulated,1:2)
         END IF
-        ! IF (MOD(ii-1,dt_to_save) == 0) THEN
-        !     ! WRITE(*,*) "x=",x_vec(1:10,1)
-        !     ! WRITE(*,*) "xp=",x_vec_prev(1:10,1)
-        !     ! WRITE(*,*) "v=",v_vec(1:10,1)
-        !     a1 = COUNT(v_vec(:,1) > 1.d-5)
-        !     b1 = COUNT(v_vec(:,1) < -1.d-5)
-        !     c1 = COUNT(ABS(v_vec(:,1)) <= 1.d-5)
-        !     WRITE(*,*) "a1=",a1
-        !     WRITE(*,*) "b1=",b1
-        !     WRITE(*,*) "c1=",c1
-        ! END IF
-
 
 
         ! Boundary Condition implementation -------------------------------------------
         ! (removing exiting particles should be absorbed into BC implementation)
         IF (N_simulated > 0) THEN
-            CALL SPECULAR_REFLECTION('SIM_PARTICLES___',N_array,0)
+            string_in = 'SIM_PARTICLES___'
+            Num_r = N_simulated
+            counter = 0
+            CALL SPECULAR_REFLECTION
         END IF
-
 
         ! Input from Source/Reservoir -------------------------------------------------
         IF (include_source .EQV. .true.) THEN
@@ -193,26 +196,21 @@ PROGRAM MAIN
             N_added_total(ii) = N_entered            
         END IF
 
-
         IF (N_simulated > 0) THEN
             ! Update Cell Index -----------------------------------------------------------
             CALL UPDATE_CELL_INDEX
-
 
             ! Collisions ------------------------------------------------------------------
             CALL RUN_COLLISIONS
         END IF
         
-
         ! update and save current data ---------------------------------------------
         N_total(ii) = N_simulated
-
 
         ! NOTE: saving with the label (ii-1)
         IF ( ( MOD(ii-1,dt_to_save) == 0 ) .or. ( ii == nt ) ) THEN
             CALL SAVE_DATA
         END IF
-
 
     END DO
 

@@ -1,7 +1,7 @@
 *N_INITIAL_____
-1.d22
+3.d22
 *NS_INITIAL____
-1.d22
+3.d22
 *FN____________
 1.7d17
 *N_CELLS_X_____
@@ -11,7 +11,7 @@
 *T_MAX_________
 6.d-5
 *DT____________
-6.d-8
+2.d-8
 *DT_TO_SAVE____
 10
 *INCLUDE_SOURCE
@@ -25,7 +25,7 @@
 *USE_HOMOG_GRID
 .FALSE.
 *DX_INIT_______
-.000337
+.000112
 *DX_FACTOR_____
 1.d4
 *DY_FACTOR_____
