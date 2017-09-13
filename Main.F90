@@ -48,6 +48,7 @@ MODULE CONTAIN
     INTEGER:: nmax, nx, ny, n_cells, N_all,N_simulated, nt, n_saved, nw, N_expected, N_array, Num_s, N_entered, cx,cy,Npc_max, ii
     INTEGER:: N_candidate_pairs,N_accepted_pairs,Npc_cur, num_walls, N_collisions, N_added, N_removed
     REAL(8), DIMENSION(2,2):: x_lim
+    REAL(8), DIMENSION(2):: y_inlet
     INTEGER, DIMENSION(2):: n_cells_vec
     LOGICAL:: file_exists
     CHARACTER(80)::filename
@@ -86,6 +87,7 @@ MODULE PROPERTIES
 
 ! gun geometry dimensions
     REAL(8), PARAMETER:: inlet_height = 1.d0
+    ! REAL(8), PARAMETER:: inlet_height = 0.01d0
     ! REAL(8), PARAMETER:: inlet_height = 0.5
     REAL(8), PARAMETER:: inlet_length = .1d0
     REAL(8), PARAMETER:: gun_length = .26d0
@@ -184,7 +186,7 @@ PROGRAM MAIN
         ! Boundary Condition implementation -------------------------------------------
         ! (removing exiting particles should be absorbed into BC implementation)
         IF (N_simulated > 0) THEN
-            string_in = 'SIM_PARTICLES___'
+            ! string_in = 'SIM_PARTICLES___'
             Num_r = N_simulated
             counter = 0
             CALL SPECULAR_REFLECTION

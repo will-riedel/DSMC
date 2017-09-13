@@ -113,6 +113,8 @@ SUBROUTINE INITIALIZE
     Vs = ws*hs
     Num_s = INT(ns*Vs/Fn)                                                           ! Number of source particles in the reservoir
 
+
+
     xs_min = xmin - ws
     xs_max = xmin
     ymid = (ymin+ymax)/2
@@ -122,24 +124,34 @@ SUBROUTINE INITIALIZE
     ! Set up wall geometry ---------------------------------------------------------
     ! draw boundaries with vertical and horizontal lines (each row is endpoints of wall: (x1,y1,x2,y2))
     ! include vertical walls at inlet/outlet as first two rows
-    ALLOCATE(x_walls(4,2))
-    ! num_walls = 4
-    num_walls = 2
+    
+    CALL WALL_PARAMETERS_READIN
     x_walls(:,1) = (/ xmin,ymin,xmin,ymax /)                                        ! left vertical wall
     x_walls(:,2) = (/ xmax,ymin,xmax,ymax /)                                        ! right vertical wall
-    ! x_walls(1,1) = xmin
-    ! x_walls(2,1) = ymin
-    ! x_walls(3,1) = xmin
-    ! x_walls(4,1) = ymax
+    x_walls(:,3) = (/ xmin,ymin,xmax,ymin /)                                        ! bottom horizontal wall
+    x_walls(:,4) = (/ xmin,ymax,xmax,ymax /)                                        ! top horizontal wall
+    
+    num_walls = 2
 
-    ! x_walls(1,2) = xmax
-    ! x_walls(2,2) = ymin
-    ! x_walls(3,2) = xmax
-    ! x_walls(4,2) = ymax
 
-    ! bottom/top walls, gun geometry?
 
-    nw = 2
+    ! ALLOCATE(x_walls(4,2))
+    ! ! num_walls = 4
+    ! num_walls = 2
+    ! x_walls(:,1) = (/ xmin,ymin,xmin,ymax /)                                        ! left vertical wall
+    ! x_walls(:,2) = (/ xmax,ymin,xmax,ymax /)                                        ! right vertical wall
+    ! ! x_walls(1,1) = xmin
+    ! ! x_walls(2,1) = ymin
+    ! ! x_walls(3,1) = xmin
+    ! ! x_walls(4,1) = ymax
+
+    ! ! x_walls(1,2) = xmax
+    ! ! x_walls(2,2) = ymin
+    ! ! x_walls(3,2) = xmax
+    ! ! x_walls(4,2) = ymax
+
+    ! ! bottom/top walls, gun geometry?
+    ! 
 
 
     ! set up vectors/IC's ----------------------------------------------------------

@@ -109,7 +109,31 @@ END SUBROUTINE INPUT_PARAMETERS_READIN
 
 
 
+SUBROUTINE WALL_PARAMETERS_READIN
+    USE CONTAIN
+    IMPLICIT NONE
 
+    ! top/bottom boundaries for the inlet
+    OPEN(UNIT=1,FILE='Input/y_inlet.txt',STATUS='old')! ,access='direct',recl=4,iostat=ok)
+    READ(1,*) y_inlet
+    CLOSE(1)
+
+    ! xy coordinates of the walls (1-4 are the outer boundaries of the rectangle)
+    OPEN(UNIT=1,FILE='Input/num_walls.txt',STATUS='old')! ,access='direct',recl=4,iostat=ok)
+    READ(1,*) num_walls
+    CLOSE(1)
+    num_walls = num_walls + 4
+    ! nw = num_walls
+    ALLOCATE(x_walls(4,num_walls))
+
+    OPEN(UNIT=1,FILE='Input/x_walls.txt',STATUS='old')! ,access='direct',recl=4,iostat=ok)
+    READ(1,*) x_walls(:,5:num_walls)
+    CLOSE(1)
+
+    WRITE(*,*) "x_walls=",x_walls
+
+
+END SUBROUTINE WALL_PARAMETERS_READIN
 
 
 
