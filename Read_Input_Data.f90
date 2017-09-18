@@ -66,6 +66,9 @@ SUBROUTINE INPUT_PARAMETERS_READIN
         ELSE IF (line == '*INCLUDE_SOURCE') THEN
           ! whether to include source at inlet
           READ(100,*) include_source
+        ELSE IF (line == '*USE_TWO_SOURCE') THEN
+          ! whether to include source at inlet
+          READ(100,*) include_two_sources
         ELSE IF (line == '*CLOSE_INLET___') THEN
           ! whether to put boundary at inlet (after any source is turned off)
           READ(100,*) close_inlet
@@ -113,10 +116,19 @@ SUBROUTINE WALL_PARAMETERS_READIN
     USE CONTAIN
     IMPLICIT NONE
 
+    REAL(8):: temp
+
     ! top/bottom boundaries for the inlet
     OPEN(UNIT=1,FILE='Input/y_inlet.txt',STATUS='old')! ,access='direct',recl=4,iostat=ok)
     READ(1,*) y_inlet
     CLOSE(1)
+
+    IF (y_inlet(1) > y_inlet(2)) THEN
+        temp = y_inlet(1)
+        y_inlet(1) = y_inlet(2)
+        y_inlet(2) = temp
+    END IF
+
 
     ! xy coordinates of the walls (1-4 are the outer boundaries of the rectangle)
     OPEN(UNIT=1,FILE='Input/num_walls.txt',STATUS='old')! ,access='direct',recl=4,iostat=ok)
@@ -130,7 +142,8 @@ SUBROUTINE WALL_PARAMETERS_READIN
     READ(1,*) x_walls(:,5:num_walls)
     CLOSE(1)
 
-    WRITE(*,*) "x_walls=",x_walls
+    WRITE(*,*) "y_inlet = ",y_inlet
+    ! WRITE(*,*) "x_walls=",x_walls
 
 
 END SUBROUTINE WALL_PARAMETERS_READIN

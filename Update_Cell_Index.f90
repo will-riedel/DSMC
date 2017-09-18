@@ -63,9 +63,9 @@ SUBROUTINE UPDATE_CELL_INDEX
 
         END IF
 
-        WHERE (removed_from_sim .EQV. .true.)
-            i_cell_vec(:,1) = 0
-            i_cell_vec(:,2) = 0
+        WHERE (removed_from_sim(1:N_simulated) .EQV. .true.)
+            i_cell_vec(1:N_simulated,1) = 0
+            i_cell_vec(1:N_simulated,2) = 0
         ELSEWHERE
         END WHERE
 

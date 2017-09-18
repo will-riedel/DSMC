@@ -21,6 +21,7 @@ SUBROUTINE SPECULAR_REFLECTION
     collision_occured(1:Num_r,:) = .false.
     reflected_in(1:Num_r) = .false.
     reflected_out(1:Num_r) = .false.
+    removed_from_sim(1:Num_r) = .false.
     collision_dt(1:Num_r,:) = 1.d10
 
     DO i = 1,num_walls
@@ -47,9 +48,9 @@ SUBROUTINE SPECULAR_REFLECTION
         yc(1:Num_r) = m(1:Num_r)*xw1+b(1:Num_r)
         xc(1:Num_r) = xw1
 
-        !i_cross =  np.logical_and( (yw1<yc)&(yc<yw2) , np.logical_or( (x0<xw1)&(xw1<xt) , (x0>xw1)&(xw1>xt) ) )
         ! crossed(1:Num_r) = ((x0(1:Num_r)<xw1).and.(xw1<xt(1:Num_r))) .or. ((x0(1:Num_r)>xw1).and.(xw1>xt(1:Num_r)))
-        collision_occured(1:Num_r,i) = ((x0(1:Num_r)<xw1).and.(xw1<xt(1:Num_r))) .or. ((x0(1:Num_r)>xw1).and.(xw1>xt(1:Num_r)))
+        ! collision_occured(1:Num_r,i) = ((x0(1:Num_r)<xw1).and.(xw1<xt(1:Num_r))) .or. ((x0(1:Num_r)>xw1).and.(xw1>xt(1:Num_r)))
+        collision_occured(1:Num_r,i) = ( (x0(1:Num_r)<xw1) .neqv. (xt(1:Num_r)<xw1) )
         dt_cross(1:Num_r) = (xc(1:Num_r)-x0(1:Num_r)) / vr_vec_prev(1:Num_r,1)
         
         ! ########################################################################################
@@ -57,6 +58,7 @@ SUBROUTINE SPECULAR_REFLECTION
         ! ########################################################################################
         ! is this valid? Double-check, might save time
         ! collision_occured(1:Num_r,i) = ( (y0(1:Num_r)<yw1) .neqv. (yt(1:Num_r)<yw1) )
+        ! collision_occured(1:Num_r,i) = ( (x0(1:Num_r)<xw1) .neqv. (xt(1:Num_r)<xw1) )
         ! ########################################################################################
         ! ########################################################################################
         ! ########################################################################################
@@ -144,19 +146,18 @@ SUBROUTINE SPECULAR_REFLECTION
         !     removed_from_sim = .true.
         ! ELSEWHERE
         ! END WHERE
-        removed_from_sim = (removed_from_sim .or. reflected_out)
-        N_removed = N_removed + COUNT(reflected_out)
+        removed_from_sim(1:Num_r) = (removed_from_sim(1:Num_r) .or. reflected_out(1:Num_r))
+        N_removed = N_removed + COUNT(reflected_out(1:Num_r))
     END IF
     IF (close_inlet .EQV. .false.) THEN
         ! WHERE( reflected_in .EQV. .true.)
         !     removed_from_sim = .true.
         ! ELSEWHERE
         ! END WHERE
-        removed_from_sim = (removed_from_sim .or. reflected_in)
-        N_removed = N_removed + COUNT(reflected_in)
+        removed_from_sim(1:Num_r) = (removed_from_sim(1:Num_r) .or. reflected_in(1:Num_r))
+        N_removed = N_removed + COUNT(reflected_in(1:Num_r))
     END IF
     N_simulated = N_simulated - N_removed
-
 
     CALL CPU_TIME(t_temp)
     t_BC = t_BC + (t_temp-t0_BC)
@@ -188,6 +189,8 @@ SUBROUTINE SPECULAR_REFLECTION_SOURCE
     REAL(8):: temp
     INTEGER:: i,j
 
+    ! This just reflects any source particles that pass above or below the inlet edges before entering the sim
+
 
     CALL CPU_TIME(t0_BC)
 
@@ -198,9 +201,10 @@ SUBROUTINE SPECULAR_REFLECTION_SOURCE
 
 
     DO i = 1,2
+        yw1 = y_inlet(i)
         WHERE (collision_occured(1:Num_r,i) .eqv. .true.) 
-            xs_vec(1:Num_r,2) = 2*yw1 - xr_vec(1:Num_r,2)
-            vs_vec(1:Num_r,2) = -vr_vec(1:Num_r,2)
+            xs_vec(1:Num_r,2) = 2*yw1 - xs_vec(1:Num_r,2)
+            vs_vec(1:Num_r,2) = -vs_vec(1:Num_r,2)
         ELSEWHERE
         END WHERE
     END DO

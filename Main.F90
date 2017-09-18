@@ -11,6 +11,7 @@ MODULE CONTAIN
     REAL(8)::tmax,dt
     REAL(8)::dx_0,dx_factor,dy_factor
     LOGICAL::include_source,close_inlet,close_outlet,include_gun_boundaries,use_homogenous_grid,restart_simulation
+    LOGICAL::include_two_sources
     CHARACTER(80)::dir_cur
     INTEGER::it_restart
 
@@ -86,9 +87,9 @@ MODULE PROPERTIES
     REAL(8), PARAMETER:: dH2 = 2.89d-10
 
 ! gun geometry dimensions
-    REAL(8), PARAMETER:: inlet_height = 1.d0
+    ! REAL(8), PARAMETER:: inlet_height = 1.d0
     ! REAL(8), PARAMETER:: inlet_height = 0.01d0
-    ! REAL(8), PARAMETER:: inlet_height = 0.5
+    REAL(8), PARAMETER:: inlet_height = 0.5
     REAL(8), PARAMETER:: inlet_length = .1d0
     REAL(8), PARAMETER:: gun_length = .26d0
     REAL(8), PARAMETER:: gun_height = .05d0

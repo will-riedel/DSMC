@@ -156,6 +156,11 @@ SUBROUTINE INITIALIZE
 
     ! set up vectors/IC's ----------------------------------------------------------
 
+
+    if (include_two_sources .EQV. .true.) THEN
+        include_source = .true.
+    END IF
+
     ! calculate expected total number of particles in simulation ()
     IF (include_source .EQV. .true.) THEN
         N_all = 0
