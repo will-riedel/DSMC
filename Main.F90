@@ -11,7 +11,7 @@ MODULE CONTAIN
     REAL(8)::tmax,dt
     REAL(8)::dx_0,dx_factor,dy_factor
     LOGICAL::include_source,close_inlet,close_outlet,include_gun_boundaries,use_homogenous_grid,restart_simulation
-    LOGICAL::include_two_sources
+    LOGICAL::include_two_beams
     CHARACTER(80)::dir_cur
     INTEGER::it_restart
 
@@ -41,9 +41,9 @@ MODULE CONTAIN
 !-----------------------------------------------------------------------
 !*******************MISC. VARIBLES*************************
 !-----------------------------------------------------------------------
-    REAL(8):: m_g,d_g,vth,c_s,vr_max_0,v_avg, xmin,xmax,ymin,ymax,ymid, n_inf, V_total
-    REAL(8):: ws,ts,hs,Vs,xs_min,xs_max,ys_min,ys_max,t, N_candidate_pairs_real
-    REAL(8):: Nc0,Nc_sim,m_r,collision_ratio
+    REAL(8):: m_g,d_g,vth,c_s,vr_max_0,v_avg, xmin,xmax,ymin,ymax,ymid, n_inf, V_total, v_beam
+    REAL(8):: ws,ts,hs,Vs,xs_min,xs_max,xs2_min,xs2_max,ys_min,ys_max,t, N_candidate_pairs_real
+    REAL(8):: Nc0,Nc_sim,m_r,collision_ratio, Num_s_exact
     REAL(8):: alpha_x,alpha_y,neg_offset,pos_offset
     REAL (8):: t0,t0_BC,t0_collisions,t0_loop,t_temp,t_final,t_BC,t_collisions,t_loop, t0_test,t_test
     INTEGER:: nmax, nx, ny, n_cells, N_all,N_simulated, nt, n_saved, nw, N_expected, N_array, Num_s, N_entered, cx,cy,Npc_max, ii
@@ -163,6 +163,10 @@ PROGRAM MAIN
 ! !*******************MAIN LOOP******************************
 ! !-----------------------------------------------------------------------
          
+    WRITE(*,*) "N_expected,N_array,Num_s=",N_expected,N_array,Num_s
+    WRITE(*,*) "ns,Vs,Fn=",ns,Vs,Fn
+    WRITE(*,*) "ns*Vs/Fn=",ns*Vs/Fn
+
     DO ii = it_restart+2,nt
         t = t_vec(ii)
         IF (MOD(ii-1,dt_to_save) == 0) THEN
@@ -194,10 +198,21 @@ PROGRAM MAIN
         END IF
 
         ! Input from Source/Reservoir -------------------------------------------------
-        IF (include_source .EQV. .true.) THEN
-            CALL INITIALIZE_SOURCE
-            N_added_total(ii) = N_entered            
-        END IF
+        ! IF (include_source .EQV. .true.) THEN
+            
+        !     CALL RANDOM_NUMBER(rn)
+        !     IF (rn < Num_s_exact) THEN
+        !         Num_s = CEILING(Num_s_exact)
+        !     ELSE
+        !         Num_s = FLOOR(Num_s_exact)
+
+        !     IF (include_two_beams .EQV. .true.) THEN
+        !         CALL INITIALIZE_SOURCE_TWO_STREAM
+        !     ELSE
+        !         CALL INITIALIZE_SOURCE
+        !     END IF
+        ! END IF
+        CALL INITIALIZE_SOURCE
 
         IF (N_simulated > 0) THEN
             ! Update Cell Index -----------------------------------------------------------

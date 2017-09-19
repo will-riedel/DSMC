@@ -106,17 +106,25 @@ SUBROUTINE INITIALIZE
     n_saved = 0
 
     ! source/reservoir parameters --------------------------------------------------
-    ws = 10*vth*dt                                                                  ! width of source cell
-    ts = 5.d-4                                                                      ! pulse width of source valve opening
     
+    ts = 5.d-4                                                                      ! pulse width of source valve opening
+
+    IF (include_two_beams .EQV. .true.) THEN
+        ws = v_beam*dt
+    ELSE
+        ws = 10*vth*dt                                                                  ! width of source cell
+    END IF
+
     hs = inlet_height
     Vs = ws*hs
-    Num_s = INT(ns*Vs/Fn)                                                           ! Number of source particles in the reservoir
-
-
+    ! Num_s = INT(ns*Vs/Fn)                                                           ! Number of source particles in the reservoir
+    Num_s_exact = ns*Vs/Fn
+    Num_s = CEILING(Num_s_exact)                                                           ! Number of source particles in the reservoir
 
     xs_min = xmin - ws
     xs_max = xmin
+    xs2_min = xmax
+    xs2_max = xmax + ws
     ymid = (ymin+ymax)/2
     ys_min = ymid-hs/2
     ys_max = ymid+hs/2
@@ -157,7 +165,7 @@ SUBROUTINE INITIALIZE
     ! set up vectors/IC's ----------------------------------------------------------
 
 
-    if (include_two_sources .EQV. .true.) THEN
+    if (include_two_beams .EQV. .true.) THEN
         include_source = .true.
     END IF
 
@@ -165,8 +173,13 @@ SUBROUTINE INITIALIZE
     IF (include_source .EQV. .true.) THEN
         N_all = 0
         N_simulated = 0
-        v_avg = SQRT(8*k_b*T_g/(Pi*m_g))
-        N_expected = INT( ns*v_avg*MIN(tmax,ts)*(hs*1)/(4*Fn) )     ! hs*1 = cross-sectional area of inlet
+        IF (include_two_beams .EQV. .true.) THEN
+            v_avg = v_beam*2 ! the factor of 2 is for both sides
+            N_expected = 2*Num_s*nt
+        ELSE
+            v_avg = SQRT(8*k_b*T_g/(Pi*m_g))
+            N_expected = INT( ns*v_avg*MIN(tmax,ts)*(hs*1)/(4*Fn) )     ! hs*1 = cross-sectional area of inlet
+        END IF
         N_array = INT(N_expected*1.25)
     ELSE
         N_all  = INT(V_total*n/Fn)
@@ -176,6 +189,7 @@ SUBROUTINE INITIALIZE
     END IF
     Npc_max = N_array
 
+    ! WRITE(*,*) "N_expected,ws,dt = ",N_expected,ws,dt
 
     ALLOCATE(x_vec(N_array,ndim))
     ALLOCATE(v_vec(N_array,3))

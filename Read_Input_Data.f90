@@ -66,9 +66,12 @@ SUBROUTINE INPUT_PARAMETERS_READIN
         ELSE IF (line == '*INCLUDE_SOURCE') THEN
           ! whether to include source at inlet
           READ(100,*) include_source
-        ELSE IF (line == '*USE_TWO_SOURCE') THEN
+        ELSE IF (line == '*USE_TWO_BEAMS_') THEN
           ! whether to include source at inlet
-          READ(100,*) include_two_sources
+          READ(100,*) include_two_beams
+        ELSE IF (line == '*BEAM_VELOCITY_') THEN
+          ! whether to include source at inlet
+          READ(100,*) v_beam
         ELSE IF (line == '*CLOSE_INLET___') THEN
           ! whether to put boundary at inlet (after any source is turned off)
           READ(100,*) close_inlet
@@ -142,7 +145,7 @@ SUBROUTINE WALL_PARAMETERS_READIN
     READ(1,*) x_walls(:,5:num_walls)
     CLOSE(1)
 
-    WRITE(*,*) "y_inlet = ",y_inlet
+    ! WRITE(*,*) "y_inlet = ",y_inlet
     ! WRITE(*,*) "x_walls=",x_walls
 
 
