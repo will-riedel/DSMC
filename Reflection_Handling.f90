@@ -37,13 +37,14 @@ SUBROUTINE SPECULAR_REFLECTION
         m(1:Num_r) = vr_vec_prev(1:Num_r,2)/vr_vec_prev(1:Num_r,1)
         b(1:Num_r) = y0(1:Num_r)-m(1:Num_r)*x0(1:Num_r)
 
-        ! if (xw1=xw2)
+        ! IF (xw1=xw2) THEN
         ! vertical boundary
         IF (yw2 > yw1) THEN
             temp = yw1
             yw1 = yw2
             yw2 = temp
         END IF
+        ! END IF
 
         yc(1:Num_r) = m(1:Num_r)*xw1+b(1:Num_r)
         xc(1:Num_r) = xw1

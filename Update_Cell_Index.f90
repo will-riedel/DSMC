@@ -97,9 +97,9 @@ SUBROUTINE UPDATE_CELL_INDEX
         END DO
 
         ! generate sorted arrays
-        x_vec_unsorted = x_vec
-        v_vec_unsorted = v_vec
-        i_cell_vec_unsorted = i_cell_vec
+        x_vec_unsorted(1:N_simulated,:) = x_vec(1:N_simulated,:)
+        v_vec_unsorted(1:N_simulated,:) = v_vec(1:N_simulated,:)
+        i_cell_vec_unsorted(1:N_simulated,:) = i_cell_vec(1:N_simulated,:)
         ! removed_from_sim_unsorted = removed_from_sim
         DO i = 1,N_simulated
             cx_cur = i_cell_vec_unsorted(i,1)
@@ -115,7 +115,7 @@ SUBROUTINE UPDATE_CELL_INDEX
 
 
         N_simulated = current_sum
-        removed_from_sim(:) = .false.   
+        removed_from_sim(1:N_simulated) = .false.   
 
         CALL CPU_TIME(t_temp)
         t_test = t_test + (t_temp-t0_test)

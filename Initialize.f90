@@ -175,7 +175,8 @@ SUBROUTINE INITIALIZE
         N_simulated = 0
         IF (include_two_beams .EQV. .true.) THEN
             v_avg = v_beam*2 ! the factor of 2 is for both sides
-            N_expected = 2*Num_s*nt
+            ! N_expected = 2*Num_s*nt
+            N_expected = CEILING(2*Num_s_exact*nt)
         ELSE
             v_avg = SQRT(8*k_b*T_g/(Pi*m_g))
             N_expected = INT( ns*v_avg*MIN(tmax,ts)*(hs*1)/(4*Fn) )     ! hs*1 = cross-sectional area of inlet

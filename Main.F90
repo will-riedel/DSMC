@@ -163,14 +163,13 @@ PROGRAM MAIN
 ! !*******************MAIN LOOP******************************
 ! !-----------------------------------------------------------------------
          
-    WRITE(*,*) "N_expected,N_array,Num_s=",N_expected,N_array,Num_s
-    WRITE(*,*) "ns,Vs,Fn=",ns,Vs,Fn
-    WRITE(*,*) "ns*Vs/Fn=",ns*Vs/Fn
+    ! WRITE(*,*) "N_expected,N_array,Num_s=",N_expected,N_array,Num_s
 
     DO ii = it_restart+2,nt
         t = t_vec(ii)
         IF (MOD(ii-1,dt_to_save) == 0) THEN
             WRITE(*,*) ii-1,", t=",t,", N=",N_simulated,' ------------------------'
+            ! WRITE(*,*) "t_collisions,t_BC,t_loop,t_test=",t_collisions,t_BC,t_loop,t_test
         END IF
 
         IF ( (t>ts) .and. (include_source .EQV. .true.) ) THEN
@@ -191,7 +190,6 @@ PROGRAM MAIN
         ! Boundary Condition implementation -------------------------------------------
         ! (removing exiting particles should be absorbed into BC implementation)
         IF (N_simulated > 0) THEN
-            ! string_in = 'SIM_PARTICLES___'
             Num_r = N_simulated
             counter = 0
             CALL SPECULAR_REFLECTION
@@ -215,11 +213,13 @@ PROGRAM MAIN
         CALL INITIALIZE_SOURCE
 
         IF (N_simulated > 0) THEN
+
             ! Update Cell Index -----------------------------------------------------------
             CALL UPDATE_CELL_INDEX
 
             ! Collisions ------------------------------------------------------------------
             CALL RUN_COLLISIONS
+
         END IF
         
         ! update and save current data ---------------------------------------------

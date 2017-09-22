@@ -30,19 +30,9 @@ SUBROUTINE SAVE_DATA
     WRITE(1) Npc_slice
     CLOSE(1)
 
-    ! save miscellaneous data
-    WRITE(filename,"('Output/data/data.txt')")
-    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
-    
-    ! WRITE(1,"(A)") "*n_collisions"   
-    ! WRITE(1,"(I0)") n_collisions
     ! WRITE(1,"(A)") "*"
     ! WRITE(1,"(A)") "*n_collisions_total"   
     ! WRITE(1,"(I0)") n_collisions_total(1:ii)
-    ! ! WRITE(1,"(A)") "N_candidate_pairs"   
-    ! ! WRITE(1,"(I0)") N_candidate_pairs
-    ! ! WRITE(1,"(A)") "N_accepted_pairs"   
-    ! ! WRITE(1,"(I0)") N_accepted_pairs
     ! WRITE(1,"(A)") "*"
     ! WRITE(1,"(A)") "*N_candidate_pairs_total"   
     ! WRITE(1,"(I0)") N_candidate_pairs_total(1:ii)
@@ -56,90 +46,39 @@ SUBROUTINE SAVE_DATA
     ! WRITE(1,"(A)") "*ncp_remainder"   
     ! WRITE(1,"(E12.5)") ncp_remainder
     ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*N_added"   
-    ! WRITE(1,"(I0)") SUM(N_added_total)
-    ! WRITE(1,"(A)") "*"
     ! WRITE(1,"(A)") "*N_total"   
     ! WRITE(1,"(I0)") N_total(1:ii)
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*t_final"   
-    ! WRITE(1,"(E12.5)") t_final
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*t_BC"   
-    ! WRITE(1,"(E12.5)") t_BC
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*t_collisions"   
-    ! WRITE(1,"(E12.5)") t_collisions
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*t_loop"   
-    ! WRITE(1,"(E12.5)") t_loop
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*n"   
-    ! WRITE(1,"(E12.5)") n
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*ns"   
-    ! WRITE(1,"(E12.5)") ns
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*Fn"   
-    ! WRITE(1,"(E12.5)") Fn
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*nx"   
-    ! WRITE(1,"(I0)") nx
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*ny"   
-    ! WRITE(1,"(I0)") ny
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*tmax"   
-    ! WRITE(1,"(E12.5)") tmax
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*nt"   
-    ! WRITE(1,"(I0)") nt
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*dt"   
-    ! WRITE(1,"(E12.5)") dt
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*dt_to_save"   
-    ! WRITE(1,"(I0)") dt_to_save
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*n_saved"   
-    ! WRITE(1,"(I0)") n_saved
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*include_source"   
-    ! WRITE(1,"(L)") include_source
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*close_inlet"   
-    ! WRITE(1,"(L)") close_inlet
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*include_gun_boundaries"   
-    ! WRITE(1,"(L)") include_gun_boundaries
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*use_homogenous_grid"   
-    ! WRITE(1,"(L)") use_homogenous_grid
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*dx_0"   
-    ! WRITE(1,"(E12.5)") dx_0
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*dx_factor"   
-    ! WRITE(1,"(E12.5)") dx_factor
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*dy_factor"   
-    ! WRITE(1,"(E12.5)") dy_factor
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*x_cells_vec"   
-    ! WRITE(1,"(E12.5)") x_cells_vec
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*y_cells_vec"   
-    ! WRITE(1,"(E12.5)") y_cells_vec
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*x_lim"   
-    ! WRITE(1,"(E12.5)") x_lim
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*x_walls"   
-    ! WRITE(1,"(E12.5)") x_walls
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*it_last"   
-    ! WRITE(1,"(I0)") ii
-    ! WRITE(1,"(A)") "*END"
+
+    ! save some tracking vectors
+    WRITE(filename,"('Output/data/n_collisions_total.txt')")
+    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    WRITE(1) n_collisions_total
+    CLOSE(1)
+    WRITE(filename,"('Output/data/N_candidate_pairs_total.txt')")
+    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    WRITE(1) N_candidate_pairs_total
+    CLOSE(1)
+    WRITE(filename,"('Output/data/N_accepted_pairs_total.txt')")
+    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    WRITE(1) N_accepted_pairs_total
+    CLOSE(1)
+    WRITE(filename,"('Output/data/N_added_total.txt')")
+    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    WRITE(1) N_added_total
+    CLOSE(1)
+    WRITE(filename,"('Output/data/ncp_remainder.txt')")
+    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    WRITE(1) ncp_remainder
+    CLOSE(1)
+    WRITE(filename,"('Output/data/N_total.txt')")
+    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    WRITE(1) N_total
+    CLOSE(1)
+
+    ! save miscellaneous data
+    WRITE(filename,"('Output/data/data.txt')")
+    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    
 
     WRITE(1,"(A)") "*t_final"   
     WRITE(1,"(E12.5)") t_final
@@ -209,24 +148,24 @@ SUBROUTINE SAVE_DATA
     WRITE(1,"(A)") "*"
     WRITE(1,"(A)") "*N_added"   
     WRITE(1,"(I0)") SUM(N_added_total)
-    WRITE(1,"(A)") "*"
-    WRITE(1,"(A)") "*n_collisions_total"   
-    WRITE(1,"(I0)") n_collisions_total(1:ii)
-    WRITE(1,"(A)") "*"
-    WRITE(1,"(A)") "*N_candidate_pairs_total"   
-    WRITE(1,"(I0)") N_candidate_pairs_total(1:ii)
-    WRITE(1,"(A)") "*"   
-    WRITE(1,"(A)") "*N_accepted_pairs_total"   
-    WRITE(1,"(I0)") N_accepted_pairs_total(1:ii)
-    WRITE(1,"(A)") "*"
-    WRITE(1,"(A)") "*N_added_total"   
-    WRITE(1,"(I0)") N_added_total(1:ii)
-    WRITE(1,"(A)") "*"
-    WRITE(1,"(A)") "*ncp_remainder"   
-    WRITE(1,"(E12.5)") ncp_remainder
-    WRITE(1,"(A)") "*"
-    WRITE(1,"(A)") "*N_total"   
-    WRITE(1,"(I0)") N_total(1:ii)
+    ! WRITE(1,"(A)") "*"
+    ! WRITE(1,"(A)") "*n_collisions_total"   
+    ! WRITE(1,"(I0)") n_collisions_total(1:ii)
+    ! WRITE(1,"(A)") "*"
+    ! WRITE(1,"(A)") "*N_candidate_pairs_total"   
+    ! WRITE(1,"(I0)") N_candidate_pairs_total(1:ii)
+    ! WRITE(1,"(A)") "*"   
+    ! WRITE(1,"(A)") "*N_accepted_pairs_total"   
+    ! WRITE(1,"(I0)") N_accepted_pairs_total(1:ii)
+    ! WRITE(1,"(A)") "*"
+    ! WRITE(1,"(A)") "*N_added_total"   
+    ! WRITE(1,"(I0)") N_added_total(1:ii)
+    ! WRITE(1,"(A)") "*"
+    ! WRITE(1,"(A)") "*ncp_remainder"   
+    ! WRITE(1,"(E12.5)") ncp_remainder
+    ! WRITE(1,"(A)") "*"
+    ! WRITE(1,"(A)") "*N_total"   
+    ! WRITE(1,"(I0)") N_total(1:ii)
     WRITE(1,"(A)") "*"
     WRITE(1,"(A)") "*x_cells_vec"   
     WRITE(1,"(E12.5)") x_cells_vec
