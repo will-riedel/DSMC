@@ -74,6 +74,10 @@ SUBROUTINE SAVE_DATA
     OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
     WRITE(1) N_total
     CLOSE(1)
+    WRITE(filename,"('Output/data/x_walls.txt')")
+    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    WRITE(1) x_walls
+    CLOSE(1)
 
     ! save miscellaneous data
     WRITE(filename,"('Output/data/data.txt')")
@@ -166,18 +170,18 @@ SUBROUTINE SAVE_DATA
     ! WRITE(1,"(A)") "*"
     ! WRITE(1,"(A)") "*N_total"   
     ! WRITE(1,"(I0)") N_total(1:ii)
-    WRITE(1,"(A)") "*"
-    WRITE(1,"(A)") "*x_cells_vec"   
-    WRITE(1,"(E12.5)") x_cells_vec
-    WRITE(1,"(A)") "*"
-    WRITE(1,"(A)") "*y_cells_vec"   
-    WRITE(1,"(E12.5)") y_cells_vec
+    ! WRITE(1,"(A)") "*"
+    ! WRITE(1,"(A)") "*x_cells_vec"   
+    ! WRITE(1,"(E12.5)") x_cells_vec
+    ! WRITE(1,"(A)") "*"
+    ! WRITE(1,"(A)") "*y_cells_vec"   
+    ! WRITE(1,"(E12.5)") y_cells_vec
     WRITE(1,"(A)") "*"
     WRITE(1,"(A)") "*x_lim"   
     WRITE(1,"(E12.5)") x_lim
-    WRITE(1,"(A)") "*"
-    WRITE(1,"(A)") "*x_walls"   
-    WRITE(1,"(E12.5)") x_walls
+    ! WRITE(1,"(A)") "*"
+    ! WRITE(1,"(A)") "*x_walls"   
+    ! WRITE(1,"(E12.5)") x_walls
     WRITE(1,"(A)") "*"
     WRITE(1,"(A)") "*it_last"   
     WRITE(1,"(I0)") ii

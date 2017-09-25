@@ -1,9 +1,9 @@
 *N_INITIAL_____
-1.d22
+1.d19
 *NS_INITIAL____
-1.d22
+1.d19
 *FN____________
-1.7d17
+1.7d16
 *N_CELLS_X_____
 1000
 *N_CELLLS_Y____
@@ -21,7 +21,7 @@
 *BEAM_VELOCITY_
 1.d3
 *CLOSE_INLET___
-.TRUE.
+.FALSE.
 *CLOSE_OUTLET__
 .FALSE.
 *INCLUDE_GUN_BC

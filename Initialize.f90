@@ -129,6 +129,7 @@ SUBROUTINE INITIALIZE
     ys_min = ymid-hs/2
     ys_max = ymid+hs/2
 
+
     ! Set up wall geometry ---------------------------------------------------------
     ! draw boundaries with vertical and horizontal lines (each row is endpoints of wall: (x1,y1,x2,y2))
     ! include vertical walls at inlet/outlet as first two rows
@@ -138,25 +139,29 @@ SUBROUTINE INITIALIZE
     x_walls(:,2) = (/ xmax,ymin,xmax,ymax /)                                        ! right vertical wall
     x_walls(:,3) = (/ xmin,ymin,xmax,ymin /)                                        ! bottom horizontal wall
     x_walls(:,4) = (/ xmin,ymax,xmax,ymax /)                                        ! top horizontal wall
-    
-    num_walls = 2
 
+    ! x_walls(:,5) = (/ 0.,0.,0.3,0.5 /)                                        ! top horizontal wall
+    x_walls(:,5) = (/ 0.,0.,0.5,0.5 /)                                        ! top horizontal wall
+    ! x_walls(:,5) = (/ .15,0.,.15,1. /)                                        ! top horizontal wall
 
+    num_walls = 5
 
-    ! ALLOCATE(x_walls(4,2))
-    ! ! num_walls = 4
-    ! num_walls = 2
-    ! x_walls(:,1) = (/ xmin,ymin,xmin,ymax /)                                        ! left vertical wall
-    ! x_walls(:,2) = (/ xmax,ymin,xmax,ymax /)                                        ! right vertical wall
-    ! ! x_walls(1,1) = xmin
-    ! ! x_walls(2,1) = ymin
-    ! ! x_walls(3,1) = xmin
-    ! ! x_walls(4,1) = ymax
+    ALLOCATE(wall_angle_vec(num_walls))
+    DO i = 1,num_walls
+        xw1 = x_walls(1,i)
+        yw1 = x_walls(2,i)
+        xw2 = x_walls(3,i)
+        yw2 = x_walls(4,i)
+        IF (xw2==xw1) THEN
+            wall_angle_vec(i) = Pi/2.
+        ELSE
+            wall_angle_vec(i) = ATAN(yw2/xw2)
+            IF (xw2 < xw1) THEN
+                wall_angle_vec(i) = wall_angle_vec(i) + Pi
+            END IF
+        END IF
+    END DO
 
-    ! ! x_walls(1,2) = xmax
-    ! ! x_walls(2,2) = ymin
-    ! ! x_walls(3,2) = xmax
-    ! ! x_walls(4,2) = ymax
 
     ! ! bottom/top walls, gun geometry?
     ! 
@@ -171,7 +176,7 @@ SUBROUTINE INITIALIZE
 
     ! calculate expected total number of particles in simulation ()
     IF (include_source .EQV. .true.) THEN
-        N_all = 0
+        ! N_all = 0
         N_simulated = 0
         IF (include_two_beams .EQV. .true.) THEN
             v_avg = v_beam*2 ! the factor of 2 is for both sides
@@ -183,7 +188,7 @@ SUBROUTINE INITIALIZE
         END IF
         N_array = INT(N_expected*1.25)
     ELSE
-        N_all  = INT(V_total*n/Fn)
+        ! N_all  = INT(V_total*n/Fn)
         N_simulated = INT(V_total*n/Fn)
         N_expected = N_simulated
         N_array = N_expected
@@ -280,11 +285,11 @@ SUBROUTINE INITIALIZE
 
     ALLOCATE(xr_vec(N_array,ndim))
     ALLOCATE(xr_vec_prev(N_array,ndim))
-    ALLOCATE(x_coll(N_array,ndim))
     ALLOCATE(xr_vec_new(N_array,ndim))
     ALLOCATE(vr_vec(N_array,3))
     ALLOCATE(vr_vec_prev(N_array,3))
     ALLOCATE(vr_vec_new(N_array,3))
+    !ALLOCATE(vn(N_array,3))
     ALLOCATE(xr_walls(4,num_walls))
     ALLOCATE(collision_occured(N_array,num_walls))
     ALLOCATE(collision_dt(N_array,num_walls))
@@ -293,6 +298,8 @@ SUBROUTINE INITIALIZE
     ALLOCATE(y0(N_array))
     ALLOCATE(xt(N_array))
     ALLOCATE(yt(N_array))
+    ALLOCATE(xy0(N_array,ndim))
+    ALLOCATE(xyt(N_array,ndim))
     ALLOCATE(m(N_array))
     ALLOCATE(b(N_array))
     ALLOCATE(xc(N_array))
@@ -305,11 +312,11 @@ SUBROUTINE INITIALIZE
 
     xr_vec(:,:) = 0
     xr_vec_prev(:,:) = 0
-    x_coll(:,:) = 0
     xr_vec_new(:,:) = 0
     vr_vec(:,:) = 0
     vr_vec_prev(:,:) = 0
     vr_vec_new(:,:) = 0
+    !vn(:,:) = 0
     xr_walls(:,:) = 0
     collision_occured(:,:) = .false.
     collision_dt(:,:) = 0
@@ -317,6 +324,8 @@ SUBROUTINE INITIALIZE
     y0(:) = 0
     xt(:) = 0
     yt(:) = 0
+    xy0(:,:) = 0
+    xyt(:,:) = 0
     m(:) = 0
     b(:) = 0
     xc(:) = 0

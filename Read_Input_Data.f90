@@ -145,6 +145,8 @@ SUBROUTINE WALL_PARAMETERS_READIN
     READ(1,*) x_walls(:,5:num_walls)
     CLOSE(1)
 
+    x_walls(:,6:num_walls) = 0
+
     ! WRITE(*,*) "y_inlet = ",y_inlet
     ! WRITE(*,*) "x_walls=",x_walls
 

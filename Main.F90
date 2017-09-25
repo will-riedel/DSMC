@@ -29,12 +29,12 @@ MODULE CONTAIN
     LOGICAL,ALLOCATABLE, DIMENSION(:):: removed_from_sim_unsorted
     INTEGER,ALLOCATABLE, DIMENSION(:):: i_counting, i_column, i_cur
 
-    REAL(8),ALLOCATABLE,DIMENSION(:,:):: xr_vec,xr_vec_prev, x_coll, xr_vec_new
-    REAL(8),ALLOCATABLE,DIMENSION(:,:):: vr_vec,vr_vec_prev, vr_vec_new
-    REAL(8),ALLOCATABLE,DIMENSION(:,:)::xr_walls
+    REAL(8),ALLOCATABLE,DIMENSION(:,:):: xr_vec,xr_vec_prev, xr_vec_new
+    REAL(8),ALLOCATABLE,DIMENSION(:,:):: vr_vec,vr_vec_prev, vr_vec_new!, vn
+    REAL(8),ALLOCATABLE,DIMENSION(:,:):: xr_walls,xy0,xyt
     LOGICAL,ALLOCATABLE,DIMENSION(:,:):: collision_occured
     REAL(8),ALLOCATABLE,DIMENSION(:,:):: collision_dt
-    REAL(8),ALLOCATABLE,DIMENSION(:):: x0,y0,xt,yt,m,b,xc,yc, dt_cross,min_collision_dt
+    REAL(8),ALLOCATABLE,DIMENSION(:):: x0,y0,xt,yt,m,b,xc,yc, dt_cross,min_collision_dt, wall_angle_vec
     LOGICAL,ALLOCATABLE,DIMENSION(:):: first_collision,crossed
     INTEGER,ALLOCATABLE,DIMENSION(:):: i_cross, i_first
 
@@ -48,15 +48,15 @@ MODULE CONTAIN
     REAL (8):: t0,t0_BC,t0_collisions,t0_loop,t_temp,t_final,t_BC,t_collisions,t_loop, t0_test,t_test
     INTEGER:: nmax, nx, ny, n_cells, N_all,N_simulated, nt, n_saved, nw, N_expected, N_array, Num_s, N_entered, cx,cy,Npc_max, ii
     INTEGER:: N_candidate_pairs,N_accepted_pairs,Npc_cur, num_walls, N_collisions, N_added, N_removed
-    REAL(8), DIMENSION(2,2):: x_lim
-    REAL(8), DIMENSION(2):: y_inlet
+    REAL(8), DIMENSION(2,2):: x_lim, Rotation_mat_neg, Rotation_mat_pos
+    REAL(8), DIMENSION(2):: y_inlet,xy_w
     INTEGER, DIMENSION(2):: n_cells_vec
     LOGICAL:: file_exists
     CHARACTER(80)::filename
 
     CHARACTER(16):: string_in
     INTEGER:: Num_r,counter
-    REAL(8):: xw1,xw2,yw1,yw2
+    REAL(8):: xw1,xw2,yw1,yw2,xw1_0,yw1_0,xw2_0,yw2_0,m_w,b_w,Theta
 
 
 
@@ -67,6 +67,7 @@ MODULE CONTAIN
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: a_mat,b_mat,c_mat
     REAL(8), ALLOCATABLE, DIMENSION(:):: a_vec,b_vec,c_vec
     INTEGER, ALLOCATABLE, DIMENSION(:):: i_temp_vec
+    LOGICAL, ALLOCATABLE, DIMENSION(:):: a_log_vec
     
 END MODULE CONTAIN
 
@@ -147,9 +148,7 @@ PROGRAM MAIN
 
     ! WRITE(*,*)"line=",line
     ! WRITE(*,*)"line(3:4)=",line(3:4)
-
-
-
+    
 
 !-----------------------------------------------------------------------
 !*******************READ INPUT FILE************************
@@ -162,7 +161,7 @@ PROGRAM MAIN
 ! !-----------------------------------------------------------------------
 ! !*******************MAIN LOOP******************************
 ! !-----------------------------------------------------------------------
-         
+
     ! WRITE(*,*) "N_expected,N_array,Num_s=",N_expected,N_array,Num_s
 
     DO ii = it_restart+2,nt
@@ -194,6 +193,7 @@ PROGRAM MAIN
             counter = 0
             CALL SPECULAR_REFLECTION
         END IF
+
 
         ! Input from Source/Reservoir -------------------------------------------------
         ! IF (include_source .EQV. .true.) THEN

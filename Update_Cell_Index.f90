@@ -2,7 +2,7 @@ SUBROUTINE UPDATE_CELL_INDEX
     USE CONTAIN
     USE PROPERTIES
     IMPLICIT NONE
-    INTEGER::i,cx_test,i_test,i_sorted,cx_cur,current_sum
+    INTEGER::i,j,cx_test,i_test,i_sorted,cx_cur,current_sum
 
     ! note: if (x,y) == (0,0), then just set index to -1000 or something (or 0, since indices start with 1 here)
     IF (N_simulated > 0) THEN
@@ -69,6 +69,13 @@ SUBROUTINE UPDATE_CELL_INDEX
         ELSEWHERE
         END WHERE
 
+        DO j = 1,N_simulated
+            IF (removed_from_sim(j) .EQV. .true.) THEN
+                WRITE(*,*) "removed: x=",x_vec(j,:)
+                WRITE(*,*) "removed: v=",v_vec(j,1:2)
+            END IF
+        END DO
+        ! WRITE(*,*) COUNT(removed_from_sim),
 
 
         ! sort array that stores which particles are in each cell
@@ -78,10 +85,11 @@ SUBROUTINE UPDATE_CELL_INDEX
         ! 1. one  pass - count Npc_slice, index spots in sorted cell array  (starting indices)
         ! 2. one pass through cells - find starting index for each cell
         ! 3. one pass - assign each particle to it's sorted place
-
-        ! count how many particles in each cell
+        
         Npc_slice(:,:) = 0
         Npc_added(:,:) = 0
+        
+        ! count how many particles in each cell
         DO i = 1,N_simulated
             cx_cur = i_cell_vec(i,1)
             IF (cx_cur > 0) THEN
@@ -114,8 +122,9 @@ SUBROUTINE UPDATE_CELL_INDEX
         END DO
 
 
-        N_simulated = current_sum
+
         removed_from_sim(1:N_simulated) = .false.   
+        N_simulated = current_sum
 
         CALL CPU_TIME(t_temp)
         t_test = t_test + (t_temp-t0_test)
