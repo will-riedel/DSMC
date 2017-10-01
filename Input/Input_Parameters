@@ -1,7 +1,7 @@
 *N_INITIAL_____
-1.d19
+1.d22
 *NS_INITIAL____
-1.d19
+1.d22
 *FN____________
 1.7d16
 *N_CELLS_X_____
@@ -11,9 +11,9 @@
 *T_MAX_________
 6.d-4
 *DT____________
-6.d-8
+2.d-8
 *DT_TO_SAVE____
-40 
+20 
 *INCLUDE_SOURCE
 .TRUE.
 *USE_TWO_BEAMS_
@@ -26,6 +26,8 @@
 .FALSE.
 *INCLUDE_GUN_BC
 .FALSE.
+*ACCOMMODATION_
+0.5
 *USE_HOMOG_GRID
 .FALSE.
 *DX_INIT_______

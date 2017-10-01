@@ -130,21 +130,29 @@ SUBROUTINE INITIALIZE
     ys_max = ymid+hs/2
 
 
+    ! WRITE(*,*) "x_lim=",x_lim
+    ! WRITE(*,*) "hs,Vs,ymid,ys_min,ys_max=",hs,Vs,ymid,ys_min,ys_max
+
+
+
     ! Set up wall geometry ---------------------------------------------------------
     ! draw boundaries with vertical and horizontal lines (each row is endpoints of wall: (x1,y1,x2,y2))
     ! include vertical walls at inlet/outlet as first two rows
     
     CALL WALL_PARAMETERS_READIN
+
     x_walls(:,1) = (/ xmin,ymin,xmin,ymax /)                                        ! left vertical wall
     x_walls(:,2) = (/ xmax,ymin,xmax,ymax /)                                        ! right vertical wall
     x_walls(:,3) = (/ xmin,ymin,xmax,ymin /)                                        ! bottom horizontal wall
     x_walls(:,4) = (/ xmin,ymax,xmax,ymax /)                                        ! top horizontal wall
 
     ! x_walls(:,5) = (/ 0.,0.,0.3,0.5 /)                                        ! top horizontal wall
-    x_walls(:,5) = (/ 0.,0.,0.5,0.5 /)                                        ! top horizontal wall
+    ! x_walls(:,5) = (/ 0.,0.,0.5,0.5 /)                                        ! top horizontal wall
     ! x_walls(:,5) = (/ .15,0.,.15,1. /)                                        ! top horizontal wall
+    ! x_walls(:,5) = (/ .1,0.,0.1,.05 /)  
+    ! x_walls(:,6) = (/ .025,.05,.05,.025 /)  
 
-    num_walls = 5
+    ! num_walls = 6
 
     ALLOCATE(wall_angle_vec(num_walls))
     DO i = 1,num_walls
@@ -155,17 +163,15 @@ SUBROUTINE INITIALIZE
         IF (xw2==xw1) THEN
             wall_angle_vec(i) = Pi/2.
         ELSE
-            wall_angle_vec(i) = ATAN(yw2/xw2)
+            wall_angle_vec(i) = ATAN((yw2-yw1)/(xw2-xw1))
             IF (xw2 < xw1) THEN
                 wall_angle_vec(i) = wall_angle_vec(i) + Pi
             END IF
         END IF
     END DO
 
-
-    ! ! bottom/top walls, gun geometry?
-    ! 
-
+    N_specular = 0
+    N_diffuse = 0
 
     ! set up vectors/IC's ----------------------------------------------------------
 
@@ -213,6 +219,7 @@ SUBROUTINE INITIALIZE
     ALLOCATE(reflected_in(N_array))
     ALLOCATE(removed_from_sim(N_array))
     ALLOCATE(removed_from_sim_unsorted(N_array))
+    ALLOCATE(rn_vec(N_array))
 
     ALLOCATE(in_column(N_array))
     ALLOCATE(in_cell(N_array))
@@ -242,6 +249,7 @@ SUBROUTINE INITIALIZE
     reflected_in(:) = .false.
     removed_from_sim(:) = .false.
     removed_from_sim_unsorted(:) = .false.
+    rn_vec(:) = 0
 
     in_column(:) = .false.
     in_cell(:) = .false.

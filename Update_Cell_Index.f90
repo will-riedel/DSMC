@@ -47,14 +47,24 @@ SUBROUTINE UPDATE_CELL_INDEX
                     neg_offset = ny/2.-.5
                 ENDIF
 
-                WHERE (x_vec(1:N_simulated,2) < ymid)
-                    i_cell_vec(1:N_simulated,2) = &
-                        FLOOR( neg_offset - FLOOR( n_inf*(1-EXP(-alpha_y*(ymid - x_vec(1:N_simulated,2))))) ) 
-                ELSEWHERE
-                    ! i_cell_vec(1:N_simulated,2) = CEILING( pos_offset - FLOOR( n_inf*(1-EXP(-alpha_y*(x_vec(1:N_simulated,2) - ymid)))) )
-                    i_cell_vec(1:N_simulated,2) = &
-                        CEILING( pos_offset + FLOOR( n_inf*(1-EXP(-alpha_y*(x_vec(1:N_simulated,2) - ymid)))) ) 
-                END WHERE
+                ! WHERE (x_vec(1:N_simulated,2) < ymid)
+                !     i_cell_vec(1:N_simulated,2) = &
+                !         FLOOR( neg_offset - FLOOR( n_inf*(1-EXP(-alpha_y*(ymid - x_vec(1:N_simulated,2))))) ) 
+                ! ELSEWHERE
+                !     ! i_cell_vec(1:N_simulated,2) = CEILING( pos_offset - FLOOR( n_inf*(1-EXP(-alpha_y*(x_vec(1:N_simulated,2) - ymid)))) )
+                !     i_cell_vec(1:N_simulated,2) = &
+                !         CEILING( pos_offset + FLOOR( n_inf*(1-EXP(-alpha_y*(x_vec(1:N_simulated,2) - ymid)))) ) 
+                ! END WHERE
+
+                DO i = 1,N_simulated
+                    IF (x_vec(i,2) < ymid) THEN
+                        i_cell_vec(i,2) = &
+                        FLOOR( neg_offset - FLOOR( n_inf*(1-EXP(-alpha_y*(ymid - x_vec(i,2))))) ) 
+                    ELSE 
+                        i_cell_vec(i,2) = &
+                        CEILING( pos_offset + FLOOR( n_inf*(1-EXP(-alpha_y*(x_vec(i,2) - ymid)))) ) 
+                    END IF
+                END DO
 
                 i_cell_vec(1:N_simulated,2) = i_cell_vec(1:N_simulated,2) + 1
             ELSE
@@ -63,19 +73,26 @@ SUBROUTINE UPDATE_CELL_INDEX
 
         END IF
 
-        WHERE (removed_from_sim(1:N_simulated) .EQV. .true.)
-            i_cell_vec(1:N_simulated,1) = 0
-            i_cell_vec(1:N_simulated,2) = 0
-        ELSEWHERE
-        END WHERE
+        ! WHERE (removed_from_sim(1:N_simulated) .EQV. .true.)
+        !     i_cell_vec(1:N_simulated,1) = 0
+        !     i_cell_vec(1:N_simulated,2) = 0
+        ! ELSEWHERE
+        ! END WHERE
 
-        DO j = 1,N_simulated
-            IF (removed_from_sim(j) .EQV. .true.) THEN
-                WRITE(*,*) "removed: x=",x_vec(j,:)
-                WRITE(*,*) "removed: v=",v_vec(j,1:2)
-            END IF
+        DO i = 1,N_simulated
+            IF (removed_from_sim(i) .eqv. .true.) THEN
+                i_cell_vec(i,1) = 0
+                i_cell_vec(i,2) = 0
+            END IF 
         END DO
-        ! WRITE(*,*) COUNT(removed_from_sim),
+
+        ! DO j = 1,N_simulated
+        !     IF (removed_from_sim(j) .EQV. .true.) THEN
+        !         WRITE(*,*) "removed: x=",x_vec(j,:)
+        !         WRITE(*,*) "removed: v=",v_vec(j,1:2)
+        !     END IF
+        ! END DO
+        ! WRITE(*,*) COUNT(removedoved_from_sim),
 
 
         ! sort array that stores which particles are in each cell

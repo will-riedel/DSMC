@@ -24,30 +24,11 @@ SUBROUTINE SAVE_DATA
     WRITE(1) i_cell_vec(1:N_simulated,:)
     CLOSE(1)
 
-    ! save num_per_cell data? This also seems way unnecessary
-    WRITE(filename,"('Output/data/Npc_',I7.7,'.txt')") (ii-1)
-    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    WRITE(1) Npc_slice
-    CLOSE(1)
-
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*n_collisions_total"   
-    ! WRITE(1,"(I0)") n_collisions_total(1:ii)
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*N_candidate_pairs_total"   
-    ! WRITE(1,"(I0)") N_candidate_pairs_total(1:ii)
-    ! WRITE(1,"(A)") "*"   
-    ! WRITE(1,"(A)") "*N_accepted_pairs_total"   
-    ! WRITE(1,"(I0)") N_accepted_pairs_total(1:ii)
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*N_added_total"   
-    ! WRITE(1,"(I0)") N_added_total(1:ii)
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*ncp_remainder"   
-    ! WRITE(1,"(E12.5)") ncp_remainder
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*N_total"   
-    ! WRITE(1,"(I0)") N_total(1:ii)
+    ! ! save num_per_cell data? This also seems way unnecessary
+    ! WRITE(filename,"('Output/data/Npc_',I7.7,'.txt')") (ii-1)
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    ! WRITE(1) Npc_slice
+    ! CLOSE(1)
 
     ! save some tracking vectors
     WRITE(filename,"('Output/data/n_collisions_total.txt')")
@@ -76,8 +57,11 @@ SUBROUTINE SAVE_DATA
     CLOSE(1)
     WRITE(filename,"('Output/data/x_walls.txt')")
     OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    WRITE(1) x_walls
+    WRITE(1) x_walls(:,1:num_walls)
     CLOSE(1)
+    ! WRITE(*,*) "x_walls=",x_walls
+    ! WRITE(*,*) "shape,num=",SHAPE(x_walls),num_walls
+
 
     ! save miscellaneous data
     WRITE(filename,"('Output/data/data.txt')")
@@ -152,55 +136,15 @@ SUBROUTINE SAVE_DATA
     WRITE(1,"(A)") "*"
     WRITE(1,"(A)") "*N_added"   
     WRITE(1,"(I0)") SUM(N_added_total)
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*n_collisions_total"   
-    ! WRITE(1,"(I0)") n_collisions_total(1:ii)
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*N_candidate_pairs_total"   
-    ! WRITE(1,"(I0)") N_candidate_pairs_total(1:ii)
-    ! WRITE(1,"(A)") "*"   
-    ! WRITE(1,"(A)") "*N_accepted_pairs_total"   
-    ! WRITE(1,"(I0)") N_accepted_pairs_total(1:ii)
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*N_added_total"   
-    ! WRITE(1,"(I0)") N_added_total(1:ii)
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*ncp_remainder"   
-    ! WRITE(1,"(E12.5)") ncp_remainder
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*N_total"   
-    ! WRITE(1,"(I0)") N_total(1:ii)
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*x_cells_vec"   
-    ! WRITE(1,"(E12.5)") x_cells_vec
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*y_cells_vec"   
-    ! WRITE(1,"(E12.5)") y_cells_vec
     WRITE(1,"(A)") "*"
     WRITE(1,"(A)") "*x_lim"   
     WRITE(1,"(E12.5)") x_lim
-    ! WRITE(1,"(A)") "*"
-    ! WRITE(1,"(A)") "*x_walls"   
-    ! WRITE(1,"(E12.5)") x_walls
     WRITE(1,"(A)") "*"
     WRITE(1,"(A)") "*it_last"   
     WRITE(1,"(I0)") ii
     WRITE(1,"(A)") "*END"
     CLOSE(1)
 
-
-
-    ! WRITE(var_cur,"("N_candidate_pairs_total" )")
-    ! WRITE(filename,"('Output/data/',,'.txt')") var_cur
-    ! OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
-    ! WRITE(1,"(A)") var_cur
-    ! WRITE(1,"(I0)") N_candidate_pairs_total
-    ! CLOSE(1)
-    ! WRITE(filename,"('Output/data/data.txt')")
-    ! OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
-    ! WRITE(1,"(A)") "N_accepted_pairs_total"   
-    ! WRITE(1,"(I0)") N_accepted_pairs_total
-    ! CLOSE(1)
 
 
     n_saved = n_saved + 1

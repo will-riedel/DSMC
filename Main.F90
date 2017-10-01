@@ -34,7 +34,7 @@ MODULE CONTAIN
     REAL(8),ALLOCATABLE,DIMENSION(:,:):: xr_walls,xy0,xyt
     LOGICAL,ALLOCATABLE,DIMENSION(:,:):: collision_occured
     REAL(8),ALLOCATABLE,DIMENSION(:,:):: collision_dt
-    REAL(8),ALLOCATABLE,DIMENSION(:):: x0,y0,xt,yt,m,b,xc,yc, dt_cross,min_collision_dt, wall_angle_vec
+    REAL(8),ALLOCATABLE,DIMENSION(:):: x0,y0,xt,yt,m,b,xc,yc, dt_cross,min_collision_dt, wall_angle_vec, rn_vec
     LOGICAL,ALLOCATABLE,DIMENSION(:):: first_collision,crossed
     INTEGER,ALLOCATABLE,DIMENSION(:):: i_cross, i_first
 
@@ -44,12 +44,13 @@ MODULE CONTAIN
     REAL(8):: m_g,d_g,vth,c_s,vr_max_0,v_avg, xmin,xmax,ymin,ymax,ymid, n_inf, V_total, v_beam
     REAL(8):: ws,ts,hs,Vs,xs_min,xs_max,xs2_min,xs2_max,ys_min,ys_max,t, N_candidate_pairs_real
     REAL(8):: Nc0,Nc_sim,m_r,collision_ratio, Num_s_exact
-    REAL(8):: alpha_x,alpha_y,neg_offset,pos_offset
+    REAL(8):: alpha_x,alpha_y,neg_offset,pos_offset, accommodation 
     REAL (8):: t0,t0_BC,t0_collisions,t0_loop,t_temp,t_final,t_BC,t_collisions,t_loop, t0_test,t_test
     INTEGER:: nmax, nx, ny, n_cells, N_all,N_simulated, nt, n_saved, nw, N_expected, N_array, Num_s, N_entered, cx,cy,Npc_max, ii
-    INTEGER:: N_candidate_pairs,N_accepted_pairs,Npc_cur, num_walls, N_collisions, N_added, N_removed
+    INTEGER:: N_candidate_pairs,N_accepted_pairs,Npc_cur, num_walls, N_collisions, N_added, N_removed, N_specular, N_diffuse
     REAL(8), DIMENSION(2,2):: x_lim, Rotation_mat_neg, Rotation_mat_pos
     REAL(8), DIMENSION(2):: y_inlet,xy_w
+    REAL(8), DIMENSION(3):: alpha_vec
     INTEGER, DIMENSION(2):: n_cells_vec
     LOGICAL:: file_exists
     CHARACTER(80)::filename
@@ -90,11 +91,13 @@ MODULE PROPERTIES
 ! gun geometry dimensions
     ! REAL(8), PARAMETER:: inlet_height = 1.d0
     ! REAL(8), PARAMETER:: inlet_height = 0.01d0
-    REAL(8), PARAMETER:: inlet_height = 0.5
+    ! REAL(8), PARAMETER:: inlet_height = 0.5
+    REAL(8), PARAMETER:: inlet_height = 0.025
     REAL(8), PARAMETER:: inlet_length = .1d0
     REAL(8), PARAMETER:: gun_length = .26d0
     REAL(8), PARAMETER:: gun_height = .05d0
-    REAL(8), PARAMETER:: outlet_height = 1.d0
+    ! REAL(8), PARAMETER:: outlet_height = 1.d0
+    REAL(8), PARAMETER:: outlet_height = 0.05
     REAL(8), PARAMETER:: outlet_length = .25d0
 
 ! number of dimensions (keep at 2 right now, even for 1-D simulation)
@@ -120,35 +123,40 @@ PROGRAM MAIN
     ! CHARACTER(80)::filename
     CHARACTER(10)::str_file_num, line
 
-    ! ALLOCATE(a_mat(6,2))
-    ! ALLOCATE(b_mat(6,2))
-    ! a_mat(:,1) = 1
-    ! a_mat(:,2) = 2
-    ! WRITE(*,*) "a_mat = ",a_mat
+    ! N_array = 1.d8
+    ! ALLOCATE(x_vec(N_array,2))
+    ! ALLOCATE(first_collision(N_array))
+    ! ! 1 --------------------------------
+    ! CALL CPU_TIME(t0_test)
+    ! x_vec(1:N_array,1) = 0.
+    ! x_vec(1:N_array,2) = 0.
+    ! first_collision(1:N_array) = .true.
+    ! ! WHERE(x_vec(1:N_array,1) == 0.)
+    ! WHERE(first_collision(1:N_array) .eqv. .true.)
+    !     x_vec(1:N_array,2) = 1.
+    ! ELSEWHERE
+    !     x_vec(1:N_array,2) = 2.
+    ! ENDWHERE
 
-    ! ! save position data
-    ! WRITE(filename,"('Output/data/a.txt')")
-    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    ! WRITE(1) a_mat
-    ! ! OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
-    ! ! WRITE(1,"(E12.5)") x_vec
-    ! CLOSE(1)
+    ! CALL CPU_TIME(t_temp)
+    ! WRITE(*,*) "t1 = ", (t_temp-t0_test)
 
+    ! ! 2 --------------------------------
+    ! CALL CPU_TIME(t0_test)
+    ! x_vec(1:N_array,1) = 0.
+    ! x_vec(1:N_array,2) = 0.
+    ! first_collision(1:N_array) = .true.
+    ! DO i = 1,N_array
+    !     ! IF (x_vec(i,1) == 0.) THEN
+    !     IF (first_collision(i) .eqv. .true.) THEN
+    !         x_vec(i,2) = 1.
+    !     ELSE
+    !         x_vec(i,2) = 2.
+    !     END IF
+    ! END DO
 
-    ! OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
-    ! READ(1) b_mat
-    ! CLOSE(1)
-    ! WRITE(*,*) "b_mat = ",b_mat
-    ! WRITE(*,*) "shape(b_mat) = ",SHAPE(b_mat)
-
-    ! WRITE(filename,"('Output/data/data.txt')")
-    ! OPEN(UNIT=100,FILE=filename)
-    ! READ(100,*) line
-    ! CLOSE(100)
-
-    ! WRITE(*,*)"line=",line
-    ! WRITE(*,*)"line(3:4)=",line(3:4)
-    
+    ! CALL CPU_TIME(t_temp)
+    ! WRITE(*,*) "t2 = ", (t_temp-t0_test)
 
 !-----------------------------------------------------------------------
 !*******************READ INPUT FILE************************
@@ -161,8 +169,6 @@ PROGRAM MAIN
 ! !-----------------------------------------------------------------------
 ! !*******************MAIN LOOP******************************
 ! !-----------------------------------------------------------------------
-
-    ! WRITE(*,*) "N_expected,N_array,Num_s=",N_expected,N_array,Num_s
 
     DO ii = it_restart+2,nt
         t = t_vec(ii)
@@ -196,20 +202,6 @@ PROGRAM MAIN
 
 
         ! Input from Source/Reservoir -------------------------------------------------
-        ! IF (include_source .EQV. .true.) THEN
-            
-        !     CALL RANDOM_NUMBER(rn)
-        !     IF (rn < Num_s_exact) THEN
-        !         Num_s = CEILING(Num_s_exact)
-        !     ELSE
-        !         Num_s = FLOOR(Num_s_exact)
-
-        !     IF (include_two_beams .EQV. .true.) THEN
-        !         CALL INITIALIZE_SOURCE_TWO_STREAM
-        !     ELSE
-        !         CALL INITIALIZE_SOURCE
-        !     END IF
-        ! END IF
         CALL INITIALIZE_SOURCE
 
         IF (N_simulated > 0) THEN
@@ -255,6 +247,7 @@ PROGRAM MAIN
     WRITE(*,*) "N_accepted_pairs =",N_accepted_pairs
     WRITE(*,*) "collision acceptance rate = ",N_collisions*1.0/N_candidate_pairs
     WRITE(*,*) "Computed Collision Rate / Analytic Collision rate = ", collision_ratio
+    WRITE(*,*) "N_diffuse, N_specular, Effective Accomm. Coeff. = ", N_diffuse, N_specular, (N_diffuse+0.)/(N_diffuse+N_specular)
     WRITE(*,*) "N_expected =",N_expected
     WRITE(*,*) "N_added = ",N_added
     WRITE(*,*) "peak N = ",MAXVAL(N_total)

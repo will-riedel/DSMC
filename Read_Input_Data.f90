@@ -81,6 +81,9 @@ SUBROUTINE INPUT_PARAMETERS_READIN
         ELSE IF (line == '*INCLUDE_GUN_BC') THEN
           ! include the boundaries of the gun geometry
           READ(100,*) include_gun_boundaries
+        ELSE IF (line == '*ACCOMMODATION_') THEN
+          ! include the boundaries of the gun geometry
+          READ(100,*) accommodation
         ELSE IF (line == '*USE_HOMOG_GRID') THEN
           ! whether to use a homogeneous grid or the geometric one
           READ(100,*) use_homogenous_grid
@@ -134,18 +137,18 @@ SUBROUTINE WALL_PARAMETERS_READIN
 
 
     ! xy coordinates of the walls (1-4 are the outer boundaries of the rectangle)
-    OPEN(UNIT=1,FILE='Input/num_walls.txt',STATUS='old')! ,access='direct',recl=4,iostat=ok)
+    OPEN(UNIT=1,FILE='Input/num_walls.txt',STATUS='old')
     READ(1,*) num_walls
     CLOSE(1)
     num_walls = num_walls + 4
     ! nw = num_walls
     ALLOCATE(x_walls(4,num_walls))
 
-    OPEN(UNIT=1,FILE='Input/x_walls.txt',STATUS='old')! ,access='direct',recl=4,iostat=ok)
+    OPEN(UNIT=1,FILE='Input/x_walls.txt',STATUS='old')
     READ(1,*) x_walls(:,5:num_walls)
     CLOSE(1)
 
-    x_walls(:,6:num_walls) = 0
+    ! x_walls(:,6:num_walls) = 0
 
     ! WRITE(*,*) "y_inlet = ",y_inlet
     ! WRITE(*,*) "x_walls=",x_walls
