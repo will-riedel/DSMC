@@ -141,21 +141,28 @@ SUBROUTINE WALL_PARAMETERS_READIN
 
 
     ! xy coordinates of the walls (1-4 are the outer boundaries of the rectangle)
-    OPEN(UNIT=1,FILE='Input/num_walls.txt',STATUS='old')
-    READ(1,*) num_walls
-    CLOSE(1)
-    num_walls = num_walls + 4
-    ! nw = num_walls
-    ALLOCATE(x_walls(4,num_walls))
+    IF (include_gun_boundaries .EQV. .true.) THEN
+        OPEN(UNIT=1,FILE='Input/num_walls.txt',STATUS='old')
+        READ(1,*) num_walls
+        CLOSE(1)
+        num_walls = num_walls + 4
+        ! nw = num_walls
+        ALLOCATE(x_walls(4,num_walls))
 
-    OPEN(UNIT=1,FILE='Input/x_walls.txt',STATUS='old')
-    READ(1,*) x_walls(:,5:num_walls)
-    CLOSE(1)
+        OPEN(UNIT=1,FILE='Input/x_walls.txt',STATUS='old')
+        READ(1,*) x_walls(:,5:num_walls)
+        CLOSE(1)
 
-    ! x_walls(:,6:num_walls) = 0
+        ! x_walls(:,6:num_walls) = 0
 
-    ! WRITE(*,*) "y_inlet = ",y_inlet
-    ! WRITE(*,*) "x_walls=",x_walls
+        ! WRITE(*,*) "y_inlet = ",y_inlet
+        ! WRITE(*,*) "x_walls=",x_walls
+
+    ELSE
+        num_walls = 4
+        ALLOCATE(x_walls(4,4))
+
+      END IF
 
 
 END SUBROUTINE WALL_PARAMETERS_READIN

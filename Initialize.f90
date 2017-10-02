@@ -96,13 +96,11 @@ SUBROUTINE INITIALIZE
 
         END IF
 
-
-
-        WRITE(*,*) "ny,nmax,n_inf,dy_factor=",ny,nmax,n_inf,dy_factor
-        WRITE(*,*) "i_range_y=",i_range_y
-        WRITE(*,*) "y_cells_half=",y_cells_half
-        WRITE(*,*) "ymin,ymax,ymid=",ymin,ymax,ymid
-        WRITE(*,*) "ycv=",y_cells_vec
+        ! WRITE(*,*) "ny,nmax,n_inf,dy_factor=",ny,nmax,n_inf,dy_factor
+        ! WRITE(*,*) "i_range_y=",i_range_y
+        ! WRITE(*,*) "y_cells_half=",y_cells_half
+        ! WRITE(*,*) "ymin,ymax,ymid=",ymin,ymax,ymid
+        ! WRITE(*,*) "ycv=",y_cells_vec
 
     END IF
 
