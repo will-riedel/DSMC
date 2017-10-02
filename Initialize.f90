@@ -28,11 +28,12 @@ SUBROUTINE INITIALIZE
     xmax = x_lim(1,2)
     ymin = x_lim(2,1)
     ymax = x_lim(2,2)    
+    ymid = (ymin+ymax)/2
 
     ! nx = n_cells_vec(1)
     ! ny = n_cells_vec(2)
-    ny = 1
-    cy  = 1
+    ! ny = 1
+    ! cy  = 1
 
 
     IF (use_homogenous_grid .EQV. .true.) THEN
@@ -52,23 +53,56 @@ SUBROUTINE INITIALIZE
             y_cells_vec(i) = ymin + dy*(i-1)
         END DO
     ELSE
-        ! xmax = x_lim(1,2)
         alpha_x = -LOG(1./dx_factor)/xmax
         n_inf = 1/(dx_0*alpha_x)
         nmax = INT(n_inf*(1-EXP(-alpha_x*xmax)))
         nx = nmax+1
-        ! ny = 1
 
-        ALLOCATE( i_range(nx) )
+        ALLOCATE( i_range_x(nx) )
         ALLOCATE( x_cells_vec(nx) )
-        ALLOCATE( y_cells_vec(ny) )
+
+        i_range_x = (/ (i,i=0,nmax) /)
+        x_cells_vec = -1/alpha_x*LOG(1-i_range_x/n_inf)
 
 
-        i_range = (/ (i,i=0,nmax) /)
-        x_cells_vec = -1/alpha_x*LOG(1-i_range/n_inf)
-        y_cells_vec = 0
-        ! n_cells_vec(1) = nmax+1
-        ! n_cells_vec(2) = 1
+
+        IF (dy_0 < (ymax-ymin) ) THEN
+            
+            alpha_y = -LOG(1./dy_factor)/(ymax-ymid)
+            n_inf = 1./(dy_0*alpha_y)
+            nmax = INT(n_inf*( 1.-EXP( -alpha_y*(ymax-ymid) ) ))
+            ny = 2*(nmax+1)
+
+            ALLOCATE( i_range_y(nmax+1) )
+            ALLOCATE( y_cells_half(nmax+1) )
+            ALLOCATE( y_cells_vec(ny) )
+
+            i_range_y = (/ (i,i=0,nmax) /)
+            y_cells_half = -1/alpha_y*LOG(1.-i_range_y/n_inf)
+
+            y_cells_vec(1) = ymin
+            DO i = 2,(nmax+1)
+                y_cells_vec(i) = ymid - y_cells_half( (nmax+1)-(i-2) )
+            END DO
+            DO i = (nmax+2),ny
+                y_cells_vec(i) = ymid + y_cells_half( i-(nmax+2)+1 )
+            END DO
+        
+        ELSE
+
+            ny = 1
+            ALLOCATE( y_cells_vec(ny) )
+            y_cells_vec = 0
+
+        END IF
+
+
+
+        WRITE(*,*) "ny,nmax,n_inf,dy_factor=",ny,nmax,n_inf,dy_factor
+        WRITE(*,*) "i_range_y=",i_range_y
+        WRITE(*,*) "y_cells_half=",y_cells_half
+        WRITE(*,*) "ymin,ymax,ymid=",ymin,ymax,ymid
+        WRITE(*,*) "ycv=",y_cells_vec
 
     END IF
 
@@ -78,16 +112,22 @@ SUBROUTINE INITIALIZE
     ALLOCATE(dx_cells_vec(nx))
     ALLOCATE(dy_cells_vec(ny))
     dx_cells_vec(1:(nx-1)) = x_cells_vec(2:nx) - x_cells_vec(1:(nx-1))
-    dx_cells_vec(nx) = x_lim(1,2) - x_cells_vec(nx)
-    dy_cells_vec = 1
+    dx_cells_vec(nx) = xmax - x_cells_vec(nx)
+    IF (ny == 1) THEN
+        ! dy_cells_vec = 1
+        dy_cells_vec = (ymax-ymin)
+    ELSE
+        dy_cells_vec(1:(ny-1)) = y_cells_vec(2:ny) - y_cells_vec(1:(ny-1))
+        dy_cells_vec(ny) = ymax - y_cells_vec(ny)
+    END IF
     ALLOCATE(Vc(nx,ny))
-    DO i = 1,nx
-        DO j = 1,ny
-            Vc(i,j) = dx_cells_vec(i)*dy_cells_vec(j)
+    DO cx = 1,nx
+        DO cy = 1,ny
+            Vc(cx,cy) = dx_cells_vec(cx)*dy_cells_vec(cy)
         END DO
     END DO
 
-    V_total = ( x_lim(1,2)-x_lim(1,1) ) * ( x_lim(2,2)-x_lim(2,1) )                 ! total simulation volume
+    V_total = ( xmax-xmin ) * ( ymax-ymin )                 ! total simulation volume
     
 
     ! time step parameters ---------------------------------------------------------
@@ -125,7 +165,6 @@ SUBROUTINE INITIALIZE
     xs_max = xmin
     xs2_min = xmax
     xs2_max = xmax + ws
-    ymid = (ymin+ymax)/2
     ys_min = ymid-hs/2
     ys_max = ymid+hs/2
 

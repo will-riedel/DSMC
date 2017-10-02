@@ -2,7 +2,7 @@ SUBROUTINE UPDATE_CELL_INDEX
     USE CONTAIN
     USE PROPERTIES
     IMPLICIT NONE
-    INTEGER::i,j,cx_test,i_test,i_sorted,cx_cur,current_sum
+    INTEGER::i,j,cx_test,i_test,i_sorted,current_sum
 
     ! note: if (x,y) == (0,0), then just set index to -1000 or something (or 0, since indices start with 1 here)
     IF (N_simulated > 0) THEN
@@ -26,7 +26,7 @@ SUBROUTINE UPDATE_CELL_INDEX
             ! END DO
 
             IF (ny>1) THEN
-                i_cell_vec(1:N_simulated,2) = FLOOR( (x_vec(1:N_simulated,2)-xmin)/(xmax-xmin)*ny ) + 1
+                i_cell_vec(1:N_simulated,2) = FLOOR( (x_vec(1:N_simulated,2)-ymin)/(ymax-ymin)*ny ) + 1
             ELSE
                 i_cell_vec(1:N_simulated,2) = 1
             END IF
@@ -38,7 +38,7 @@ SUBROUTINE UPDATE_CELL_INDEX
 
             IF (ny > 1) THEN
                 alpha_y = -LOG(1/dy_factor) / (ymax-ymid)
-                n_inf = 1/(dx_0*alpha_y)
+                n_inf = 1/(dy_0*alpha_y)
                 IF (MOD(ny,2)==0) THEN
                     pos_offset = ny/2. - 0
                     neg_offset = ny/2. - 1
@@ -108,17 +108,20 @@ SUBROUTINE UPDATE_CELL_INDEX
         
         ! count how many particles in each cell
         DO i = 1,N_simulated
-            cx_cur = i_cell_vec(i,1)
-            IF (cx_cur > 0) THEN
-                Npc_slice(cx_cur,cy) = Npc_slice(cx_cur,cy) + 1
+            cx = i_cell_vec(i,1)
+            cy = i_cell_vec(i,2)
+            IF (cx > 0) THEN
+                Npc_slice(cx,cy) = Npc_slice(cx,cy) + 1
             END IF
         END DO
 
         ! find starting index for each cell in sorted arrays
         current_sum = 0
-        DO cx_cur = 1,nx
-            starting_index(cx_cur,cy) = current_sum+1
-            current_sum = current_sum + Npc_slice(cx_cur,cy)
+        DO cx = 1,nx
+            DO cy = 1,ny
+                starting_index(cx,cy) = current_sum+1
+                current_sum = current_sum + Npc_slice(cx,cy)
+            END DO
         END DO
 
         ! generate sorted arrays
@@ -127,10 +130,11 @@ SUBROUTINE UPDATE_CELL_INDEX
         i_cell_vec_unsorted(1:N_simulated,:) = i_cell_vec(1:N_simulated,:)
         ! removed_from_sim_unsorted = removed_from_sim
         DO i = 1,N_simulated
-            cx_cur = i_cell_vec_unsorted(i,1)
-            IF (cx_cur > 0) THEN
-                i_sorted = starting_index(cx_cur,cy) + Npc_added(cx_cur,cy)
-                Npc_added(cx_cur,cy) = Npc_added(cx_cur,cy) + 1
+            cx = i_cell_vec_unsorted(i,1)
+            cy = i_cell_vec_unsorted(i,2)
+            IF (cx > 0) THEN
+                i_sorted = starting_index(cx,cy) + Npc_added(cx,cy)
+                Npc_added(cx,cy) = Npc_added(cx,cy) + 1
 
                 x_vec(i_sorted,:) = x_vec_unsorted(i,:)
                 v_vec(i_sorted,:) = v_vec_unsorted(i,:)

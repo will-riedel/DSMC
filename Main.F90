@@ -9,7 +9,7 @@ MODULE CONTAIN
     INTEGER::n_cells_x,n_cells_y
     INTEGER::dt_to_save
     REAL(8)::tmax,dt
-    REAL(8)::dx_0,dx_factor,dy_factor
+    REAL(8)::dx_0,dy_0,dx_factor,dy_factor
     LOGICAL::include_source,close_inlet,close_outlet,include_gun_boundaries,use_homogenous_grid,restart_simulation
     LOGICAL::include_two_beams
     CHARACTER(80)::dir_cur
@@ -18,9 +18,9 @@ MODULE CONTAIN
 !-----------------------------------------------------------------------
 !*******************DYNAMIC ARRAYS*************************
 !-----------------------------------------------------------------------
-    REAL(8), ALLOCATABLE, DIMENSION(:):: x_cells_vec, y_cells_vec, dx_cells_vec, dy_cells_vec, i_range, t_vec
+    REAL(8), ALLOCATABLE, DIMENSION(:):: x_cells_vec, y_cells_vec, y_cells_half, dx_cells_vec, dy_cells_vec
+    REAL(8), ALLOCATABLE, DIMENSION(:):: counter_vec, i_range_x,i_range_y, t_vec
     INTEGER, ALLOCATABLE, DIMENSION(:):: N_total,N_candidate_pairs_total,N_accepted_pairs_total,N_collisions_total,N_added_total
-    REAL(8), ALLOCATABLE, DIMENSION(:):: counter_vec
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: Vc, x_walls, vr_max, x_vec,v_vec, ncp_remainder
     INTEGER, ALLOCATABLE, DIMENSION(:,:):: i_cell_vec, i_cell_vec_prev, Npc_slice, starting_index, Npc_added
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_prev,v_vec_prev, xs_vec,vs_vec,xs_vec_prev,vs_vec_prev
@@ -197,7 +197,7 @@ PROGRAM MAIN
         IF (N_simulated > 0) THEN
             Num_r = N_simulated
             counter = 0
-            CALL SPECULAR_REFLECTION
+            CALL COMPUTE_REFLECTION
         END IF
 
 

@@ -13,7 +13,7 @@
 *DT____________
 2.d-8
 *DT_TO_SAVE____
-20 
+100 
 *INCLUDE_SOURCE
 .TRUE.
 *USE_TWO_BEAMS_
@@ -32,6 +32,8 @@
 .FALSE.
 *DX_INIT_______
 .000337
+*DY_INIT_______
+.002
 *DX_FACTOR_____
 1.d4
 *DY_FACTOR_____

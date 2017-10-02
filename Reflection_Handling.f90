@@ -1,4 +1,4 @@
-SUBROUTINE SPECULAR_REFLECTION
+SUBROUTINE COMPUTE_REFLECTION
     USE CONTAIN
     USE PROPERTIES
     IMPLICIT NONE
@@ -38,7 +38,7 @@ SUBROUTINE SPECULAR_REFLECTION
         m(1:Num_r) = vr_vec_prev(1:Num_r,2)/vr_vec_prev(1:Num_r,1)
         b(1:Num_r) = xy0(1:Num_r,2)-m(1:Num_r)*xy0(1:Num_r,1)
         
-        IF (xw1 == xw2) THEN    ! (infinite slopes, slightly different calculation of crossing point)
+        IF (xw1 == xw2) THEN    ! (vertical walls = infinite slopes, slightly different calculation of crossing point)
             xc(1:Num_r) = xw1
             yc(1:Num_r) = m(1:Num_r)*xw1 + b(1:Num_r)
             collision_occured(1:Num_r,i) = ( (xy0(1:Num_r,1)<xc(1:Num_r))   .neqv. (xyt(1:Num_r,1)<xc(1:Num_r)) ) &
@@ -98,26 +98,6 @@ SUBROUTINE SPECULAR_REFLECTION
             Rotation_mat_pos(:,1) = (/  COS(Theta), -SIN(Theta) /)
             Rotation_mat_pos(:,2) = (/ SIN(Theta),  COS(Theta) /)
 
-
-
-
-            ! xy_w(1) = xw2
-            ! xy_w(2) = yw2
-            ! WRITE(*,*) "Theta=",Theta
-            ! WRITE(*,*) "xyw orig =",xy_w
-            ! xy_w(1) = xy_w(1) - xw1_0
-            ! xy_w(2) = xy_w(2) - yw1_0
-            ! WRITE(*,*) "xyw translated =",xy_w
-            ! xy_w = MATMUL(xy_w,Rotation_mat_neg)
-            ! WRITE(*,*) "xyw_rotated away =",xy_w
-            ! xy_w = MATMUL(xy_w,Rotation_mat_pos)
-            ! WRITE(*,*) "xyw_rotated back =",xy_w
-            ! xy_w(1) = xy_w(1) + xw1_0
-            ! xy_w(2) = xy_w(2) + yw1_0
-            ! WRITE(*,*) "xyw translated back =",xy_w
-
-
-
             ! translate origin to xw1,yw1
             xw1_0 = xw1
             yw1_0 = yw1
@@ -128,19 +108,12 @@ SUBROUTINE SPECULAR_REFLECTION
             xw1 = 0
             yw1 = 0
 
-
         END IF
-
-        ! WRITE(*,*) "walls=",xr_walls(:,1:num_walls)
-        ! WRITE(*,*) "xw1,xw2=",xw1,xw2
-        ! WRITE(*,*) "yw1,yw2=",yw1,yw2
-
 
         DO j = 1,Num_r
             IF (first_collision(j) .eqv. .true.) THEN
                 IF (xw1 == xw2) THEN
                     ! vertical boundary
-                    ! WRITE(*,*) "vertical boundary: ",xw1,xw2,yw1,yw2
                     IF (rn_vec(j) > accommodation) THEN
                         ! specular reflection
                         N_specular = N_specular+1
@@ -170,7 +143,6 @@ SUBROUTINE SPECULAR_REFLECTION
 
                 ELSE IF (yw1 == yw2) THEN
                     ! horizontal boundary
-                    ! WRITE(*,*) "horizontal boundary: ",xw1,xw2,yw1,yw2
                     IF (rn_vec(j) > accommodation) THEN
                         ! specular reflection
                         N_specular = N_specular+1
@@ -181,8 +153,6 @@ SUBROUTINE SPECULAR_REFLECTION
                         ! diffuse reflection
                         N_diffuse = N_diffuse+1
 
-                        ! xyc(j,1) = (yw1-b(j))/m(j)
-                        ! xyc(j,2) = yw1
                         xc(j) = (yw1-b(j))/m(j)
                         yc(j) = yw1
 
@@ -202,16 +172,13 @@ SUBROUTINE SPECULAR_REFLECTION
 
                 ELSE 
                     ! angled boundary
-                    ! WRITE(*,*) "angled boundary: ",xw1,xw2,yw1,yw2
-
                     xr_vec_new(j,1) = xr_vec_new(j,1)-xw1_0
                     xr_vec_new(j,2) = xr_vec_new(j,2)-yw1_0
                     xyt(j,1) = xyt(j,1)-xw1_0
                     xyt(j,2) = xyt(j,2)-yw1_0
                     xy0(j,1) = xy0(j,1)-xw1_0
                     xy0(j,2) = xy0(j,2)-yw1_0
-                    ! xc(1:Num_r) = xw1
-                    ! yc(1:Num_r) = m(1:Num_r)*xw1 + b(1:Num_r)
+                    ! xc,yc only calculated if diffuse reflection
 
                     ! rotate by -T (to bring to horizontal line)
                     xr_vec_new(j,1:2) = MATMUL(xr_vec_new(j,1:2),Rotation_mat_neg)
@@ -308,7 +275,7 @@ SUBROUTINE SPECULAR_REFLECTION
     t_BC = t_BC + (t_temp-t0_BC)
     
 
-END SUBROUTINE SPECULAR_REFLECTION
+END SUBROUTINE COMPUTE_REFLECTION
 
 
 

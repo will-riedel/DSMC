@@ -1,7 +1,7 @@
 SUBROUTINE INPUT_PARAMETERS_READIN
     USE CONTAIN
     IMPLICIT NONE
-    CHARACTER(80):: Header_name(18), line
+    CHARACTER(80):: Header_name(19), line
 !-----------------------------------------------------------------------
 !*******************INITIALIZE CHARACTER*******************
 !-----------------------------------------------------------------------
@@ -20,6 +20,7 @@ SUBROUTINE INPUT_PARAMETERS_READIN
                         '*INCLUDE_GUN_BC', &
                         '*USE_HOMOG_GRID', &
                         '*DX_INIT_______', &
+                        '*DY_INIT_______', &
                         '*DX_FACTOR_____', &
                         '*DY_FACTOR_____', &
                         '*RESTART_SIM___', &
@@ -90,6 +91,9 @@ SUBROUTINE INPUT_PARAMETERS_READIN
         ELSE IF (line == '*DX_INIT_______') THEN
           ! initial cell-size (at center of inlet)
           READ(100,*) dx_0
+        ELSE IF (line == '*DY_INIT_______') THEN
+          ! initial cell-size (at center of inlet)
+          READ(100,*) dy_0
         ELSE IF (line == '*DX_FACTOR_____') THEN
           ! relative cell-size at the outlet in the x-direction
           READ(100,*) dx_factor
