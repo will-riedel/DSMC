@@ -24,7 +24,7 @@ SUBROUTINE INPUT_PARAMETERS_READIN
                         '*DX_FACTOR_____', &
                         '*DY_FACTOR_____', &
                         '*RESTART_SIM___', &
-                        '*DIR_RESTART___', &
+                        '*DIRECTORY_CUR_', &
                         '*RESTART_INDEX_'/)         
 
 !-----------------------------------------------------------------------
@@ -103,9 +103,11 @@ SUBROUTINE INPUT_PARAMETERS_READIN
         ELSE IF (line == '*RESTART_SIM___') THEN
           ! whether or not to restart a partially-completed simulation
           READ(100,*) restart_simulation
-        ELSE IF (line == '*DIR_RESTART___') THEN
+        ELSE IF (line == '*DIRECTORY_CUR_') THEN
           ! directory of current data
           READ(100,*) dir_cur
+          dir_cur = "Output/" // dir_cur
+          dir_cur_length = LEN_TRIM(dir_cur)
         ELSE IF (line == '*RESTART_INDEX_') THEN
           ! index to restart from
           READ(100,*) it_restart
@@ -181,7 +183,13 @@ SUBROUTINE RESTART_PARAMETERS_READIN
 !-----------------------------------------------------------------------
 !*******************OPEN FILE******************************
 !-----------------------------------------------------------------------
-    WRITE(filename,"('Output/data/data.txt')")
+    ! WRITE(filename,"('Output/data/data.txt')")
+    ! WRITE(filename,"('/data.txt')")
+    WRITE(filename,"('/data_',I7.7,'.txt')") (it_restart)
+
+    filename = dir_cur(1:dir_cur_length) // filename
+    WRITE(*,*) "got here"
+    WRITE(*,*) filename
     OPEN(UNIT=100,FILE=filename)
 
 !-----------------------------------------------------------------------
@@ -189,70 +197,73 @@ SUBROUTINE RESTART_PARAMETERS_READIN
 !-----------------------------------------------------------------------
     DO
         READ(100,*) line
-        IF      (line(1:8) == '*N_total') THEN
-            i = 1
-            DO
-                READ(100,*) line
-                IF (line(1:1) == "*") THEN
-                    N_simulated = N_total(i-1)
-                    EXIT
-                ELSE
-                    READ(line,*) N_total(i)
-                    i = i+1
-                ENDIF
-            END DO
+        ! IF      (line(1:8) == '*N_total') THEN
+        !     i = 1
+        !     DO
+        !         READ(100,*) line
+        !         IF (line(1:1) == "*") THEN
+        !             N_simulated = N_total(i-1)
+        !             EXIT
+        !         ELSE
+        !             READ(line,*) N_total(i)
+        !             i = i+1
+        !         ENDIF
+        !     END DO
 
-        ELSE IF   (line(1:24) == '*N_candidate_pairs_total') THEN
-            i = 1
-            DO
-                READ(100,*) line
-                IF (line(1:1) == "*") THEN
-                    EXIT
-                ELSE
-                    READ(line,*) N_candidate_pairs_total(i)
-                    i = i+1
-                ENDIF
-            END DO
+        ! ELSE IF   (line(1:24) == '*N_candidate_pairs_total') THEN
+        !     i = 1
+        !     DO
+        !         READ(100,*) line
+        !         IF (line(1:1) == "*") THEN
+        !             EXIT
+        !         ELSE
+        !             READ(line,*) N_candidate_pairs_total(i)
+        !             i = i+1
+        !         ENDIF
+        !     END DO
 
-        ELSE IF   (line(1:23) == '*N_accepted_pairs_total') THEN
-            i = 1
-            DO
-                READ(100,*) line
-                IF (line(1:1) == "*") THEN
-                    EXIT
-                ELSE
-                    READ(line,*) N_accepted_pairs_total(i)
-                    i = i+1
-                ENDIF
-            END DO
+        ! ELSE IF   (line(1:23) == '*N_accepted_pairs_total') THEN
+        !     i = 1
+        !     DO
+        !         READ(100,*) line
+        !         IF (line(1:1) == "*") THEN
+        !             EXIT
+        !         ELSE
+        !             READ(line,*) N_accepted_pairs_total(i)
+        !             i = i+1
+        !         ENDIF
+        !     END DO
 
-        ELSE IF   (line(1:19) == '*n_collisions_total') THEN
-            i = 1
-            DO
-                READ(100,*) line
-                IF (line(1:1) == "*") THEN
-                    EXIT
-                ELSE
-                    READ(line,*) N_collisions_total(i)
-                    i = i+1
-                ENDIF
-            END DO
+        ! ELSE IF   (line(1:19) == '*n_collisions_total') THEN
+        !     i = 1
+        !     DO
+        !         READ(100,*) line
+        !         IF (line(1:1) == "*") THEN
+        !             EXIT
+        !         ELSE
+        !             READ(line,*) N_collisions_total(i)
+        !             i = i+1
+        !         ENDIF
+        !     END DO
 
-        ELSE IF   (line(1:14) == '*N_added_total') THEN
-            WRITE(*,*) "recognized N_added_total"
-            i = 1
-            DO
-                READ(100,*) line
-                IF (line(1:1) == "*") THEN
-                    EXIT
-                ELSE
-                    READ(line,*) N_added_total(i)
-                    i = i+1
-                ENDIF
-            END DO
+        ! ELSE IF   (line(1:14) == '*N_added_total') THEN
+        !     WRITE(*,*) "recognized N_added_total"
+        !     i = 1
+        !     DO
+        !         READ(100,*) line
+        !         IF (line(1:1) == "*") THEN
+        !             EXIT
+        !         ELSE
+        !             READ(line,*) N_added_total(i)
+        !             i = i+1
+        !         ENDIF
+        !     END DO
 
-        ELSE IF   (line(1:19) == '*ncp_remainder') THEN
-            READ(100,"(E12.5)") ncp_remainder
+        ! IF   (line(1:19) == '*ncp_remainder') THEN
+        !     READ(100,"(E12.5)") ncp_remainder
+        IF   (line(1:8) == "*t_total") THEN
+            WRITE(*,*) "recognized t_total"
+            READ(100,"(E12.5)") t_total
 
         ELSE IF   (line(1:5) == "*t_BC") THEN
             WRITE(*,*) "recognized t_BC"
@@ -268,7 +279,11 @@ SUBROUTINE RESTART_PARAMETERS_READIN
 
         ELSE IF   (line(1:8) == "*n_saved") THEN
             WRITE(*,*) "recognized n_saved"
-            READ(100,*) t_loop
+            READ(100,*) n_saved
+
+        ELSE IF   (line(1:12) == "*N_simulated") THEN
+            WRITE(*,*) "recognized N_simulated"
+            READ(100,*) N_simulated
 
         ! add in timing variables and other things that need to be carried over
 
@@ -283,6 +298,87 @@ SUBROUTINE RESTART_PARAMETERS_READIN
        END IF
     END DO
     CLOSE(100)
+
+
+    WRITE(filename,"('/N_total.txt')")
+    filename = dir_cur(1:dir_cur_length) // filename
+    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
+    READ(1) N_total(1:(it_restart+1))
+    CLOSE(1)
+
+
+    ! WRITE(*,*) N_total(1:(n_saved*dt_to_save+5))
+    ! WRITE(*,*) "size=",SHAPE(N_total)
+    ! WRITE(*,*) "it_restart+1=",it_restart+1
+    ! WRITE(*,*) "n_saved*dt_to_save+1=",n_saved*dt_to_save+1
+    ! WRITE(*,*) "N_simulated=",N_simulated
+
+
+    WRITE(filename,"('/n_collisions_total.txt')")
+    filename = dir_cur(1:dir_cur_length) // filename
+    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
+    READ(1) n_collisions_total(1:(it_restart+1))
+    CLOSE(1)
+
+    WRITE(filename,"('/N_candidate_pairs_total.txt')")
+    filename = dir_cur(1:dir_cur_length) // filename
+    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
+    READ(1) N_candidate_pairs_total(1:(it_restart+1))
+    CLOSE(1)
+
+    WRITE(filename,"('/N_accepted_pairs_total.txt')")
+    filename = dir_cur(1:dir_cur_length) // filename
+    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
+    READ(1) N_accepted_pairs_total(1:(it_restart+1))
+    CLOSE(1)
+
+    WRITE(filename,"('/N_added_total.txt')")
+    filename = dir_cur(1:dir_cur_length) // filename
+    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
+    READ(1) N_added_total(1:(it_restart+1))
+    CLOSE(1)
+
+    WRITE(filename,"('/ncp_remainder.txt')")
+    filename = dir_cur(1:dir_cur_length) // filename
+    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
+    READ(1) ncp_remainder
+    CLOSE(1)
+
+
+
+
+    ! for now, dir_cur = "Output/data"
+    ! WRITE(filename,"('Output/data/x_',I7.7,'.txt')") (it_restart)
+    WRITE(filename,"('/x_',I7.7,'.txt')") (it_restart)
+    filename = dir_cur(1:dir_cur_length) // filename
+    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
+    READ(1) x_vec(1:N_simulated,:)
+    CLOSE(1)
+
+    ! WRITE(filename,"('Output/data/v_',I7.7,'.txt')") (it_restart)
+    WRITE(filename,"('/v_',I7.7,'.txt')") (it_restart)
+    filename = dir_cur(1:dir_cur_length) // filename
+    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
+    READ(1) v_vec(1:N_simulated,:)
+    CLOSE(1)
+
+    ! WRITE(filename,"('Output/data/i_',I7.7,'.txt')") (it_restart)
+    WRITE(filename,"('/i_',I7.7,'.txt')") (it_restart)
+    filename = dir_cur(1:dir_cur_length) // filename
+    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
+    READ(1) i_cell_vec(1:N_simulated,:)
+    CLOSE(1)
+
+    ! WRITE(filename,"('Output/data/Npc_',I7.7,'.txt')") (it_restart)
+    WRITE(filename,"('/Npc_',I7.7,'.txt')") (it_restart)
+    filename = dir_cur(1:dir_cur_length) // filename
+    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
+    READ(1) Npc_slice
+    CLOSE(1)
+
+
+
+
 END SUBROUTINE RESTART_PARAMETERS_READIN
 
 

@@ -3,17 +3,17 @@
 *NS_INITIAL____
 1.d22
 *FN____________
-1.7d16
+3.d14
 *N_CELLS_X_____
 1000
 *N_CELLLS_Y____
 10
 *T_MAX_________
-6.d-4
+1.d-4
 *DT____________
-2.d-8
+6.d-8
 *DT_TO_SAVE____
-100 
+7
 *INCLUDE_SOURCE
 .TRUE.
 *USE_TWO_BEAMS_
@@ -27,23 +27,23 @@
 *INCLUDE_GUN_BC
 .TRUE.
 *ACCOMMODATION_
-0.5
+0.3
 *USE_HOMOG_GRID
 .FALSE.
 *DX_INIT_______
-.000337
+3.37d-4
 *DY_INIT_______
-.002
+3.37e-2
 *DX_FACTOR_____
 1.d4
 *DY_FACTOR_____
 1.d4
 *RESTART_SIM___
 .FALSE.
-*DIR_RESTART___
-current
+*DIRECTORY_CUR_
+data_0
 *RESTART_INDEX_
-396630
+736396
 
 
 

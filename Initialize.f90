@@ -12,6 +12,7 @@ SUBROUTINE INITIALIZE
 
     IF (restart_simulation .EQV. .false.) THEN
         it_restart = -1
+        ! it_restart = 0
         ! need to set dir_cur differently, it's currently set to the restart_directory input
     END IF
 
@@ -135,8 +136,8 @@ SUBROUTINE INITIALIZE
         t_vec(i) = (i-1)*dt
     END DO
 
-    CALL CPU_TIME(t0)
-    t_final = 0
+    CALL CPU_TIME(t0_total)
+    t_total = 0
     t_test=0
     t_collisions = 0
     t_BC = 0
@@ -395,32 +396,39 @@ SUBROUTINE INITIALIZE
             ! x_vec(:,2) = 0.5
         END IF
 
+
+        ! clear out the current directory
+        CALL SYSTEM( "mkdir " // dir_cur(1:dir_cur_length) )
+        ! WRITE(*,*) "rm " // dir_cur(1:dir_cur_length) // "/*.txt"
+        CALL SYSTEM( "rm " // dir_cur(1:dir_cur_length) // "/*.txt" )
+
+        ! WRITE(filename,"('Output/data/x_',I7.7,'.txt')") (it_restart)
+        ! WRITE(filename,"(dir_cur(1:dir_cur_length),'/x_',I7.7,'.txt')") (it_restart)
+        ! WRITE(filename,"('/x_',I7.7,'.txt')") (25)
+        ! WRITE(*,*) filename, "$$$"
+        ! filename = dir_cur(1:dir_cur_length) // filename
+        ! WRITE(*,*) filename, "$$$"
+
+        ! WRITE(*,*) "got here"
+        ! STOP
         
     ELSE
         CALL RESTART_PARAMETERS_READIN
 
 
-        ! for now, dir_cur = "Output/data"
-        ! WRITE(filename,"('Output/data/a.txt')")
-        WRITE(filename,"('Output/data/x_',I7.7,'.txt')") (it_restart)
-        OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
-        READ(1) x_vec(1:N_simulated,:)
-        CLOSE(1)
+        
 
-        WRITE(filename,"('Output/data/v_',I7.7,'.txt')") (it_restart)
-        OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
-        READ(1) v_vec(1:N_simulated,:)
-        CLOSE(1)
+        WRITE(*,*) "N_simulated=",N_simulated
+        ! WRITE(*,*) "N_collisions_total=",N_simulated
+        WRITE(*,*) "t_total=",t_total
+        WRITE(*,*) "t_BC=",t_BC
+        WRITE(*,*) "t_collisions=",t_collisions
+        WRITE(*,*) "t_loop=",t_loop
 
-        WRITE(filename,"('Output/data/i_',I7.7,'.txt')") (it_restart)
-        OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
-        READ(1) i_cell_vec(1:N_simulated,:)
-        CLOSE(1)
+        WRITE(*,*) "N_sim=",N_simulated
+        ! WRITE(*,*) "N_total=",N_total(1:n_saved)
 
-        WRITE(filename,"('Output/data/Npc_',I7.7,'.txt')") (it_restart)
-        OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
-        READ(1) Npc_slice
-        CLOSE(1)
+
 
 
     END IF

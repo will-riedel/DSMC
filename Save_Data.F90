@@ -5,71 +5,85 @@ SUBROUTINE SAVE_DATA
     ! CHARACTER(80)::filename
 
     ! save position data
-    WRITE(filename,"('Output/data/x_',I7.7,'.txt')") (ii-1)
+    WRITE(filename,"('/x_',I7.7,'.txt')") (ii-1)
+    filename = dir_cur(1:dir_cur_length) // filename
     OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
     WRITE(1) x_vec(1:N_simulated,:)
-    ! OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
-    ! WRITE(1,"(E12.5)") x_vec
     CLOSE(1)
 
     ! save velocity data
-    WRITE(filename,"('Output/data/v_',I7.7,'.txt')") (ii-1)
+    WRITE(filename,"('/v_',I7.7,'.txt')") (ii-1)
+    filename = dir_cur(1:dir_cur_length) // filename
     OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
     WRITE(1) v_vec(1:N_simulated,:)
     CLOSE(1)
 
     ! save cell data (this is probably not required)
-    WRITE(filename,"('Output/data/i_',I7.7,'.txt')") (ii-1)
+    WRITE(filename,"('/i_',I7.7,'.txt')") (ii-1)
+    filename = dir_cur(1:dir_cur_length) // filename
     OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
     WRITE(1) i_cell_vec(1:N_simulated,:)
     CLOSE(1)
 
     ! ! save num_per_cell data? This also seems way unnecessary
-    ! WRITE(filename,"('Output/data/Npc_',I7.7,'.txt')") (ii-1)
-    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    ! WRITE(1) Npc_slice
-    ! CLOSE(1)
+    WRITE(filename,"('/Npc_',I7.7,'.txt')") (ii-1)
+    filename = dir_cur(1:dir_cur_length) // filename
+    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    WRITE(1) Npc_slice
+    CLOSE(1)
 
     ! save some tracking vectors
-    WRITE(filename,"('Output/data/n_collisions_total.txt')")
+    WRITE(filename,"('/n_collisions_total.txt')")
+    filename = dir_cur(1:dir_cur_length) // filename
     OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
     WRITE(1) n_collisions_total
     CLOSE(1)
-    WRITE(filename,"('Output/data/N_candidate_pairs_total.txt')")
+    WRITE(filename,"('/N_candidate_pairs_total.txt')")
+    filename = dir_cur(1:dir_cur_length) // filename
     OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
     WRITE(1) N_candidate_pairs_total
     CLOSE(1)
-    WRITE(filename,"('Output/data/N_accepted_pairs_total.txt')")
+    WRITE(filename,"('/N_accepted_pairs_total.txt')")
+    filename = dir_cur(1:dir_cur_length) // filename
     OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
     WRITE(1) N_accepted_pairs_total
     CLOSE(1)
-    WRITE(filename,"('Output/data/N_added_total.txt')")
+    WRITE(filename,"('/N_added_total.txt')")
+    filename = dir_cur(1:dir_cur_length) // filename
     OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
     WRITE(1) N_added_total
     CLOSE(1)
-    WRITE(filename,"('Output/data/ncp_remainder.txt')")
+    WRITE(filename,"('/ncp_remainder.txt')")
+    filename = dir_cur(1:dir_cur_length) // filename
     OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
     WRITE(1) ncp_remainder
     CLOSE(1)
-    WRITE(filename,"('Output/data/N_total.txt')")
+    WRITE(filename,"('/N_total.txt')")
+    filename = dir_cur(1:dir_cur_length) // filename
     OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
     WRITE(1) N_total
     CLOSE(1)
-    WRITE(filename,"('Output/data/x_walls.txt')")
+    WRITE(filename,"('/x_walls.txt')")
+    filename = dir_cur(1:dir_cur_length) // filename
     OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
     WRITE(1) x_walls(:,1:num_walls)
     CLOSE(1)
-    ! WRITE(*,*) "x_walls=",x_walls
-    ! WRITE(*,*) "shape,num=",SHAPE(x_walls),num_walls
 
 
     ! save miscellaneous data
-    WRITE(filename,"('Output/data/data.txt')")
+
+    call CPU_TIME(t_temp)
+    t_total = t_total + (t_temp-t0_total)
+    CALL CPU_TIME(t0_total)
+
+    ! WRITE(filename,"('/data.txt')")
+    WRITE(filename,"('/data_',I7.7,'.txt')") (ii-1)
+    filename = dir_cur(1:dir_cur_length) // filename
     OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
     
 
-    WRITE(1,"(A)") "*t_final"   
-    WRITE(1,"(E12.5)") t_final
+    WRITE(1,"(A)") "*t_total"   
+    WRITE(1,"(E12.5)") t_total
     WRITE(1,"(A)") "*"
     WRITE(1,"(A)") "*t_BC"   
     WRITE(1,"(E12.5)") t_BC
@@ -137,6 +151,9 @@ SUBROUTINE SAVE_DATA
     WRITE(1,"(A)") "*N_added"   
     WRITE(1,"(I0)") SUM(N_added_total)
     WRITE(1,"(A)") "*"
+    WRITE(1,"(A)") "*N_simulated"   
+    WRITE(1,"(I0)") N_simulated
+    WRITE(1,"(A)") "*"
     WRITE(1,"(A)") "*x_lim"   
     WRITE(1,"(E12.5)") x_lim
     WRITE(1,"(A)") "*"
@@ -148,7 +165,6 @@ SUBROUTINE SAVE_DATA
 
 
     n_saved = n_saved + 1
-
 
 
 

@@ -12,7 +12,7 @@ MODULE CONTAIN
     REAL(8)::dx_0,dy_0,dx_factor,dy_factor
     LOGICAL::include_source,close_inlet,close_outlet,include_gun_boundaries,use_homogenous_grid,restart_simulation
     LOGICAL::include_two_beams
-    CHARACTER(80)::dir_cur
+    CHARACTER(80)::dir_cur,dir_temp
     INTEGER::it_restart
 
 !-----------------------------------------------------------------------
@@ -38,6 +38,7 @@ MODULE CONTAIN
     LOGICAL,ALLOCATABLE,DIMENSION(:):: first_collision,crossed
     INTEGER,ALLOCATABLE,DIMENSION(:):: i_cross, i_first
 
+
 !-----------------------------------------------------------------------
 !*******************MISC. VARIBLES*************************
 !-----------------------------------------------------------------------
@@ -45,7 +46,7 @@ MODULE CONTAIN
     REAL(8):: ws,ts,hs,Vs,xs_min,xs_max,xs2_min,xs2_max,ys_min,ys_max,t, N_candidate_pairs_real
     REAL(8):: Nc0,Nc_sim,m_r,collision_ratio, Num_s_exact
     REAL(8):: alpha_x,alpha_y,neg_offset,pos_offset, accommodation 
-    REAL (8):: t0,t0_BC,t0_collisions,t0_loop,t_temp,t_final,t_BC,t_collisions,t_loop, t0_test,t_test
+    REAL (8):: t0_total,t0_BC,t0_collisions,t0_loop,t_temp,t_total,t_BC,t_collisions,t_loop, t0_test,t_test
     INTEGER:: nmax, nx, ny, n_cells, N_all,N_simulated, nt, n_saved, nw, N_expected, N_array, Num_s, N_entered, cx,cy,Npc_max, ii
     INTEGER:: N_candidate_pairs,N_accepted_pairs,Npc_cur, num_walls, N_collisions, N_added, N_removed, N_specular, N_diffuse
     REAL(8), DIMENSION(2,2):: x_lim, Rotation_mat_neg, Rotation_mat_pos
@@ -56,7 +57,7 @@ MODULE CONTAIN
     CHARACTER(80)::filename
 
     CHARACTER(16):: string_in
-    INTEGER:: Num_r,counter
+    INTEGER:: Num_r,counter, dir_cur_length,dir_temp_length
     REAL(8):: xw1,xw2,yw1,yw2,xw1_0,yw1_0,xw2_0,yw2_0,m_w,b_w,Theta
 
 
@@ -158,6 +159,8 @@ PROGRAM MAIN
     ! CALL CPU_TIME(t_temp)
     ! WRITE(*,*) "t2 = ", (t_temp-t0_test)
 
+
+
 !-----------------------------------------------------------------------
 !*******************READ INPUT FILE************************
 !-----------------------------------------------------------------------
@@ -233,7 +236,8 @@ PROGRAM MAIN
     N_accepted_pairs = SUM(N_accepted_pairs_total)
     N_added = SUM(N_added_total)
     call CPU_TIME(t_temp)
-    t_final = t_temp-t0
+    ! t_total = t_temp-t0_total
+    t_total = t_total + (t_temp-t0_total)
 
     ! calculated collision rate compared to analytical solution (at equilbrium)
     m_r = m_g/2
@@ -247,14 +251,15 @@ PROGRAM MAIN
     WRITE(*,*) "N_accepted_pairs =",N_accepted_pairs
     WRITE(*,*) "collision acceptance rate = ",N_collisions*1.0/N_candidate_pairs
     WRITE(*,*) "Computed Collision Rate / Analytic Collision rate = ", collision_ratio
-    WRITE(*,*) "N_diffuse, N_specular, Effective Accomm. Coeff. = ", N_diffuse, N_specular, (N_diffuse+0.)/(N_diffuse+N_specular)
+    WRITE(*,*) "N_diffuse, N_specular (not updated), Effective Accomm. Coeff. = ", & 
+    N_diffuse, N_specular, (N_diffuse+0.)/(N_diffuse+N_specular)
     WRITE(*,*) "N_expected =",N_expected
     WRITE(*,*) "N_added = ",N_added
     WRITE(*,*) "peak N = ",MAXVAL(N_total)
     WRITE(*,*) "(nx,ny) = (",((/ nx, ny /)),")"
     WRITE(*,*) "nt = ",nt
     WRITE(*,*) "n_saved = ",n_saved
-    WRITE(*,*) "computation time (total) = ",t_final
+    WRITE(*,*) "computation time (total) = ",t_total
     WRITE(*,*) "computation time (BC's) = ",t_BC
     WRITE(*,*) "computation time (collisions) = ",t_collisions
     WRITE(*,*) "computation time (looping in collisions)=",t_loop
