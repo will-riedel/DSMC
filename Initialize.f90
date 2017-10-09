@@ -208,6 +208,64 @@ SUBROUTINE INITIALIZE
         END IF
     END DO
 
+    ALLOCATE(cx_lim(num_walls,2))
+    cx_lim(:,1) = 1
+    cx_lim(:,2) = nx
+
+    ! find cell range for each wall
+    N_simulated = num_walls*2
+    ALLOCATE(x_vec(N_simulated,ndim))
+    ALLOCATE(i_cell_vec(N_simulated,2))
+    ALLOCATE(i_cell_vec_prev(N_simulated,2))
+
+    DO i = 1,num_walls
+        xw1 = x_walls(1,i)
+        yw1 = x_walls(2,i)
+        xw2 = x_walls(3,i)
+        yw2 = x_walls(4,i)
+        x_vec(2*i-1,1) = xw1
+        x_vec(2*i-1,2) = yw1
+        x_vec(2*i,1) = xw2
+        x_vec(2*i,2) = yw2
+    END DO
+
+
+    finding_wall_cells = .true.
+    CALL UPDATE_CELL_INDEX
+    finding_wall_cells = .false.
+
+    DO i = 1,num_walls
+        cx_lim(i,1) = MINVAL( i_cell_vec( (2*i-1):(2*i) , 1 ) ,1 ) - 2
+        cx_lim(i,2) = MAXVAL( i_cell_vec( (2*i-1):(2*i) , 1 ) ,1 ) + 2
+    END DO
+    DO i = 1,num_walls
+        IF (cx_lim(i,1) < 1) THEN
+            cx_lim(i,1) = 1
+        END IF
+        IF (cx_lim(i,2) > nx) THEN
+            cx_lim(i,2) = nx
+        END IF
+    END DO
+
+    ! WRITE(*,*) "x_vec="
+    ! WRITE(*,*) x_vec(1:N_simulated,:)
+    ! WRITE(*,*) "i_cell_vec="
+    ! WRITE(*,*) i_cell_vec(1:N_simulated,:)
+    ! WRITE(*,*) "cx_lim(:,1)="
+    ! WRITE(*,*) cx_lim(1:num_walls,1)
+    ! WRITE(*,*) "cx_lim(:,2)="
+    ! WRITE(*,*) cx_lim(1:num_walls,2)
+
+    DEALLOCATE(x_vec)
+    DEALLOCATE(i_cell_vec)
+    DEALLOCATE(i_cell_vec_prev)
+    N_simulated = 0
+
+    ! cx_lim(:,1) = 1
+    ! cx_lim(:,2) = nx
+
+
+
     N_specular = 0
     N_diffuse = 0
 
@@ -235,7 +293,7 @@ SUBROUTINE INITIALIZE
         ! N_all  = INT(V_total*n/Fn)
         N_simulated = INT(V_total*n/Fn)
         N_expected = N_simulated
-        N_array = N_expected
+        N_array = N_expected+1
     END IF
     Npc_max = N_array
 

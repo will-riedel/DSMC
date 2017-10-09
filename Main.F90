@@ -22,7 +22,7 @@ MODULE CONTAIN
     REAL(8), ALLOCATABLE, DIMENSION(:):: counter_vec, i_range_x,i_range_y, t_vec
     INTEGER, ALLOCATABLE, DIMENSION(:):: N_total,N_candidate_pairs_total,N_accepted_pairs_total,N_collisions_total,N_added_total
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: Vc, x_walls, vr_max, x_vec,v_vec, ncp_remainder
-    INTEGER, ALLOCATABLE, DIMENSION(:,:):: i_cell_vec, i_cell_vec_prev, Npc_slice, starting_index, Npc_added
+    INTEGER, ALLOCATABLE, DIMENSION(:,:):: i_cell_vec, i_cell_vec_prev, Npc_slice, starting_index, Npc_added, cx_lim
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_prev,v_vec_prev, xs_vec,vs_vec,xs_vec_prev,vs_vec_prev
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_unsorted,v_vec_unsorted, i_cell_vec_unsorted
     LOGICAL,ALLOCATABLE, DIMENSION(:):: reflected_in, reflected_out, in_column, in_cell, removed_from_sim, entered_sim
@@ -53,7 +53,7 @@ MODULE CONTAIN
     REAL(8), DIMENSION(2):: y_inlet,xy_w
     REAL(8), DIMENSION(3):: alpha_vec
     INTEGER, DIMENSION(2):: n_cells_vec
-    LOGICAL:: file_exists
+    LOGICAL:: file_exists, finding_wall_cells
     CHARACTER(80)::filename
 
     CHARACTER(16):: string_in
@@ -194,7 +194,6 @@ PROGRAM MAIN
             x_vec(1:N_simulated,:) = x_vec(1:N_simulated,:) + dt*v_vec(1:N_simulated,1:2)
         END IF
 
-
         ! Boundary Condition implementation -------------------------------------------
         ! (removing exiting particles should be absorbed into BC implementation)
         IF (N_simulated > 0) THEN
@@ -203,15 +202,16 @@ PROGRAM MAIN
             CALL COMPUTE_REFLECTION
         END IF
 
-
         ! Input from Source/Reservoir -------------------------------------------------
         CALL INITIALIZE_SOURCE
 
+        ! WRITE(*,*) "got here 2.5"
         IF (N_simulated > 0) THEN
 
             ! Update Cell Index -----------------------------------------------------------
             CALL UPDATE_CELL_INDEX
 
+            ! WRITE(*,*) "got here 3"
             ! Collisions ------------------------------------------------------------------
             CALL RUN_COLLISIONS
 

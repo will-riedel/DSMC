@@ -150,6 +150,8 @@ SUBROUTINE SAVE_DATA
     WRITE(1,"(A)") "*"
     WRITE(1,"(A)") "*N_added"   
     WRITE(1,"(I0)") SUM(N_added_total)
+    WRITE(1,"(A)") "*N_array"   
+    WRITE(1,"(I0)") N_array
     WRITE(1,"(A)") "*"
     WRITE(1,"(A)") "*N_simulated"   
     WRITE(1,"(I0)") N_simulated
@@ -172,11 +174,12 @@ SUBROUTINE SAVE_DATA
 
 
 
-    ! ! save source velocity data
-    ! WRITE(filename,"('Output/data/vs_',I7.7,'.txt')") (ii-1)
-    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    ! WRITE(1) vs_vec(1:Num_s,:)
-    ! CLOSE(1)
+    ! save source velocity data
+    WRITE(filename,"('/vs_',I7.7,'.txt')") (ii-1)
+    filename = dir_cur(1:dir_cur_length) // filename
+    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    WRITE(1) vs_vec(1:Num_s,:)
+    CLOSE(1)
 
 
 

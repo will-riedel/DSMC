@@ -22,7 +22,7 @@ SUBROUTINE INITIALIZE_SOURCE
                 CALL INITIALIZE_SOURCE_ONE_STREAM
             END IF
         END IF
-        
+
     END IF
 
 END SUBROUTINE INITIALIZE_SOURCE
@@ -52,10 +52,9 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM
     xs_vec = xs_vec + dt*vs_vec(:,1:2)
 
 
-    ! (not needed right now)
     CALL SPECULAR_REFLECTION_SOURCE
 
-    entered_sim = (xs_vec(:,1) > 0)
+    entered_sim = (xs_vec(:,1) > xs_max)
     N_entered = COUNT(entered_sim)
     i_cur(1:N_entered) = PACK(i_counting , entered_sim)
 
@@ -63,7 +62,6 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM
     IF (N_entered > 0) THEN
         x_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = xs_vec(i_cur(1:N_entered),:)
         v_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = vs_vec(i_cur(1:N_entered),:)
-        ! N_all = N_all + N_entered
         N_simulated = N_simulated + N_entered
     END IF
 

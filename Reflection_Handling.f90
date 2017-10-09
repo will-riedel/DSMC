@@ -4,7 +4,7 @@ SUBROUTINE COMPUTE_REFLECTION
     IMPLICIT NONE
 
     REAL(8):: temp
-    INTEGER:: i,j
+    INTEGER:: i,j,i_min,i_max
 
 
     CALL CPU_TIME(t0_BC)
@@ -30,27 +30,33 @@ SUBROUTINE COMPUTE_REFLECTION
         yw1 = xr_walls(2,i)
         xw2 = xr_walls(3,i)
         yw2 = xr_walls(4,i)
+
+        i_min = starting_index(cx_lim(i,1),1)
+        i_max = starting_index(cx_lim(i,2),ny) + Npc_slice(cx_lim(i,2),ny)
+
         m_w = (yw2-yw1)/(xw2-xw1)
         b_w = yw1 - m_w*xw1
 
-        xy0(1:Num_r,:) = xr_vec_prev(1:Num_r,:)
-        xyt(1:Num_r,:) = xr_vec(1:Num_r,:)
-        m(1:Num_r) = vr_vec_prev(1:Num_r,2)/vr_vec_prev(1:Num_r,1)
-        b(1:Num_r) = xy0(1:Num_r,2)-m(1:Num_r)*xy0(1:Num_r,1)
+        xy0(i_min:i_max,:) = xr_vec_prev(i_min:i_max,:)
+        xyt(i_min:i_max,:) = xr_vec(i_min:i_max,:)
+        m(i_min:i_max) = vr_vec_prev(i_min:i_max,2)/vr_vec_prev(i_min:i_max,1)
+        b(i_min:i_max) = xy0(i_min:i_max,2)-m(i_min:i_max)*xy0(i_min:i_max,1)
         
         IF (xw1 == xw2) THEN    ! (vertical walls = infinite slopes, slightly different calculation of crossing point)
-            xc(1:Num_r) = xw1
-            yc(1:Num_r) = m(1:Num_r)*xw1 + b(1:Num_r)
-            collision_occured(1:Num_r,i) = ( (xy0(1:Num_r,1)<xc(1:Num_r))   .neqv. (xyt(1:Num_r,1)<xc(1:Num_r)) ) &
-                                 .and. ( (yc(1:Num_r)<yw1)              .neqv. (yc(1:Num_r)<yw2) )
+            xc(i_min:i_max) = xw1
+            yc(i_min:i_max) = m(i_min:i_max)*xw1 + b(i_min:i_max)
+            collision_occured(i_min:i_max,i) = &
+                            ( (xy0(i_min:i_max,1)<xc(i_min:i_max))   .neqv. (xyt(i_min:i_max,1)<xc(i_min:i_max)) ) &
+                     .and.  ( (yc(i_min:i_max)<yw1)              .neqv. (yc(i_min:i_max)<yw2) )
         ELSE
-            xc(1:Num_r) = (b_w-b(1:Num_r)) / (m(1:Num_r) - m_w)
-            yc(1:Num_r) = m_w*xc(1:Num_r) + b_w
-            collision_occured(1:Num_r,i) = ( (xy0(1:Num_r,1)<xc(1:Num_r))   .neqv. (xyt(1:Num_r,1)<xc(1:Num_r)) ) &
-                                 .and. ( (xc(1:Num_r)<xw1)              .neqv. (xc(1:Num_r)<xw2) )
+            xc(i_min:i_max) = (b_w-b(i_min:i_max)) / (m(i_min:i_max) - m_w)
+            yc(i_min:i_max) = m_w*xc(i_min:i_max) + b_w
+            collision_occured(i_min:i_max,i) = &
+                            ( (xy0(i_min:i_max,1)<xc(i_min:i_max))   .neqv. (xyt(i_min:i_max,1)<xc(i_min:i_max)) ) &
+                     .and.  ( (xc(i_min:i_max)<xw1)              .neqv. (xc(i_min:i_max)<xw2) )
         END IF
 
-        DO j = 1,Num_r
+        DO j = i_min,i_max
             IF (collision_occured(j,i) .eqv. .true.) THEN
                 collision_dt(j,i) = (xc(j)-xy0(j,1)) / vr_vec_prev(j,1)
             END IF
@@ -72,21 +78,26 @@ SUBROUTINE COMPUTE_REFLECTION
     ! Process reflection/scattering
     CALL RANDOM_NUMBER(rn_vec)
     DO i = 1,num_walls
-        ! first_collision(1:Num_r) =  (collision_occured(1:Num_r,i) .eqv. .true.) .and. &
-        !                             (collision_dt(1:Num_r,i) == min_collision_dt(1:Num_r))
-        first_collision(1:Num_r) =  (collision_dt(1:Num_r,i) == min_collision_dt(1:Num_r))
 
         xw1 = xr_walls(1,i)
         yw1 = xr_walls(2,i)
         xw2 = xr_walls(3,i)
         yw2 = xr_walls(4,i)
+
+        i_min = starting_index(cx_lim(i,1),1)
+        i_max = starting_index(cx_lim(i,2),ny) + Npc_slice(cx_lim(i,2),ny)
+
         m_w = (yw2-yw1)/(xw2-xw1)
         b_w = yw1 - m_w*xw1
 
-        xy0(1:Num_r,:) = xr_vec_prev(1:Num_r,:)
-        xyt(1:Num_r,:) = xr_vec(1:Num_r,:)
-        m(1:Num_r) = vr_vec_prev(1:Num_r,2)/vr_vec_prev(1:Num_r,1)
-        b(1:Num_r) = xy0(1:Num_r,2)-m(1:Num_r)*xy0(1:Num_r,1)
+        ! first_collision(1:Num_r) =  (collision_occured(1:Num_r,i) .eqv. .true.) .and. &
+        !                             (collision_dt(1:Num_r,i) == min_collision_dt(1:Num_r))
+        first_collision(i_min:i_max) =  (collision_dt(i_min:i_max,i) == min_collision_dt(i_min:i_max))
+
+        xy0(i_min:i_max,:) = xr_vec_prev(i_min:i_max,:)
+        xyt(i_min:i_max,:) = xr_vec(i_min:i_max,:)
+        m(i_min:i_max) = vr_vec_prev(i_min:i_max,2)/vr_vec_prev(i_min:i_max,1)
+        b(i_min:i_max) = xy0(i_min:i_max,2)-m(i_min:i_max)*xy0(i_min:i_max,1)
         
 
         IF ((xw1 /= xw2) .and. (yw1 /= yw2) ) THEN
@@ -110,7 +121,7 @@ SUBROUTINE COMPUTE_REFLECTION
 
         END IF
 
-        DO j = 1,Num_r
+        DO j = i_min,i_max
             IF (first_collision(j) .eqv. .true.) THEN
                 IF (xw1 == xw2) THEN
                     ! vertical boundary
@@ -228,13 +239,13 @@ SUBROUTINE COMPUTE_REFLECTION
 
 
         IF ((xw1==xmin).and.(xw2==xmin)) THEN
-            DO j = 1,Num_r
+            DO j = i_min,i_max
                 IF (first_collision(j) .eqv. .true.) THEN
                     reflected_in(j) = .true.
                 END IF
             END DO
         ELSE IF ((xw1==xmax).and.(xw2==xmax)) THEN
-            DO j = 1,Num_r
+            DO j = i_min,i_max
                 IF (first_collision(j) .eqv. .true.) THEN
                     reflected_out(j) = .true.
                 END IF
