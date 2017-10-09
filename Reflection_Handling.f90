@@ -31,8 +31,8 @@ SUBROUTINE COMPUTE_REFLECTION
         xw2 = xr_walls(3,i)
         yw2 = xr_walls(4,i)
 
-        i_min = starting_index(cx_lim(i,1),1)
-        i_max = starting_index(cx_lim(i,2),ny) + Npc_slice(cx_lim(i,2),ny)
+        i_min = starting_index(i_cell_lim(i,1),1)
+        i_max = starting_index(i_cell_lim(i,2),ny) + Npc_slice(i_cell_lim(i,2),ny)
 
         m_w = (yw2-yw1)/(xw2-xw1)
         b_w = yw1 - m_w*xw1
@@ -84,8 +84,8 @@ SUBROUTINE COMPUTE_REFLECTION
         xw2 = xr_walls(3,i)
         yw2 = xr_walls(4,i)
 
-        i_min = starting_index(cx_lim(i,1),1)
-        i_max = starting_index(cx_lim(i,2),ny) + Npc_slice(cx_lim(i,2),ny)
+        i_min = starting_index(i_cell_lim(i,1),1)
+        i_max = starting_index(i_cell_lim(i,2),ny) + Npc_slice(i_cell_lim(i,2),ny)
 
         m_w = (yw2-yw1)/(xw2-xw1)
         b_w = yw1 - m_w*xw1
