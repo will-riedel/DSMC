@@ -141,6 +141,11 @@ SUBROUTINE INITIALIZE
     t_test=0
     t_collisions = 0
     t_BC = 0
+    t_BC1 = 0
+    t_BC2 = 0
+    t_BC3 = 0
+    t_BC4 = 0
+    t_BC5 = 0
     t_loop = 0
     n_saved = 0
 
@@ -208,52 +213,68 @@ SUBROUTINE INITIALIZE
         END IF
     END DO
 
-    ALLOCATE(i_cell_lim(num_walls,2))
-    i_cell_lim(:,1) = 1
-    i_cell_lim(:,2) = nx
+    ALLOCATE(i_cell_lim_x(num_walls,2))
+    ALLOCATE(i_cell_lim_y(num_walls,2))
+    i_cell_lim_x(:,1) = 1
+    i_cell_lim_x(:,2) = nx
+    i_cell_lim_y(:,1) = 1
+    i_cell_lim_y(:,2) = ny
 
     ! find cell range for each wall
-    N_simulated = num_walls*2
-    ALLOCATE(x_vec(N_simulated,ndim))
-    ALLOCATE(i_cell_vec(N_simulated,2))
-    ALLOCATE(i_cell_vec_prev(N_simulated,2))
 
-    DO i = 1,num_walls
-        xw1 = x_walls(1,i)
-        yw1 = x_walls(2,i)
-        xw2 = x_walls(3,i)
-        yw2 = x_walls(4,i)
-        x_vec(2*i-1,1) = xw1
-        x_vec(2*i-1,2) = yw1
-        x_vec(2*i,1) = xw2
-        x_vec(2*i,2) = yw2
-    END DO
+    CALL FIND_WALL_CELLS
+    ! N_simulated = num_walls*2
+    ! ALLOCATE(x_vec(N_simulated,ndim))
+    ! ALLOCATE(i_cell_vec(N_simulated,2))
+    ! ALLOCATE(i_cell_vec_prev(N_simulated,2))
+
+    ! DO i = 1,num_walls
+    !     xw1 = x_walls(1,i)
+    !     yw1 = x_walls(2,i)
+    !     xw2 = x_walls(3,i)
+    !     yw2 = x_walls(4,i)
+    !     x_vec(2*i-1,1) = xw1
+    !     x_vec(2*i-1,2) = yw1
+    !     x_vec(2*i,1) = xw2
+    !     x_vec(2*i,2) = yw2
+    ! END DO
 
 
-    finding_wall_cells = .true.
-    CALL UPDATE_CELL_INDEX
-    finding_wall_cells = .false.
+    ! finding_wall_cells = .true.
+    ! CALL UPDATE_CELL_INDEX
+    ! finding_wall_cells = .false.
 
-    DO i = 1,num_walls
-        i_cell_lim(i,1) = MINVAL( i_cell_vec( (2*i-1):(2*i) , 1 ) ,1 ) - 2
-        i_cell_lim(i,2) = MAXVAL( i_cell_vec( (2*i-1):(2*i) , 1 ) ,1 ) + 2
-    END DO
-    DO i = 1,num_walls
-        IF (i_cell_lim(i,1) < 1) THEN
-            i_cell_lim(i,1) = 1
-        END IF
-        IF (i_cell_lim(i,2) > nx) THEN
-            i_cell_lim(i,2) = nx
-        END IF
-    END DO
+    ! cell_lim_buffer = 2
+    ! DO i = 1,num_walls
+    !     i_cell_lim_x(i,1) = MINVAL( i_cell_vec( (2*i-1):(2*i) , 1 ) ,1 ) - cell_lim_buffer
+    !     i_cell_lim_x(i,2) = MAXVAL( i_cell_vec( (2*i-1):(2*i) , 1 ) ,1 ) + cell_lim_buffer
+    !     i_cell_lim_y(i,1) = MINVAL( i_cell_vec( (2*i-1):(2*i) , 2 ) ,1 ) - cell_lim_buffer
+    !     i_cell_lim_y(i,2) = MAXVAL( i_cell_vec( (2*i-1):(2*i) , 2 ) ,1 ) + cell_lim_buffer
+    ! END DO
+    ! DO i = 1,num_walls
+    !     IF (i_cell_lim_x(i,1) < 1) THEN
+    !         i_cell_lim_x(i,1) = 1
+    !     END IF
+    !     IF (i_cell_lim_x(i,2) > nx) THEN
+    !         i_cell_lim_x(i,2) = nx
+    !     END IF
+    !     IF (i_cell_lim_y(i,1) < 1) THEN
+    !         i_cell_lim_y(i,1) = 1
+    !     END IF
+    !     IF (i_cell_lim_y(i,2) > ny) THEN
+    !         i_cell_lim_y(i,2) = ny
+    !     END IF
+    ! END DO
 
-    DEALLOCATE(x_vec)
-    DEALLOCATE(i_cell_vec)
-    DEALLOCATE(i_cell_vec_prev)
-    N_simulated = 0
+    ! DEALLOCATE(x_vec)
+    ! DEALLOCATE(i_cell_vec)
+    ! DEALLOCATE(i_cell_vec_prev)
+    ! N_simulated = 0
 
-    ! i_cell_lim(:,1) = 1
-    ! i_cell_lim(:,2) = nx
+    ! ! i_cell_lim_x(:,1) = 1
+    ! ! i_cell_lim_x(:,2) = nx
+    ! ! i_cell_lim_y(:,1) = 1
+    ! ! i_cell_lim_y(:,2) = ny
 
 
 

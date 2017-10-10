@@ -3,7 +3,7 @@
 *NS_INITIAL____
 1.d22
 *FN____________
-3.d14
+1.d14
 *N_CELLS_X_____
 1000
 *N_CELLLS_Y____
@@ -33,7 +33,7 @@
 *DX_INIT_______
 3.37d-4
 *DY_INIT_______
-3.37e-2
+1
 *DX_FACTOR_____
 1.d4
 *DY_FACTOR_____

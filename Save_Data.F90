@@ -174,12 +174,12 @@ SUBROUTINE SAVE_DATA
 
 
 
-    ! save source velocity data
-    WRITE(filename,"('/vs_',I7.7,'.txt')") (ii-1)
-    filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    WRITE(1) vs_vec(1:Num_s,:)
-    CLOSE(1)
+    ! ! save source velocity data
+    ! WRITE(filename,"('/vs_',I7.7,'.txt')") (ii-1)
+    ! filename = dir_cur(1:dir_cur_length) // filename
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    ! WRITE(1) vs_vec(1:Num_s,:)
+    ! CLOSE(1)
 
 
 

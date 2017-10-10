@@ -196,16 +196,25 @@ SUBROUTINE FIND_WALL_CELLS
     CALL UPDATE_CELL_INDEX
     finding_wall_cells = .false.
 
+    cell_lim_buffer = 2
     DO i = 1,num_walls
-        i_cell_lim(i,1) = MINVAL( i_cell_vec( (2*i-1):(2*i) , 1 ) ,1 ) - 2
-        i_cell_lim(i,2) = MAXVAL( i_cell_vec( (2*i-1):(2*i) , 1 ) ,1 ) + 2
+        i_cell_lim_x(i,1) = MINVAL( i_cell_vec( (2*i-1):(2*i) , 1 ) ,1 ) - cell_lim_buffer
+        i_cell_lim_x(i,2) = MAXVAL( i_cell_vec( (2*i-1):(2*i) , 1 ) ,1 ) + cell_lim_buffer
+        i_cell_lim_y(i,1) = MINVAL( i_cell_vec( (2*i-1):(2*i) , 2 ) ,1 ) - cell_lim_buffer
+        i_cell_lim_y(i,2) = MAXVAL( i_cell_vec( (2*i-1):(2*i) , 2 ) ,1 ) + cell_lim_buffer
     END DO
     DO i = 1,num_walls
-        IF (i_cell_lim(i,1) < 1) THEN
-            i_cell_lim(i,1) = 1
+        IF (i_cell_lim_x(i,1) < 1) THEN
+            i_cell_lim_x(i,1) = 1
         END IF
-        IF (i_cell_lim(i,2) > nx) THEN
-            i_cell_lim(i,2) = nx
+        IF (i_cell_lim_x(i,2) > nx) THEN
+            i_cell_lim_x(i,2) = nx
+        END IF
+        IF (i_cell_lim_y(i,1) < 1) THEN
+            i_cell_lim_y(i,1) = 1
+        END IF
+        IF (i_cell_lim_y(i,2) > ny) THEN
+            i_cell_lim_y(i,2) = ny
         END IF
     END DO
 
@@ -213,18 +222,20 @@ SUBROUTINE FIND_WALL_CELLS
     ! WRITE(*,*) x_vec(1:N_simulated,:)
     ! WRITE(*,*) "i_cell_vec="
     ! WRITE(*,*) i_cell_vec(1:N_simulated,:)
-    ! WRITE(*,*) "i_cell_lim(:,1)="
-    ! WRITE(*,*) i_cell_lim(1:num_walls,1)
-    ! WRITE(*,*) "i_cell_lim(:,2)="
-    ! WRITE(*,*) i_cell_lim(1:num_walls,2)
+    ! WRITE(*,*) "i_cell_lim_x(:,1)="
+    ! WRITE(*,*) i_cell_lim_x(1:num_walls,1)
+    ! WRITE(*,*) "i_cell_lim_x(:,2)="
+    ! WRITE(*,*) i_cell_lim_x(1:num_walls,2)
 
     DEALLOCATE(x_vec)
     DEALLOCATE(i_cell_vec)
     DEALLOCATE(i_cell_vec_prev)
     N_simulated = 0
 
-    ! i_cell_lim(:,1) = 1
-    ! i_cell_lim(:,2) = nx
+    ! i_cell_lim_x(:,1) = 1
+    ! i_cell_lim_x(:,2) = nx
+    ! i_cell_lim_y(:,1) = 1
+    ! i_cell_lim_y(:,2) = ny
 
 
 

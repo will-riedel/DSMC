@@ -25,14 +25,15 @@ SUBROUTINE COMPUTE_REFLECTION
     collision_dt(1:Num_r,:) = 1.d10
 
     ! Find where collisions occur, and intersection between each point and each wall
+    CALL CPU_TIME(t0_BC1)
     DO i = 1,num_walls
         xw1 = xr_walls(1,i)
         yw1 = xr_walls(2,i)
         xw2 = xr_walls(3,i)
         yw2 = xr_walls(4,i)
 
-        i_min = starting_index(i_cell_lim(i,1),1)
-        i_max = starting_index(i_cell_lim(i,2),ny) + Npc_slice(i_cell_lim(i,2),ny)
+        i_min = starting_index(i_cell_lim_x(i,1),1)
+        i_max = starting_index(i_cell_lim_x(i,2),ny) + Npc_slice(i_cell_lim_x(i,2),ny)
 
         m_w = (yw2-yw1)/(xw2-xw1)
         b_w = yw1 - m_w*xw1
@@ -42,40 +43,65 @@ SUBROUTINE COMPUTE_REFLECTION
         m(i_min:i_max) = vr_vec_prev(i_min:i_max,2)/vr_vec_prev(i_min:i_max,1)
         b(i_min:i_max) = xy0(i_min:i_max,2)-m(i_min:i_max)*xy0(i_min:i_max,1)
         
+        CALL CPU_TIME(t0_BC2)
+        ! IF (xw1 == xw2) THEN    ! (vertical walls = infinite slopes, slightly different calculation of crossing point)
+        !     xc(i_min:i_max) = xw1
+        !     yc(i_min:i_max) = m(i_min:i_max)*xw1 + b(i_min:i_max)
+        !     collision_occured(i_min:i_max,i) = &
+        !                     ( (xy0(i_min:i_max,1)<xc(i_min:i_max))      .neqv. (xyt(i_min:i_max,1)<xc(i_min:i_max)) ) &
+        !              .and.  ( (yc(i_min:i_max)<yw1)                     .neqv. (yc(i_min:i_max)<yw2) )
+        ! ELSE
+        !     xc(i_min:i_max) = (b_w-b(i_min:i_max)) / (m(i_min:i_max) - m_w)
+        !     yc(i_min:i_max) = m_w*xc(i_min:i_max) + b_w
+        !     collision_occured(i_min:i_max,i) = &
+        !                     ( (xy0(i_min:i_max,1)<xc(i_min:i_max))      .neqv. (xyt(i_min:i_max,1)<xc(i_min:i_max)) ) &
+        !              .and.  ( (xc(i_min:i_max)<xw1)                     .neqv. (xc(i_min:i_max)<xw2) )
+        ! END IF
         IF (xw1 == xw2) THEN    ! (vertical walls = infinite slopes, slightly different calculation of crossing point)
             xc(i_min:i_max) = xw1
             yc(i_min:i_max) = m(i_min:i_max)*xw1 + b(i_min:i_max)
             collision_occured(i_min:i_max,i) = &
-                            ( (xy0(i_min:i_max,1)<xc(i_min:i_max))   .neqv. (xyt(i_min:i_max,1)<xc(i_min:i_max)) ) &
-                     .and.  ( (yc(i_min:i_max)<yw1)              .neqv. (yc(i_min:i_max)<yw2) )
+                            ( ((xy0(i_min:i_max,1)-xc(i_min:i_max))*(xyt(i_min:i_max,1)-xc(i_min:i_max))) < 0 ) &
+                     .and.  ( ((yc(i_min:i_max)-yw1)*(yc(i_min:i_max)-yw2)) < 0 )
         ELSE
             xc(i_min:i_max) = (b_w-b(i_min:i_max)) / (m(i_min:i_max) - m_w)
             yc(i_min:i_max) = m_w*xc(i_min:i_max) + b_w
             collision_occured(i_min:i_max,i) = &
-                            ( (xy0(i_min:i_max,1)<xc(i_min:i_max))   .neqv. (xyt(i_min:i_max,1)<xc(i_min:i_max)) ) &
-                     .and.  ( (xc(i_min:i_max)<xw1)              .neqv. (xc(i_min:i_max)<xw2) )
+                            ( ((xy0(i_min:i_max,1)-xc(i_min:i_max))*(xyt(i_min:i_max,1)-xc(i_min:i_max))) < 0 ) &
+                     .and.  ( ((xc(i_min:i_max)-xw1)*(xc(i_min:i_max)-xw2)) < 0 )
         END IF
+        CALL CPU_TIME(t_temp)
+        t_BC2 = t_BC2 + (t_temp-t0_BC2)
 
+
+        CALL CPU_TIME(t0_BC3)
         DO j = i_min,i_max
             IF (collision_occured(j,i) .eqv. .true.) THEN
                 collision_dt(j,i) = (xc(j)-xy0(j,1)) / vr_vec_prev(j,1)
             END IF
         END DO
+        CALL CPU_TIME(t_temp)
+        t_BC3 = t_BC3 + (t_temp-t0_BC3)
 
     END DO
+    CALL CPU_TIME(t_temp)
+    t_BC1 = t_BC1 + (t_temp-t0_BC1)
 
 
+    CALL CPU_TIME(t0_BC5)
     min_collision_dt(1:Num_r) = MINVAL(collision_dt(1:Num_r,:),2)
     DO j = 1,Num_r
         IF (min_collision_dt(j) == 1.d10) THEN
             min_collision_dt(j) = 2.d10 !  collision_dt = min_collision_dt only where a collision actually occurred
         END IF
     END DO
-
+    CALL CPU_TIME(t_temp)
+    t_BC5 = t_BC5 + (t_temp-t0_BC5)
 
 
     
     ! Process reflection/scattering
+    CALL CPU_TIME(t0_BC4)
     CALL RANDOM_NUMBER(rn_vec)
     DO i = 1,num_walls
 
@@ -84,8 +110,8 @@ SUBROUTINE COMPUTE_REFLECTION
         xw2 = xr_walls(3,i)
         yw2 = xr_walls(4,i)
 
-        i_min = starting_index(i_cell_lim(i,1),1)
-        i_max = starting_index(i_cell_lim(i,2),ny) + Npc_slice(i_cell_lim(i,2),ny)
+        i_min = starting_index(i_cell_lim_x(i,1),1)
+        i_max = starting_index(i_cell_lim_x(i,2),ny) + Npc_slice(i_cell_lim_x(i,2),ny)
 
         m_w = (yw2-yw1)/(xw2-xw1)
         b_w = yw1 - m_w*xw1
@@ -255,7 +281,8 @@ SUBROUTINE COMPUTE_REFLECTION
 
 
     END DO
-    
+    CALL CPU_TIME(t_temp)
+    t_BC4 = t_BC4 + (t_temp-t0_BC4)
 
 
     x_vec(1:Num_r,:) = xr_vec_new(1:Num_r,:)

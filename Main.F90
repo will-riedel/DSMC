@@ -22,7 +22,8 @@ MODULE CONTAIN
     REAL(8), ALLOCATABLE, DIMENSION(:):: counter_vec, i_range_x,i_range_y, t_vec
     INTEGER, ALLOCATABLE, DIMENSION(:):: N_total,N_candidate_pairs_total,N_accepted_pairs_total,N_collisions_total,N_added_total
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: Vc, x_walls, vr_max, x_vec,v_vec, ncp_remainder
-    INTEGER, ALLOCATABLE, DIMENSION(:,:):: i_cell_vec, i_cell_vec_prev, Npc_slice, starting_index, Npc_added, i_cell_lim
+    INTEGER, ALLOCATABLE, DIMENSION(:,:):: i_cell_vec, i_cell_vec_prev, Npc_slice
+    INTEGER, ALLOCATABLE, DIMENSION(:,:):: starting_index, Npc_added, i_cell_lim_x, i_cell_lim_y
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_prev,v_vec_prev, xs_vec,vs_vec,xs_vec_prev,vs_vec_prev
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_unsorted,v_vec_unsorted, i_cell_vec_unsorted
     LOGICAL,ALLOCATABLE, DIMENSION(:):: reflected_in, reflected_out, in_column, in_cell, removed_from_sim, entered_sim
@@ -47,6 +48,7 @@ MODULE CONTAIN
     REAL(8):: Nc0,Nc_sim,m_r,collision_ratio, Num_s_exact
     REAL(8):: alpha_x,alpha_y,neg_offset,pos_offset, accommodation 
     REAL (8):: t0_total,t0_BC,t0_collisions,t0_loop,t_temp,t_total,t_BC,t_collisions,t_loop, t0_test,t_test
+    REAL (8):: t0_BC1,t0_BC2,t0_BC3,t0_BC4,t0_BC5,t_BC1,t_BC2,t_BC3,t_BC4,t_BC5
     INTEGER:: nmax, nx, ny, n_cells, N_all,N_simulated, nt, n_saved, nw, N_expected, N_array, Num_s, N_entered, cx,cy,Npc_max, ii
     INTEGER:: N_candidate_pairs,N_accepted_pairs,Npc_cur, num_walls, N_collisions, N_added, N_removed, N_specular, N_diffuse
     REAL(8), DIMENSION(2,2):: x_lim, Rotation_mat_neg, Rotation_mat_pos
@@ -57,7 +59,7 @@ MODULE CONTAIN
     CHARACTER(80)::filename
 
     CHARACTER(16):: string_in
-    INTEGER:: Num_r,counter, dir_cur_length,dir_temp_length
+    INTEGER:: Num_r,counter, dir_cur_length,dir_temp_length, cell_lim_buffer
     REAL(8):: xw1,xw2,yw1,yw2,xw1_0,yw1_0,xw2_0,yw2_0,m_w,b_w,Theta
 
 
@@ -264,6 +266,14 @@ PROGRAM MAIN
     WRITE(*,*) "computation time (collisions) = ",t_collisions
     WRITE(*,*) "computation time (looping in collisions)=",t_loop
     WRITE(*,*) "computation time (test)=",t_test
+
+    WRITE(*,*) "t0_BC1 = ",t_BC1
+    WRITE(*,*) "t0_BC2 = ",t_BC2
+    WRITE(*,*) "t0_BC3 = ",t_BC3
+    WRITE(*,*) "t0_BC4 = ",t_BC4
+    WRITE(*,*) "t0_BC5 = ",t_BC5
+
+
 
     WRITE(*,*) '------ done ------'
 
