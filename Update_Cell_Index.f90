@@ -159,9 +159,7 @@ SUBROUTINE SORT_ARRAYS
 
     CALL CPU_TIME(t_temp)
     t_test = t_test + (t_temp-t0_test)
-
-
-
+    
 END SUBROUTINE SORT_ARRAYS
 
 
@@ -218,14 +216,26 @@ SUBROUTINE FIND_WALL_CELLS
         END IF
     END DO
 
-    ! WRITE(*,*) "x_vec="
-    ! WRITE(*,*) x_vec(1:N_simulated,:)
-    ! WRITE(*,*) "i_cell_vec="
-    ! WRITE(*,*) i_cell_vec(1:N_simulated,:)
+    ! ! WRITE(*,*) "x_vec="
+    ! ! WRITE(*,*) x_vec(1:N_simulated,:)
+    ! ! WRITE(*,*) "i_cell_vec="
+    ! ! WRITE(*,*) i_cell_vec(1:N_simulated,:)
+    ! WRITE(*,*) "x_vec(:,1)="
+    ! WRITE(*,*) x_vec(1:num_walls,1)
+    ! WRITE(*,*) "x_vec(:,2)="
+    ! WRITE(*,*) x_vec(1:num_walls,2)
+    ! WRITE(*,*) "i_cell_vec(:,1)="
+    ! WRITE(*,*) i_cell_vec(1:num_walls,1)
+    ! WRITE(*,*) "i_cell_vec(:,2)="
+    ! WRITE(*,*) i_cell_vec(1:num_walls,2)
     ! WRITE(*,*) "i_cell_lim_x(:,1)="
     ! WRITE(*,*) i_cell_lim_x(1:num_walls,1)
     ! WRITE(*,*) "i_cell_lim_x(:,2)="
     ! WRITE(*,*) i_cell_lim_x(1:num_walls,2)
+    ! WRITE(*,*) "i_cell_lim_y(:,1)="
+    ! WRITE(*,*) i_cell_lim_y(1:num_walls,1)
+    ! WRITE(*,*) "i_cell_lim_y(:,2)="
+    ! WRITE(*,*) i_cell_lim_y(1:num_walls,2)
 
     DEALLOCATE(x_vec)
     DEALLOCATE(i_cell_vec)

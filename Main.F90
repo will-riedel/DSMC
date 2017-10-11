@@ -36,7 +36,7 @@ MODULE CONTAIN
     LOGICAL,ALLOCATABLE,DIMENSION(:,:):: collision_occured
     REAL(8),ALLOCATABLE,DIMENSION(:,:):: collision_dt
     REAL(8),ALLOCATABLE,DIMENSION(:):: x0,y0,xt,yt,m,b,xc,yc, dt_cross,min_collision_dt, wall_angle_vec, rn_vec
-    LOGICAL,ALLOCATABLE,DIMENSION(:):: first_collision,crossed
+    LOGICAL,ALLOCATABLE,DIMENSION(:):: first_collision,crossed,collision_occured_any
     INTEGER,ALLOCATABLE,DIMENSION(:):: i_cross, i_first
 
 

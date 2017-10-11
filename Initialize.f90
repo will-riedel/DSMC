@@ -223,58 +223,11 @@ SUBROUTINE INITIALIZE
     ! find cell range for each wall
 
     CALL FIND_WALL_CELLS
-    ! N_simulated = num_walls*2
-    ! ALLOCATE(x_vec(N_simulated,ndim))
-    ! ALLOCATE(i_cell_vec(N_simulated,2))
-    ! ALLOCATE(i_cell_vec_prev(N_simulated,2))
-
+    
     ! DO i = 1,num_walls
-    !     xw1 = x_walls(1,i)
-    !     yw1 = x_walls(2,i)
-    !     xw2 = x_walls(3,i)
-    !     yw2 = x_walls(4,i)
-    !     x_vec(2*i-1,1) = xw1
-    !     x_vec(2*i-1,2) = yw1
-    !     x_vec(2*i,1) = xw2
-    !     x_vec(2*i,2) = yw2
+    !     WRITE(*,*) "cxmin,cxmax,cymin,cymax=", &
+    !                 i_cell_lim_x(i,1),i_cell_lim_x(i,2),i_cell_lim_y(i,1),i_cell_lim_y(i,2)
     ! END DO
-
-
-    ! finding_wall_cells = .true.
-    ! CALL UPDATE_CELL_INDEX
-    ! finding_wall_cells = .false.
-
-    ! cell_lim_buffer = 2
-    ! DO i = 1,num_walls
-    !     i_cell_lim_x(i,1) = MINVAL( i_cell_vec( (2*i-1):(2*i) , 1 ) ,1 ) - cell_lim_buffer
-    !     i_cell_lim_x(i,2) = MAXVAL( i_cell_vec( (2*i-1):(2*i) , 1 ) ,1 ) + cell_lim_buffer
-    !     i_cell_lim_y(i,1) = MINVAL( i_cell_vec( (2*i-1):(2*i) , 2 ) ,1 ) - cell_lim_buffer
-    !     i_cell_lim_y(i,2) = MAXVAL( i_cell_vec( (2*i-1):(2*i) , 2 ) ,1 ) + cell_lim_buffer
-    ! END DO
-    ! DO i = 1,num_walls
-    !     IF (i_cell_lim_x(i,1) < 1) THEN
-    !         i_cell_lim_x(i,1) = 1
-    !     END IF
-    !     IF (i_cell_lim_x(i,2) > nx) THEN
-    !         i_cell_lim_x(i,2) = nx
-    !     END IF
-    !     IF (i_cell_lim_y(i,1) < 1) THEN
-    !         i_cell_lim_y(i,1) = 1
-    !     END IF
-    !     IF (i_cell_lim_y(i,2) > ny) THEN
-    !         i_cell_lim_y(i,2) = ny
-    !     END IF
-    ! END DO
-
-    ! DEALLOCATE(x_vec)
-    ! DEALLOCATE(i_cell_vec)
-    ! DEALLOCATE(i_cell_vec_prev)
-    ! N_simulated = 0
-
-    ! ! i_cell_lim_x(:,1) = 1
-    ! ! i_cell_lim_x(:,2) = nx
-    ! ! i_cell_lim_y(:,1) = 1
-    ! ! i_cell_lim_y(:,2) = ny
 
 
 
@@ -408,6 +361,7 @@ SUBROUTINE INITIALIZE
     !ALLOCATE(vn(N_array,3))
     ALLOCATE(xr_walls(4,num_walls))
     ALLOCATE(collision_occured(N_array,num_walls))
+    ALLOCATE(collision_occured_any(N_array))
     ALLOCATE(collision_dt(N_array,num_walls))
     ALLOCATE(min_collision_dt(N_array))
     ALLOCATE(x0(N_array))
@@ -435,6 +389,7 @@ SUBROUTINE INITIALIZE
     !vn(:,:) = 0
     xr_walls(:,:) = 0
     collision_occured(:,:) = .false.
+    collision_occured_any(:) = .false.
     collision_dt(:,:) = 0
     x0(:) = 0
     y0(:) = 0
