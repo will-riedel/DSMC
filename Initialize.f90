@@ -138,7 +138,7 @@ SUBROUTINE INITIALIZE
 
     CALL CPU_TIME(t0_total)
     t_total = 0
-    t_test=0
+    t_index = 0
     t_collisions = 0
     t_BC = 0
     t_BC1 = 0
@@ -332,7 +332,8 @@ SUBROUTINE INITIALIZE
     ALLOCATE(N_collisions_total(nt))
     ALLOCATE(N_added_total(nt))
     ALLOCATE(Npc_slice(nx,ny))
-    ALLOCATE(starting_index(nx,ny))     ! this will break if you go back to 2D
+    ALLOCATE(starting_index(nx,ny))
+    ALLOCATE(final_index(nx,ny))
 
     ALLOCATE(Npc_added(nx,ny))
     ALLOCATE(ncp_remainder(nx,ny))
@@ -345,6 +346,7 @@ SUBROUTINE INITIALIZE
     N_added_total(:) = 0
     Npc_slice(:,:) = 0
     starting_index(:,:) = 0
+    final_index(:,:) = 0
 
     Npc_added(:,:) = 0
     ncp_remainder(:,:) = 0
@@ -358,7 +360,6 @@ SUBROUTINE INITIALIZE
     ALLOCATE(vr_vec(N_array,3))
     ALLOCATE(vr_vec_prev(N_array,3))
     ALLOCATE(vr_vec_new(N_array,3))
-    !ALLOCATE(vn(N_array,3))
     ALLOCATE(xr_walls(4,num_walls))
     ALLOCATE(collision_occured(N_array,num_walls))
     ALLOCATE(collision_occured_any(N_array))

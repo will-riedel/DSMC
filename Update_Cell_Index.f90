@@ -4,6 +4,7 @@ SUBROUTINE UPDATE_CELL_INDEX
     IMPLICIT NONE
     INTEGER::i,j
 
+    CALL CPU_TIME(t0_index)
 
     ! note: if (x,y) == (0,0), then just set index to -1000 or something (or 0, since indices start with 1 here)
     IF (N_simulated > 0) THEN
@@ -107,7 +108,7 @@ SUBROUTINE SORT_ARRAYS
     INTEGER::i,j,i_sorted,current_sum
 
     ! sort array that stores which particles are in each cell
-    CALL CPU_TIME(t0_test)
+    ! CALL CPU_TIME(t0_index)
 
     ! bucket method based on NASA paper (https://www.nas.nasa.gov/assets/pdf/techreports/1990/rnr-90-017.pdf)
     ! 1. one  pass - count Npc_slice, index spots in sorted cell array  (starting indices)
@@ -132,6 +133,7 @@ SUBROUTINE SORT_ARRAYS
         DO cy = 1,ny
             starting_index(cx,cy) = current_sum+1
             current_sum = current_sum + Npc_slice(cx,cy)
+            final_index(cx,cy) = current_sum
         END DO
     END DO
 
@@ -158,8 +160,8 @@ SUBROUTINE SORT_ARRAYS
     N_total(ii-1) = N_simulated
 
     CALL CPU_TIME(t_temp)
-    t_test = t_test + (t_temp-t0_test)
-    
+    t_index = t_index + (t_temp-t0_index)
+
 END SUBROUTINE SORT_ARRAYS
 
 

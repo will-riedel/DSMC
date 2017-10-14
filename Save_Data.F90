@@ -7,66 +7,129 @@ SUBROUTINE SAVE_DATA
     ! save position data
     WRITE(filename,"('/x_',I7.7,'.txt')") (ii-1)
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    WRITE(1) x_vec(1:N_simulated,:)
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    ! WRITE(1) N_simulated*ndim
+    ! WRITE(1) x_vec(1:N_simulated,:)
+    WRITE(1,"(E12.5)") x_vec(1:N_simulated,:)
     CLOSE(1)
 
     ! save velocity data
     WRITE(filename,"('/v_',I7.7,'.txt')") (ii-1)
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    WRITE(1) v_vec(1:N_simulated,:)
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    ! WRITE(1) N_simulated*3
+    ! WRITE(1) v_vec(1:N_simulated,:)
+    WRITE(1,"(E12.5)") v_vec(1:N_simulated,:)
     CLOSE(1)
 
     ! save cell data (this is probably not required)
     WRITE(filename,"('/i_',I7.7,'.txt')") (ii-1)
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    WRITE(1) i_cell_vec(1:N_simulated,:)
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    ! WRITE(1) N_simulated*ndim
+    ! WRITE(1) i_cell_vec(1:N_simulated,:)
+    WRITE(1,"(I0)") i_cell_vec(1:N_simulated,:)
     CLOSE(1)
 
     ! ! save num_per_cell data? This also seems way unnecessary
     WRITE(filename,"('/Npc_',I7.7,'.txt')") (ii-1)
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    WRITE(1) Npc_slice
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    ! WRITE(1) nx*ny
+    ! WRITE(1) Npc_slice
+    WRITE(1,"(I0)") Npc_slice
     CLOSE(1)
 
     ! save some tracking vectors
     WRITE(filename,"('/n_collisions_total.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    WRITE(1) n_collisions_total
+    ! CALL SYSTEM( "mv " // filename // ' ' // dir_cur(1:dir_cur_length) // "_temp.txt" )
+    ! WRITE(*,*) ("mv " // filename // ' ' // dir_cur(1:dir_cur_length) // "_temp.txt")
+    ! IF (ii > 50) THEN
+    !     STOP
+    ! END IF
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='direct',recl=nt)
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    ! WRITE(1) nt
+    ! WRITE(1) n_collisions_total
+    WRITE(1,"(I0)") n_collisions_total
     CLOSE(1)
+    ! CALL SYSTEM( "rm " // dir_cur(1:dir_cur_length) // "_temp.txt" )
+    ! WRITE(*,*) ( "rm " // dir_cur(1:dir_cur_length) // "_temp.txt" )
+
     WRITE(filename,"('/N_candidate_pairs_total.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    WRITE(1) N_candidate_pairs_total
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    ! WRITE(1) nt
+    ! WRITE(1) N_candidate_pairs_total
+    WRITE(1,"(I0)") N_candidate_pairs_total
     CLOSE(1)
     WRITE(filename,"('/N_accepted_pairs_total.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    WRITE(1) N_accepted_pairs_total
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    ! WRITE(1) nt
+    ! WRITE(1) N_accepted_pairs_total
+    WRITE(1,"(I0)") N_accepted_pairs_total
     CLOSE(1)
     WRITE(filename,"('/N_added_total.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    WRITE(1) N_added_total
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    ! WRITE(1) nt
+    ! WRITE(1) N_added_total
+    WRITE(1,"(I0)") N_added_total
     CLOSE(1)
     WRITE(filename,"('/ncp_remainder.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    WRITE(1) ncp_remainder
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    ! WRITE(1) nx*ny
+    ! WRITE(1) ncp_remainder
+    WRITE(1,"(E12.5)") ncp_remainder
     CLOSE(1)
     WRITE(filename,"('/N_total.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    WRITE(1) N_total
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    ! WRITE(1) nt
+    ! WRITE(1) N_total
+    WRITE(1,"(I0)") N_total
     CLOSE(1)
     WRITE(filename,"('/x_walls.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    WRITE(1) x_walls(:,1:num_walls)
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    ! WRITE(1) num_walls*4
+    ! WRITE(1) x_walls(:,1:num_walls)
+    WRITE(1,"(E12.5)") x_walls(:,1:num_walls)
     CLOSE(1)
 
 
