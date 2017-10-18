@@ -514,7 +514,6 @@ SUBROUTINE SPECULAR_REFLECTION_SOURCE
 
     ! This just reflects any source particles that pass above or below the inlet edges before entering the sim
 
-
     CALL CPU_TIME(t0_BC)
 
     Num_r = Num_s
@@ -524,12 +523,7 @@ SUBROUTINE SPECULAR_REFLECTION_SOURCE
 
 
     DO i = 1,2
-        yw1 = y_inlet(i)
-        ! WHERE (collision_occured(1:Num_r,i) .eqv. .true.) 
-        !     xs_vec(1:Num_r,2) = 2*yw1 - xs_vec(1:Num_r,2)
-        !     vs_vec(1:Num_r,2) = -vs_vec(1:Num_r,2)
-        ! ELSEWHERE
-        ! END WHERE
+        yw1 = y_inlet(i)ERE
 
         DO j = 1,Num_r
             IF (collision_occured(j,i) .eqv. .true.) THEN
@@ -538,6 +532,8 @@ SUBROUTINE SPECULAR_REFLECTION_SOURCE
             END IF
         END DO
     END DO
+
+
 
     CALL CPU_TIME(t_temp)
     t_BC = t_BC + (t_temp-t0_BC)

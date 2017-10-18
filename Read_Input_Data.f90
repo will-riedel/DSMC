@@ -100,6 +100,9 @@ SUBROUTINE INPUT_PARAMETERS_READIN
         ELSE IF (line == '*DY_FACTOR_____') THEN
           ! relative cell-size at edges in the y-direction
           READ(100,*) dy_factor
+        ELSE IF (line == '*DX_INLET______') THEN
+          ! dx in high-density inlet region
+          READ(100,*) dx_inlet
         ELSE IF (line == '*RESTART_SIM___') THEN
           ! whether or not to restart a partially-completed simulation
           READ(100,*) restart_simulation
@@ -120,6 +123,9 @@ SUBROUTINE INPUT_PARAMETERS_READIN
        END IF
     END DO
     CLOSE(100)
+
+    CALL WALL_PARAMETERS_READIN
+
 END SUBROUTINE INPUT_PARAMETERS_READIN
 
 
@@ -133,6 +139,10 @@ SUBROUTINE WALL_PARAMETERS_READIN
     ! top/bottom boundaries for the inlet
     OPEN(UNIT=1,FILE='Input/y_inlet.txt',STATUS='old')! ,access='direct',recl=4,iostat=ok)
     READ(1,*) y_inlet
+    CLOSE(1)
+
+    OPEN(UNIT=1,FILE='Input/x_inlet.txt',STATUS='old')! ,access='direct',recl=4,iostat=ok)
+    READ(1,*) x_inlet
     CLOSE(1)
 
     IF (y_inlet(1) > y_inlet(2)) THEN
@@ -302,8 +312,8 @@ SUBROUTINE RESTART_PARAMETERS_READIN
 
     WRITE(filename,"('/N_total.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
-    READ(1) N_total(1:(it_restart+1))
+    OPEN(UNIT=1,FILE=filename,STATUS='old')! ,access='direct',recl=4,iostat=ok)
+    READ(1,*) N_total(1:(it_restart+1))
     CLOSE(1)
 
 
@@ -316,32 +326,32 @@ SUBROUTINE RESTART_PARAMETERS_READIN
 
     WRITE(filename,"('/n_collisions_total.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
-    READ(1) n_collisions_total(1:(it_restart+1))
+    OPEN(UNIT=1,FILE=filename,STATUS='old')! ,access='direct',recl=4,iostat=ok)
+    READ(1,*) n_collisions_total(1:(it_restart+1))
     CLOSE(1)
 
     WRITE(filename,"('/N_candidate_pairs_total.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
-    READ(1) N_candidate_pairs_total(1:(it_restart+1))
+    OPEN(UNIT=1,FILE=filename,STATUS='old')! ,access='direct',recl=4,iostat=ok)
+    READ(1,*) N_candidate_pairs_total(1:(it_restart+1))
     CLOSE(1)
 
     WRITE(filename,"('/N_accepted_pairs_total.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
-    READ(1) N_accepted_pairs_total(1:(it_restart+1))
+    OPEN(UNIT=1,FILE=filename,STATUS='old')! ,access='direct',recl=4,iostat=ok)
+    READ(1,*) N_accepted_pairs_total(1:(it_restart+1))
     CLOSE(1)
 
     WRITE(filename,"('/N_added_total.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
-    READ(1) N_added_total(1:(it_restart+1))
+    OPEN(UNIT=1,FILE=filename,STATUS='old')! ,access='direct',recl=4,iostat=ok)
+    READ(1,*) N_added_total(1:(it_restart+1))
     CLOSE(1)
 
     WRITE(filename,"('/ncp_remainder.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
-    READ(1) ncp_remainder
+    OPEN(UNIT=1,FILE=filename,STATUS='old')! ,access='direct',recl=4,iostat=ok)
+    READ(1,*) ncp_remainder
     CLOSE(1)
 
 
@@ -351,29 +361,29 @@ SUBROUTINE RESTART_PARAMETERS_READIN
     ! WRITE(filename,"('Output/data/x_',I7.7,'.txt')") (it_restart)
     WRITE(filename,"('/x_',I7.7,'.txt')") (it_restart)
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
-    READ(1) x_vec(1:N_simulated,:)
+    OPEN(UNIT=1,FILE=filename,STATUS='old')! ,access='direct',recl=4,iostat=ok)
+    READ(1,*) x_vec(1:N_simulated,:)
     CLOSE(1)
 
     ! WRITE(filename,"('Output/data/v_',I7.7,'.txt')") (it_restart)
     WRITE(filename,"('/v_',I7.7,'.txt')") (it_restart)
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
-    READ(1) v_vec(1:N_simulated,:)
+    OPEN(UNIT=1,FILE=filename,STATUS='old')! ,access='direct',recl=4,iostat=ok)
+    READ(1,*) v_vec(1:N_simulated,:)
     CLOSE(1)
 
     ! WRITE(filename,"('Output/data/i_',I7.7,'.txt')") (it_restart)
     WRITE(filename,"('/i_',I7.7,'.txt')") (it_restart)
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
-    READ(1) i_cell_vec(1:N_simulated,:)
+    OPEN(UNIT=1,FILE=filename,STATUS='old')! ,access='direct',recl=4,iostat=ok)
+    READ(1,*) i_cell_vec(1:N_simulated,:)
     CLOSE(1)
 
     ! WRITE(filename,"('Output/data/Npc_',I7.7,'.txt')") (it_restart)
     WRITE(filename,"('/Npc_',I7.7,'.txt')") (it_restart)
     filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,STATUS='old', FORM='unformatted')! ,access='direct',recl=4,iostat=ok)
-    READ(1) Npc_slice
+    OPEN(UNIT=1,FILE=filename,STATUS='old')! ,access='direct',recl=4,iostat=ok)
+    READ(1,*) Npc_slice
     CLOSE(1)
 
 

@@ -38,10 +38,34 @@ SUBROUTINE UPDATE_CELL_INDEX
             ! END DO
 
         ELSE
-            alpha_x  = -LOG(1/dx_factor)/xmax
-            n_inf = 1/(dx_0*alpha_x)
-            i_cell_vec(1:N_simulated,1) = FLOOR(n_inf*(1-EXP( -alpha_x*x_vec(1:N_simulated,1) )))+1
+            ! ! find x-cell
+            ! alpha_x  = -LOG(1/dx_factor)/xmax
+            ! n_inf = 1/(dx_0*alpha_x)
+            ! i_cell_vec(1:N_simulated,1) = FLOOR(n_inf*(1-EXP( -alpha_x*x_vec(1:N_simulated,1) )))+1
 
+            alpha_x  = -LOG(1/dx_factor)/(xmax-x_inlet)
+            n_inf = 1/(dx_0*alpha_x)
+            nmax_left = (x_inlet-xmin)/dx_inlet
+            DO j = 1,N_simulated
+                IF (x_vec(j,1) < x_inlet) THEN
+                    i_cell_vec(j,1) = FLOOR( (x_vec(j,1)-xmin)/(x_inlet-xmin)*nmax_left ) + 1
+                ELSE
+                    i_cell_vec(j,1) = FLOOR(n_inf*(1-EXP( -alpha_x*(x_vec(j,1)-x_inlet) )) + nmax_left)+1
+                END IF
+
+                ! IF (i_cell_vec(j,1) == 
+            END DO
+
+            ! j = int(N_simulated/3)
+            ! WRITE(*,*) "x_vec(j,1),n_inf,alpha_x,,x_inlet,nmax_left=",x_vec(j,1),n_inf,alpha_x,x_inlet,nmax_left
+            ! WRITE(*,*) "term1=",-alpha_x*(x_vec(j,1)-x_inlet)
+            ! WRITE(*,*) "term2=",n_inf*(1-EXP( -alpha_x*(x_vec(j,1)+x_inlet)))
+            ! WRITE(*,*) "x_vec(j,1), i_cell_vec(j,1) = ",x_vec(j,1),i_cell_vec(j,1)
+            ! WRITE(*,*) "max=",MAXVAL(i_cell_vec(:,1))
+
+
+
+            ! find y-cell
             IF (ny > 1) THEN
                 alpha_y = -LOG(1/dy_factor) / (ymax-ymid)
                 n_inf = 1/(dy_0*alpha_y)
@@ -78,6 +102,18 @@ SUBROUTINE UPDATE_CELL_INDEX
                 i_cell_vec(i,2) = ny
             END IF
         END DO
+        ! DO i = 1,N_simulated
+        !     IF (i_cell_vec(i,1) > nx) THEN
+        !         i_cell_vec(i,1) = nx
+        !     ELSE IF (i_cell_vec(i,1) < 1) THEN
+        !         i_cell_vec(i,1) = 1
+        !     END IF
+        !     IF (i_cell_vec(i,2) > ny) THEN
+        !         i_cell_vec(i,2) = ny
+        !     ELSE IF (i_cell_vec(i,2) < 1) THEN
+        !         i_cell_vec(i,2) = 1
+        !     END IF
+        ! END DO
 
 
         IF (finding_wall_cells .EQV. .false.) THEN
@@ -203,6 +239,7 @@ SUBROUTINE FIND_WALL_CELLS
         i_cell_lim_y(i,1) = MINVAL( i_cell_vec( (2*i-1):(2*i) , 2 ) ,1 ) - cell_lim_buffer
         i_cell_lim_y(i,2) = MAXVAL( i_cell_vec( (2*i-1):(2*i) , 2 ) ,1 ) + cell_lim_buffer
     END DO
+    WRITE(*,*) "xw1,xw2,i_cell_lim,i_cell_vec=",xw1,xw2,i_cell_lim_x(5,:),i_cell_vec( (2*5-1):(2*5) , 1 )
     DO i = 1,num_walls
         IF (i_cell_lim_x(i,1) < 1) THEN
             i_cell_lim_x(i,1) = 1
@@ -217,6 +254,8 @@ SUBROUTINE FIND_WALL_CELLS
             i_cell_lim_y(i,2) = ny
         END IF
     END DO
+
+    WRITE(*,*) "xw1,xw2,i_cell_lim,i_cell_vec=",xw1,xw2,i_cell_lim_x(5,:),i_cell_vec( (2*5-1):(2*5) , 1 )
 
     ! ! WRITE(*,*) "x_vec="
     ! ! WRITE(*,*) x_vec(1:N_simulated,:)

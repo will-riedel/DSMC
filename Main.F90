@@ -9,7 +9,7 @@ MODULE CONTAIN
     INTEGER::n_cells_x,n_cells_y
     INTEGER::dt_to_save
     REAL(8)::tmax,dt
-    REAL(8)::dx_0,dy_0,dx_factor,dy_factor
+    REAL(8)::dx_0,dy_0,dx_factor,dy_factor,dx_inlet, x_inlet
     LOGICAL::include_source,close_inlet,close_outlet,include_gun_boundaries,use_homogenous_grid,restart_simulation
     LOGICAL::include_two_beams
     CHARACTER(80)::dir_cur,dir_temp
@@ -49,7 +49,8 @@ MODULE CONTAIN
     REAL(8):: alpha_x,alpha_y,neg_offset,pos_offset, accommodation 
     REAL (8):: t0_total,t0_BC,t0_collisions,t0_loop,t_temp,t_total,t_BC,t_collisions,t_loop, t0_index,t_index
     REAL (8):: t0_BC1,t0_BC2,t0_BC3,t0_BC4,t0_BC5,t_BC1,t_BC2,t_BC3,t_BC4,t_BC5
-    INTEGER:: nmax, nx, ny, n_cells, N_all,N_simulated, nt, n_saved, nw, N_expected, N_array, Num_s, N_entered, cx,cy,Npc_max, ii
+    INTEGER:: N_all,N_simulated, nt, n_saved, nw, N_expected, N_array, Num_s, N_entered, cx,cy,Npc_max, ii
+    INTEGER:: nmax, nmax_left,nmax_right, nx, ny, n_cells
     INTEGER:: N_candidate_pairs,N_accepted_pairs,Npc_cur, num_walls, N_collisions, N_added, N_removed, N_specular, N_diffuse
     REAL(8), DIMENSION(2,2):: x_lim, Rotation_mat_neg, Rotation_mat_pos
     REAL(8), DIMENSION(2):: y_inlet,xy_w
@@ -201,7 +202,8 @@ PROGRAM MAIN
         IF (N_simulated > 0) THEN
             Num_r = N_simulated
             counter = 0
-            CALL COMPUTE_REFLECTION
+            ! CALL COMPUTE_REFLECTION
+            CALL SPECULAR_REFLECTION_1D
         END IF
 
         ! Input from Source/Reservoir -------------------------------------------------

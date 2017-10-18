@@ -1,9 +1,9 @@
 *N_INITIAL_____
-1.d24
+6.8d25
 *NS_INITIAL____
-1.d24
+6.8d25
 *FN____________
-3.d14
+7.d17
 *N_CELLS_X_____
 1000
 *N_CELLLS_Y____
@@ -11,9 +11,9 @@
 *T_MAX_________
 6.d-5
 *DT____________
-6.d-10
+9.d-12
 *DT_TO_SAVE____
-653
+44397
 *INCLUDE_SOURCE
 .TRUE.
 *USE_TWO_BEAMS_
@@ -31,17 +31,19 @@
 *USE_HOMOG_GRID
 .FALSE.
 *DX_INIT_______
-3.37e-6
+1.e-3
 *DY_INIT_______
-3.37d-4
+1.d-4
 *DX_FACTOR_____
 1.d4
 *DY_FACTOR_____
 1.d4
+*DX_INLET______
+1.d-4
 *RESTART_SIM___
 .FALSE.
 *DIRECTORY_CUR_
-data_1e24
+data_2017-10-15
 *RESTART_INDEX_
 736396
 

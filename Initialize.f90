@@ -41,32 +41,54 @@ SUBROUTINE INITIALIZE
         ! set up equally spaced grid points
         ALLOCATE( x_cells_vec(nx) )
         ALLOCATE( y_cells_vec(ny) )
-        ! dx = ( x_lim(1,2) - x_lim(1,1) ) / (nx)
         dx = ( xmax - xmin ) / (nx)
         DO i = 1 , nx
-            ! x_cells_vec(i) = x_lim(1,1) + dx*(i-1)
             x_cells_vec(i) = xmin + dx*(i-1)
         END DO
-        ! dy = ( x_lim(2,2) - x_lim(2,1) ) / (ny)
         dy = ( ymax - ymin ) / (ny)
         DO i = 1 , ny
-            ! y_cells_vec(i) = x_lim(2,1) + dy*(i-1)
             y_cells_vec(i) = ymin + dy*(i-1)
         END DO
     ELSE
-        alpha_x = -LOG(1./dx_factor)/xmax
-        n_inf = 1/(dx_0*alpha_x)
-        nmax = INT(n_inf*(1-EXP(-alpha_x*xmax)))
+        ! ! find x_cells
+        ! alpha_x = -LOG(1./dx_factor)/xmax
+        ! n_inf = 1/(dx_0*alpha_x)
+        ! nmax = INT(n_inf*(1-EXP(-alpha_x*xmax)))
+        ! nx = nmax+1
+
+        ! ALLOCATE( i_range_x(nx) )
+        ! ALLOCATE( x_cells_vec(nx) )
+
+        ! i_range_x = (/ (i,i=0,nmax) /)
+        ! x_cells_vec = -1/alpha_x*LOG(1-i_range_x/n_inf)
+
+
+        alpha_x = -LOG(1./dx_factor)/(xmax-x_inlet)
+        n_inf = 1./(dx_0*alpha_x)
+
+        nmax_left = INT(FLOOR( (x_inlet-xmin)/dx_inlet ))
+        nmax_right = INT( n_inf*(1.-EXP(-alpha_x*(xmax-x_inlet))) )
+        nmax = INT( nmax_right + nmax_left)
         nx = nmax+1
+        ! WRITE(*,*) "nmax_left,nmax_right,nmax,nx=",nmax_left,nmax_right,nmax,nx
+        ! WRITE(*,*) "x_inlet,xmin,dx_inlet=",x_inlet,xmin,dx_inlet
+        ! WRITE(*,*) "product = ",(x_inlet-xmin)/dx_inlet
 
         ALLOCATE( i_range_x(nx) )
         ALLOCATE( x_cells_vec(nx) )
 
         i_range_x = (/ (i,i=0,nmax) /)
-        x_cells_vec = -1/alpha_x*LOG(1-i_range_x/n_inf)
+        DO j = 1,nmax_left+1
+            x_cells_vec(j) = xmin + dx_inlet*(j-1)
+        END DO
+        DO j = nmax_left+2,nx
+            x_cells_vec(j) = -1/alpha_x*LOG(1-(i_range_x(j)-nmax_left)/n_inf) + x_inlet
+        END DO
+
+        ! WRITE(*,*) "x_cells_vec=",x_cells_vec
 
 
-
+        ! find y_cells
         IF (dy_0 < (ymax-ymin) ) THEN
             
             alpha_y = -LOG(1./dy_factor)/(ymax-ymid)
@@ -159,7 +181,8 @@ SUBROUTINE INITIALIZE
         ws = 10*vth*dt                                                                  ! width of source cell
     END IF
 
-    hs = inlet_height
+    ! hs = inlet_height
+    hs = y_inlet(2)-y_inlet(1)
     Vs = ws*hs
     ! Num_s = INT(ns*Vs/Fn)                                                           ! Number of source particles in the reservoir
     Num_s_exact = ns*Vs/Fn
@@ -169,21 +192,15 @@ SUBROUTINE INITIALIZE
     xs_max = xmin
     xs2_min = xmax
     xs2_max = xmax + ws
-    ys_min = ymid-hs/2
-    ys_max = ymid+hs/2
-
-
-    ! WRITE(*,*) "x_lim=",x_lim
-    ! WRITE(*,*) "hs,Vs,ymid,ys_min,ys_max=",hs,Vs,ymid,ys_min,ys_max
-
-
+    ! ys_min = ymid-hs/2
+    ! ys_max = ymid+hs/2
+    ys_min = y_inlet(1)
+    ys_max = y_inlet(2)
 
     ! Set up wall geometry ---------------------------------------------------------
     ! draw boundaries with vertical and horizontal lines (each row is endpoints of wall: (x1,y1,x2,y2))
     ! include vertical walls at inlet/outlet as first two rows
     
-    CALL WALL_PARAMETERS_READIN
-
     x_walls(:,1) = (/ xmin,ymin,xmin,ymax /)                                        ! left vertical wall
     x_walls(:,2) = (/ xmax,ymin,xmax,ymax /)                                        ! right vertical wall
     x_walls(:,3) = (/ xmin,ymin,xmax,ymin /)                                        ! bottom horizontal wall
@@ -225,8 +242,8 @@ SUBROUTINE INITIALIZE
     CALL FIND_WALL_CELLS
     
     ! DO i = 1,num_walls
-    !     WRITE(*,*) "cxmin,cxmax,cymin,cymax=", &
-    !                 i_cell_lim_x(i,1),i_cell_lim_x(i,2),i_cell_lim_y(i,1),i_cell_lim_y(i,2)
+    !     WRITE(*,*) "i,cxmin,cxmax,cymin,cymax=", &
+    !                 i,i_cell_lim_x(i,1),i_cell_lim_x(i,2),i_cell_lim_y(i,1),i_cell_lim_y(i,2)
     ! END DO
 
 
