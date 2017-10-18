@@ -45,14 +45,14 @@ MODULE CONTAIN
 !-----------------------------------------------------------------------
     REAL(8):: m_g,d_g,vth,c_s,vr_max_0,v_avg, xmin,xmax,ymin,ymax,ymid, n_inf, V_total, v_beam
     REAL(8):: ws,ts,hs,Vs,xs_min,xs_max,xs2_min,xs2_max,ys_min,ys_max,t, N_candidate_pairs_real
-    REAL(8):: Nc0,Nc_sim,m_r,collision_ratio, Num_s_exact
+    REAL(8):: Nc0,Nc_sim,m_r,collision_ratio, Num_s_exact, b_source_A, b_source_B, b_source_barrier,Theta_source
     REAL(8):: alpha_x,alpha_y,neg_offset,pos_offset, accommodation 
     REAL (8):: t0_total,t0_BC,t0_collisions,t0_loop,t_temp,t_total,t_BC,t_collisions,t_loop, t0_index,t_index
     REAL (8):: t0_BC1,t0_BC2,t0_BC3,t0_BC4,t0_BC5,t_BC1,t_BC2,t_BC3,t_BC4,t_BC5
     INTEGER:: N_all,N_simulated, nt, n_saved, nw, N_expected, N_array, Num_s, N_entered, cx,cy,Npc_max, ii
     INTEGER:: nmax, nmax_left,nmax_right, nx, ny, n_cells
     INTEGER:: N_candidate_pairs,N_accepted_pairs,Npc_cur, num_walls, N_collisions, N_added, N_removed, N_specular, N_diffuse
-    REAL(8), DIMENSION(2,2):: x_lim, Rotation_mat_neg, Rotation_mat_pos
+    REAL(8), DIMENSION(2,2):: x_lim, Rotation_mat_neg, Rotation_mat_pos, x_source_corners
     REAL(8), DIMENSION(2):: y_inlet,xy_w
     REAL(8), DIMENSION(3):: alpha_vec
     INTEGER, DIMENSION(2):: n_cells_vec
@@ -213,7 +213,8 @@ PROGRAM MAIN
         IF (N_simulated > 0) THEN
 
             ! Update Cell Index -----------------------------------------------------------
-            CALL UPDATE_CELL_INDEX
+            ! CALL UPDATE_CELL_INDEX
+            CALL UPDATE_CELL_INDEX_TEMP
 
             ! WRITE(*,*) "got here 3"
             ! Collisions ------------------------------------------------------------------

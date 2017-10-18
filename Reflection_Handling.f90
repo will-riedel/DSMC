@@ -45,6 +45,7 @@ SUBROUTINE COMPUTE_REFLECTION
                 i_max = final_index(cx,cy)
 
 
+
                 ! CALL CPU_TIME(t0_BC2)
 
                 xy0(i_min:i_max,:) = xr_vec_prev(i_min:i_max,:)
@@ -62,23 +63,42 @@ SUBROUTINE COMPUTE_REFLECTION
                     xc(i_min:i_max) = (b_w-b(i_min:i_max)) / (m(i_min:i_max) - m_w)
                     yc(i_min:i_max) = m_w*xc(i_min:i_max) + b_w
                     collision_occured(i_min:i_max,i) = &
-                                    ( ((xy0(i_min:i_max,1)-xc(i_min:i_max))*(xyt(i_min:i_max,1)-xc(i_min:i_max))) < 0 ) &
+                                    ! ( ((xy0(i_min:i_max,1)-xc(i_min:i_max))*(xyt(i_min:i_max,1)-xc(i_min:i_max))) < 0 ) &
+                                    ( ((xy0(i_min:i_max,2)-yc(i_min:i_max))*(xyt(i_min:i_max,2)-yc(i_min:i_max))) < 0 ) &
                              .and.  ( ((xc(i_min:i_max)-xw1)*(xc(i_min:i_max)-xw2)) < 0 )
                 END IF
 
-                ! CALL CPU_TIME(t_temp)
-                ! t_BC2 = t_BC2 + (t_temp-t0_BC2)
+                ! IF (i == 8) THEN
+                !     ! WRITE(*,*) "this horizontal boundary!"
+                !     WRITE(*,*) "i=",i
+                !     ! WRITE(*,*) "xy1,xy2=",xw1,yw1,xw2,yw2
+                !     ! WRITE(*,*) (yw2-yw1),yw1==yw2
+                !     ! WRITE(*,*) "i_cell_lim_x=",i_cell_lim_x(i,:)
+                !     ! WRITE(*,*) "i_cell_lim_y=",i_cell_lim_y(i,:)
+                !     DO j = i_min,i_max
+                !         WRITE(*,*)"---"
+                !         ! WRITE(*,*) "xy0,xyt=",xy0(j,:),xyt(j,:)
+                !         WRITE(*,*) "y0,yt,yc=",xy0(j,2),xyt(j,2),yc(j)
+                !         WRITE(*,*) "y_particle, iy =",xr_vec(j,2),i_cell_vec(j,2)
+                !         WRITE(*,*) "yw1, i_cell_lim_y=",yw1,i_cell_lim_y(i,:)
+                !         WRITE(*,*) "y_cells_vec=",y_cells_vec
 
+                !         WRITE(*,*) "crossed-y ,on_target-x,collision_occured=", &
+                !                                                                 (xy0(j,2)-yc(j)), &
+                !                                                                 (xyt(j,2)-yc(j)), &
+                !                                                                 ( ( (xy0(j,2)-yc(j))*(xyt(j,2)-yc(j)) ) < 0 ) ,&
+                !                                                                 ( ( (xc(j)-xw1)*(xc(j)-xw2) ) < 0 ),&
+                !                                                                 collision_occured(j,i)
+                !         ! WRITE(*,*) "xyc,c-O=",xc(j),yc(j),collision_occured(j,i)
+                !     END DO
+                ! END IF
 
-                ! CALL CPU_TIME(t0_BC3)
                 DO j = i_min,i_max
                     IF (collision_occured(j,i) .eqv. .true.) THEN
                         collision_dt(j,i) = (xc(j)-xy0(j,1)) / vr_vec_prev(j,1)
                         ! collision_occured_any(j) = .true.
                     END IF
                 END DO
-                ! CALL CPU_TIME(t_temp)
-                ! t_BC3 = t_BC3 + (t_temp-t0_BC3)
 
             END DO
         END DO
@@ -122,6 +142,8 @@ SUBROUTINE COMPUTE_REFLECTION
 
         END IF
 
+
+
         ! i_min = starting_index(i_cell_lim_x(i,1),1)
         ! i_max = starting_index(i_cell_lim_x(i,2),ny) + Npc_slice(i_cell_lim_x(i,2),ny)
         DO cx = i_cell_lim_x(i,1) , i_cell_lim_x(i,2)
@@ -134,16 +156,26 @@ SUBROUTINE COMPUTE_REFLECTION
                         IF (collision_dt(j,i) == MINVAL(collision_dt(j,:))) THEN
 
                             
-
+                            ! WRITE(*,*) "got here"
+                            ! WRITE(*,*) "CI=",close_inlet
+                            ! IF  (close_inlet .EQV. .false.) THEN
+                            !     WRITE(*,*) "open inlet"
+                            ! END IF
 
                             ! remove(ignore) exiting particles from simulation
                             IF ( (close_outlet .EQV. .false.) .and. ((xw1==xmax).and.(xw2==xmax)) ) THEN
                                     removed_from_sim(j) = .true.
                                 ! END IF
-                            ELSE IF ( (close_inlet .EQV. .false.) .and. ((xw1==xmin).and.(xw2==xmin)) ) THEN
+                            ! ELSE IF ( (close_inlet .EQV. .false.) .and. ((xw1==xmin).and.(xw2==xmin)) ) THEN
+                            ! ! ELSE IF ( (close_inlet .EQV. .false.) .and. (x_vec(j,2) < ((-1)*x_vec(j,1) + b_source_barrier)) ) THEN
+                            !         removed_from_sim(j) = .true.
+                            !     ! END IF
+                            ELSE IF ( (close_inlet .EQV. .false.) .and. (xr_vec(j,2) < ((-1)*xr_vec(j,1) + b_source_barrier)) ) THEN
+                            ! ELSE IF ( (close_inlet .EQV. .false.) .and. (x_vec(j,2) < ((-1)*x_vec(j,1) + b_source_barrier)) ) THEN
                                     removed_from_sim(j) = .true.
                                 ! END IF
                             ELSE
+
 
                             ! Otherwise, process collision
                                 xy0(j,:) = xr_vec_prev(j,:)
@@ -183,6 +215,11 @@ SUBROUTINE COMPUTE_REFLECTION
 
                                 ELSE IF (yw1 == yw2) THEN
                                     ! horizontal boundary
+
+                                    ! WRITE(*,*) "horizontal boundary!"
+                                    
+
+
                                     IF (rn_vec(j) > accommodation) THEN
                                         ! specular reflection
                                         N_specular = N_specular+1
@@ -302,7 +339,6 @@ SUBROUTINE COMPUTE_REFLECTION
     ! END IF
 
 
-
     CALL CPU_TIME(t_temp)
     t_BC = t_BC + (t_temp-t0_BC)
     
@@ -407,6 +443,63 @@ SUBROUTINE SPECULAR_REFLECTION_SOURCE
 
 END SUBROUTINE SPECULAR_REFLECTION_SOURCE
 
+
+
+! SUBROUTINE SPECULAR_REFLECTION_SOURCE_TEMP
+!     USE CONTAIN
+!     USE PROPERTIES
+!     IMPLICIT NONE
+
+!     REAL(8):: temp,xA0,yA0
+!     INTEGER:: i,j
+
+!     ! This just reflects any source particles that pass above or below the inlet edges before entering the sim
+
+!     CALL CPU_TIME(t0_BC)
+
+!     Num_r = Num_s
+
+!     ! collision_occured(1:Num_r,1) = (xs_vec(1:Num_r,2)<y_inlet(1))
+!     ! collision_occured(1:Num_r,2) = (xs_vec(1:Num_r,2)>y_inlet(2))
+!     collision_occured(1:Num_r,1) = ( xs_vec(1:Num_r,2) < ( (1)*xs_vec(1:Num_r,1) + b_source_A) )   ! bottom
+!     collision_occured(1:Num_r,2) = ( xs_vec(1:Num_r,2) > ( (1)*xs_vec(1:Num_r,1) + b_source_B) )   ! top
+
+
+!     Theta = Theta_source
+            
+!     Rotation_mat_neg(:,1) = (/  COS(-Theta), -SIN(-Theta) /)
+!     Rotation_mat_neg(:,2) = (/ SIN(-Theta),  COS(-Theta) /)
+!     Rotation_mat_pos(:,1) = (/  COS(Theta), -SIN(Theta) /)
+!     Rotation_mat_pos(:,2) = (/ SIN(Theta),  COS(Theta) /)
+
+!     xA0 = x_source_corners(1,1)
+!     yA0 = x_source_corners(1,2)
+
+!     ! translate to xy_A
+!     xs_vec(1:Num_r,1) = xs_vec(1:Num_r,1) - xA0
+!     xs_vec(1:Num_r,2) = xs_vec(1:Num_r,1) - yA0
+
+!     ! rotate by negative theta
+
+
+!     DO i = 1,2
+!         yw1 = y_inlet(i)
+
+!         DO j = 1,Num_r
+!             IF (collision_occured(j,i) .eqv. .true.) THEN
+!                 xs_vec(j,2) = 2*yw1 - xs_vec(j,2)
+!                 vs_vec(j,2) = -vs_vec(j,2)
+!             END IF
+!         END DO
+!     END DO
+
+
+
+!     CALL CPU_TIME(t_temp)
+!     t_BC = t_BC + (t_temp-t0_BC)
+    
+
+! END SUBROUTINE SPECULAR_REFLECTION_SOURCE_TEMP
 
 
 

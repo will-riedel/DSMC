@@ -19,7 +19,8 @@ SUBROUTINE INITIALIZE_SOURCE
             IF (include_two_beams .EQV. .true.) THEN
                 CALL INITIALIZE_SOURCE_TWO_STREAM
             ELSE
-                CALL INITIALIZE_SOURCE_ONE_STREAM
+                ! CALL INITIALIZE_SOURCE_ONE_STREAM
+                CALL INITIALIZE_SOURCE_ONE_STREAM_TEMP
             END IF
         END IF
 
@@ -71,6 +72,51 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM
 END SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM
 
 
+
+SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM_TEMP
+    USE CONTAIN
+    USE PROPERTIES
+    IMPLICIT NONE
+
+    
+    CALL RANDOM_NUMBER(xs_vec_prev)
+
+
+    xs_vec(:,1) = xs_vec_prev(:,1)*(xs_max-xs_min)  + xs_min
+    xs_vec(:,2) = (xs_vec_prev(:,1)*(xs_max-xs_min) + xs_min) + b_source_A
+
+    xs_vec(:,1) = xs_vec(:,1) - xs_vec_prev(:,2)*(hs)/SQRT(2.)
+    xs_vec(:,2) = xs_vec(:,2) + xs_vec_prev(:,2)*(hs)/SQRT(2.)
+
+
+    CALL RANDN(vs_vec(:,1),Num_s) 
+    CALL RANDN(vs_vec(:,2),Num_s) 
+    CALL RANDN(vs_vec(:,3),Num_s) 
+    vs_vec = vs_vec*vth
+
+    xs_vec_prev = xs_vec
+    vs_vec_prev = vs_vec
+    xs_vec = xs_vec + dt*vs_vec(:,1:2)
+
+
+
+    entered_sim = ( (xs_vec(:,2) > ((-1)*xs_vec(:,1) + b_source_barrier) ) .and. & 
+                    (xs_vec(:,2) > ( (1)*xs_vec(:,1) + b_source_A)) .and. & 
+                    (xs_vec(:,2) < ( (1)*xs_vec(:,1) + b_source_B)) )
+    N_entered = COUNT(entered_sim)
+    i_cur(1:N_entered) = PACK(i_counting , entered_sim)
+
+
+    IF (N_entered > 0) THEN
+        x_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = xs_vec(i_cur(1:N_entered),:)
+        v_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = vs_vec(i_cur(1:N_entered),:)
+        N_simulated = N_simulated + N_entered
+    END IF
+
+    N_added_total(ii) = N_entered            
+
+
+END SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM_TEMP
 
 
 

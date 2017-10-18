@@ -23,8 +23,8 @@ SUBROUTINE INITIALIZE
     vth = SQRT(k_b*T_g/m_g)
     c_s = Pi*d_g**2
     vr_max_0 = 5*vth
-    ! x_lim(1,:) = (/ 0.d0,inlet_length+gun_length+outlet_length /)
-    x_lim = transpose(reshape( (/ 0.d0,inlet_length+gun_length+outlet_length,   0.d0,outlet_height /) , (/2,2/) ))
+    ! x_lim = transpose(reshape( (/ 0.d0,inlet_length+gun_length+outlet_length,   0.d0,outlet_height /) , (/2,2/) ))
+    x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,.025d0 /) , (/2,2/) ))
     xmin = x_lim(1,1)
     xmax = x_lim(1,2)
     ymin = x_lim(2,1)
@@ -88,36 +88,52 @@ SUBROUTINE INITIALIZE
         ! WRITE(*,*) "x_cells_vec=",x_cells_vec
 
 
-        ! find y_cells
-        IF (dy_0 < (ymax-ymin) ) THEN
+        ! ! find y_cells ----------------------------------------------------------------
+        ! IF (dy_0 < (ymax-ymin) ) THEN
             
-            alpha_y = -LOG(1./dy_factor)/(ymax-ymid)
-            n_inf = 1./(dy_0*alpha_y)
-            nmax = INT(n_inf*( 1.-EXP( -alpha_y*(ymax-ymid) ) ))
-            ny = 2*(nmax+1)
+        !     alpha_y = -LOG(1./dy_factor)/(ymax-ymid)
+        !     n_inf = 1./(dy_0*alpha_y)
+        !     nmax = INT(n_inf*( 1.-EXP( -alpha_y*(ymax-ymid) ) ))
+        !     ny = 2*(nmax+1)
 
-            ALLOCATE( i_range_y(nmax+1) )
-            ALLOCATE( y_cells_half(nmax+1) )
-            ALLOCATE( y_cells_vec(ny) )
+        !     ALLOCATE( i_range_y(nmax+1) )
+        !     ALLOCATE( y_cells_half(nmax+1) )
+        !     ALLOCATE( y_cells_vec(ny) )
 
-            i_range_y = (/ (i,i=0,nmax) /)
-            y_cells_half = -1/alpha_y*LOG(1.-i_range_y/n_inf)
+        !     i_range_y = (/ (i,i=0,nmax) /)
+        !     y_cells_half = -1/alpha_y*LOG(1.-i_range_y/n_inf)
 
-            y_cells_vec(1) = ymin
-            DO i = 2,(nmax+1)
-                y_cells_vec(i) = ymid - y_cells_half( (nmax+1)-(i-2) )
-            END DO
-            DO i = (nmax+2),ny
-                y_cells_vec(i) = ymid + y_cells_half( i-(nmax+2)+1 )
-            END DO
+        !     y_cells_vec(1) = ymin
+        !     DO i = 2,(nmax+1)
+        !         y_cells_vec(i) = ymid - y_cells_half( (nmax+1)-(i-2) )
+        !     END DO
+        !     DO i = (nmax+2),ny
+        !         y_cells_vec(i) = ymid + y_cells_half( i-(nmax+2)+1 )
+        !     END DO
         
-        ELSE
+        ! ELSE
 
-            ny = 1
-            ALLOCATE( y_cells_vec(ny) )
-            y_cells_vec = 0
+        !     ny = 1
+        !     ALLOCATE( y_cells_vec(ny) )
+        !     y_cells_vec = 0
 
-        END IF
+        ! END IF
+
+        ! find y_cells -------------------------------------------------------
+        alpha_y = -LOG(1./dy_factor)/(ymax-ymin)
+        n_inf = 1/(dy_0*alpha_y)
+        nmax = INT(n_inf*(1-EXP(-alpha_y*(ymax-ymin) )))
+        ny = nmax+1
+
+        ALLOCATE( i_range_y(ny) )
+        ALLOCATE( y_cells_vec(ny) )
+
+        i_range_y = (/ (i,i=0,nmax) /)
+        y_cells_vec = -1/alpha_y*LOG(1-i_range_y/n_inf)
+
+
+
+
 
         ! WRITE(*,*) "ny,nmax,n_inf,dy_factor=",ny,nmax,n_inf,dy_factor
         ! WRITE(*,*) "i_range_y=",i_range_y
@@ -150,6 +166,14 @@ SUBROUTINE INITIALIZE
 
     V_total = ( xmax-xmin ) * ( ymax-ymin )                 ! total simulation volume
     
+    ! WRITE(*,*) "dx_cells_vec="
+    ! DO j = 1,nx
+    !     WRITE(*,*) dx_cells_vec(j)
+    ! END DO
+    ! WRITE(*,*) "dy_cells_vec="
+    ! DO j = 1,ny
+    !     WRITE(*,*) dy_cells_vec(j)
+    ! END DO
 
     ! time step parameters ---------------------------------------------------------
     nt = INT(tmax/dt)+1
@@ -181,6 +205,7 @@ SUBROUTINE INITIALIZE
         ws = 10*vth*dt                                                                  ! width of source cell
     END IF
 
+
     ! hs = inlet_height
     hs = y_inlet(2)-y_inlet(1)
     Vs = ws*hs
@@ -196,6 +221,55 @@ SUBROUTINE INITIALIZE
     ! ys_max = ymid+hs/2
     ys_min = y_inlet(1)
     ys_max = y_inlet(2)
+
+
+
+
+
+
+
+
+
+
+
+    ! temporary stuff to deal with an angled boundary
+
+    x_source_corners(1,1) = .0235
+    x_source_corners(1,2) = .0315-.025
+    x_source_corners(2,1) = .0216
+    x_source_corners(2,2) = .0334-.025
+    hs = SQRT( (x_source_corners(2,1)-x_source_corners(1,1))**2 + &
+                    (x_source_corners(2,2)-x_source_corners(1,2))**2 )
+
+    Vs = ws*hs
+    ! Num_s = INT(ns*Vs/Fn)                                                           ! Number of source particles in the reservoir
+    Num_s_exact = ns*Vs/Fn
+    Num_s = CEILING(Num_s_exact)  
+
+    xs_min = x_source_corners(1,1) - ws/SQRT(2.)
+    xs_max = x_source_corners(1,1)
+
+    b_source_A = x_source_corners(1,2) - 1*x_source_corners(1,1)
+    b_source_B = x_source_corners(2,2) - 1*x_source_corners(2,1)
+    b_source_barrier = x_source_corners(1,2) - (-1)*x_source_corners(1,1)
+
+    Theta_source = Pi/4.    
+
+    ! WRITE(*,*) "ws,hs,Vs,Num_s_exact,Num_s=",ws,hs,Vs,Num_s_exact,Num_s
+    ! WRITE(*,*) "xs_min,xs_max=",xs_min,xs_max
+    ! WRITE(*,*) "bA,bB,b_barrier=",b_source_A,b_source_B,b_source_barrier
+    ! WRITE(*,*) "x_source_corners=",x_source_corners
+
+
+
+
+
+
+
+
+
+
+
 
     ! Set up wall geometry ---------------------------------------------------------
     ! draw boundaries with vertical and horizontal lines (each row is endpoints of wall: (x1,y1,x2,y2))
@@ -240,11 +314,14 @@ SUBROUTINE INITIALIZE
     ! find cell range for each wall
 
     CALL FIND_WALL_CELLS
-    
-    ! DO i = 1,num_walls
-    !     WRITE(*,*) "i,cxmin,cxmax,cymin,cymax=", &
-    !                 i,i_cell_lim_x(i,1),i_cell_lim_x(i,2),i_cell_lim_y(i,1),i_cell_lim_y(i,2)
-    ! END DO
+
+    DO i = 1,ny
+    WRITE(*,*) i,y_cells_vec(i)
+    END DO    
+    DO i = 1,num_walls
+        WRITE(*,*) "i,cxmin,cxmax,cymin,cymax=", &
+                    i,i_cell_lim_x(i,1),i_cell_lim_x(i,2),i_cell_lim_y(i,1),i_cell_lim_y(i,2)
+    END DO
 
 
 

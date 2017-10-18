@@ -53,7 +53,7 @@ module load python/2.7.5
 
 cd /home/wriedel/DSMC_FORTRAN
 
-cp input_parameter_files/Input_Parameters_full_1D_a Input/Input_Parameters
+cp input_parameter_files/Input_Parameters_full_1D_c Input/Input_Parameters
 
 rm Main
 make
