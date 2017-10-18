@@ -239,7 +239,7 @@ SUBROUTINE FIND_WALL_CELLS
         i_cell_lim_y(i,1) = MINVAL( i_cell_vec( (2*i-1):(2*i) , 2 ) ,1 ) - cell_lim_buffer
         i_cell_lim_y(i,2) = MAXVAL( i_cell_vec( (2*i-1):(2*i) , 2 ) ,1 ) + cell_lim_buffer
     END DO
-    WRITE(*,*) "xw1,xw2,i_cell_lim,i_cell_vec=",xw1,xw2,i_cell_lim_x(5,:),i_cell_vec( (2*5-1):(2*5) , 1 )
+
     DO i = 1,num_walls
         IF (i_cell_lim_x(i,1) < 1) THEN
             i_cell_lim_x(i,1) = 1
@@ -254,8 +254,6 @@ SUBROUTINE FIND_WALL_CELLS
             i_cell_lim_y(i,2) = ny
         END IF
     END DO
-
-    WRITE(*,*) "xw1,xw2,i_cell_lim,i_cell_vec=",xw1,xw2,i_cell_lim_x(5,:),i_cell_vec( (2*5-1):(2*5) , 1 )
 
     ! ! WRITE(*,*) "x_vec="
     ! ! WRITE(*,*) x_vec(1:N_simulated,:)

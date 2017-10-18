@@ -10,7 +10,7 @@ SUBROUTINE INPUT_PARAMETERS_READIN
     Header_name = (/    '*N_INITIAL_____', &
                         '*FN____________', &
                         '*N_CELLS_X_____', &
-                        '*N_CELLLS_Y____', &
+                        '*N_CELLS_Y_____', &
                         '*T_MAX_________', &
                         '*DT____________', &
                         '*DT_TO_SAVE____', &
@@ -35,6 +35,7 @@ SUBROUTINE INPUT_PARAMETERS_READIN
 !*******************READ CONTENTS**************************
 !-----------------------------------------------------------------------
     DO
+        ! WRITE(*,*) "reading..."
         READ(100,*) line
         IF      (line == '*N_INITIAL_____') THEN
           ! initial density
@@ -50,7 +51,7 @@ SUBROUTINE INPUT_PARAMETERS_READIN
           READ(100,*) n_cells_x
           n_cells_vec(1) = n_cells_x
           nx = n_cells_x
-        ELSE IF (line == '*N_CELLLS_Y____') THEN
+        ELSE IF (line == '*N_CELLS_Y_____') THEN
           ! number of cells in the y direction (if using homogeneous grid)
           READ(100,*) n_cells_y
           n_cells_vec(2) = n_cells_y
@@ -106,16 +107,18 @@ SUBROUTINE INPUT_PARAMETERS_READIN
         ELSE IF (line == '*RESTART_SIM___') THEN
           ! whether or not to restart a partially-completed simulation
           READ(100,*) restart_simulation
-        ELSE IF (line == '*DIRECTORY_CUR_') THEN
-          ! directory of current data
-          READ(100,*) dir_cur
-          dir_cur = "Output/" // dir_cur
-          dir_cur_length = LEN_TRIM(dir_cur)
+
         ELSE IF (line == '*RESTART_INDEX_') THEN
           ! index to restart from
           READ(100,*) it_restart
+        ELSE IF (line == '*DIRECTORY_CUR_') THEN
+          ! directory of current data
+          READ(100,*) dir_cur
+          ! WRITE(*,*) "found directory"
+          dir_cur = "Output/" // dir_cur
+          dir_cur_length = LEN_TRIM(dir_cur)
           EXIT
-       ELSE
+        ELSE
           ! Error Analyzing Input
           WRITE(*,*) 'Error Analyzing Input_Parameters'
           WRITE(*,*) line

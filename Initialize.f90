@@ -445,6 +445,11 @@ SUBROUTINE INITIALIZE
         ! WRITE(*,*) "rm " // dir_cur(1:dir_cur_length) // "/*.txt"
         CALL SYSTEM( "rm " // dir_cur(1:dir_cur_length) // "/*.txt" )
 
+        ! save input parameter file to data directory -------------------------------------------------
+        filename = dir_cur(1:dir_cur_length)
+        ! WRITE(*,*) "cp Input/Input_Parameters " // dir_cur(1:dir_cur_length) // "/Input_Parameters" 
+        CALL SYSTEM( "cp Input/Input_Parameters " // dir_cur(1:dir_cur_length) // "/Input_Parameters" )
+
         ! WRITE(filename,"('Output/data/x_',I7.7,'.txt')") (it_restart)
         ! WRITE(filename,"(dir_cur(1:dir_cur_length),'/x_',I7.7,'.txt')") (it_restart)
         ! WRITE(filename,"('/x_',I7.7,'.txt')") (25)
@@ -458,9 +463,6 @@ SUBROUTINE INITIALIZE
     ELSE
         CALL RESTART_PARAMETERS_READIN
 
-
-        
-
         WRITE(*,*) "N_simulated=",N_simulated
         ! WRITE(*,*) "N_collisions_total=",N_simulated
         WRITE(*,*) "t_total=",t_total
@@ -471,10 +473,8 @@ SUBROUTINE INITIALIZE
         WRITE(*,*) "N_sim=",N_simulated
         ! WRITE(*,*) "N_total=",N_total(1:n_saved)
 
-
-
-
     END IF
+
 
     CALL UPDATE_CELL_INDEX
 

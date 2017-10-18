@@ -202,8 +202,8 @@ PROGRAM MAIN
         IF (N_simulated > 0) THEN
             Num_r = N_simulated
             counter = 0
-            ! CALL COMPUTE_REFLECTION
-            CALL SPECULAR_REFLECTION_1D
+            CALL COMPUTE_REFLECTION
+            ! CALL SPECULAR_REFLECTION_1D
         END IF
 
         ! Input from Source/Reservoir -------------------------------------------------

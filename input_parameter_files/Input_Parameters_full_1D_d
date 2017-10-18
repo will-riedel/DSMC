@@ -1,15 +1,15 @@
 *N_INITIAL_____
-1.d22
+6.8d24
 *NS_INITIAL____
-1.d22
+6.8d24
 *FN____________
-1.d14
+1.7d15
 *DX_INIT_______
-3.37d-3
+5.d-4
 *DY_INIT_______
-3.37d-4
+1
 *DX_INLET______
-3.37d-4
+5.d-4
 *DX_FACTOR_____
 1.d4
 *DY_FACTOR_____
@@ -17,9 +17,9 @@
 *T_MAX_________
 6.d-5
 *DT____________
-6.d-8
+9.d-11
 *DT_TO_SAVE____
-7
+4440
 *N_CELLS_X_____
 1000
 *N_CELLS_Y_____
@@ -35,7 +35,7 @@
 *CLOSE_OUTLET__
 .FALSE.
 *INCLUDE_GUN_BC
-.TRUE.
+.FALSE.
 *ACCOMMODATION_
 0.3
 *USE_HOMOG_GRID
@@ -45,7 +45,7 @@
 *RESTART_INDEX_
 546
 *DIRECTORY_CUR_
-data_0
+data_full_1D_d
 
 
 
