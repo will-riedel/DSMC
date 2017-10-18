@@ -510,7 +510,7 @@ SUBROUTINE SPECULAR_REFLECTION_SOURCE
     IMPLICIT NONE
 
     REAL(8):: temp
-    INTEGER:: i,j
+    INTEGER:: i,j,before_val,after_val
 
     ! This just reflects any source particles that pass above or below the inlet edges before entering the sim
 
@@ -523,7 +523,7 @@ SUBROUTINE SPECULAR_REFLECTION_SOURCE
 
 
     DO i = 1,2
-        yw1 = y_inlet(i)ERE
+        yw1 = y_inlet(i)
 
         DO j = 1,Num_r
             IF (collision_occured(j,i) .eqv. .true.) THEN
