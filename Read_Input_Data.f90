@@ -107,7 +107,15 @@ SUBROUTINE INPUT_PARAMETERS_READIN
         ELSE IF (line == '*RESTART_SIM___') THEN
           ! whether or not to restart a partially-completed simulation
           READ(100,*) restart_simulation
-
+        ELSE IF (line == '*X_GRID_TYPE___') THEN
+          ! type of grid to use for columns
+          READ(100,*) x_grid_type
+        ELSE IF (line == '*Y_GRID_TYPE___') THEN
+          ! type of grid to use for columns
+          READ(100,*) y_grid_type
+        ELSE IF (line == '*SOURCE_TYPE___') THEN
+          ! type of source input
+          READ(100,*) source_type
         ELSE IF (line == '*RESTART_INDEX_') THEN
           ! index to restart from
           READ(100,*) it_restart

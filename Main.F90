@@ -12,7 +12,7 @@ MODULE CONTAIN
     REAL(8)::dx_0,dy_0,dx_factor,dy_factor,dx_inlet, x_inlet
     LOGICAL::include_source,close_inlet,close_outlet,include_gun_boundaries,use_homogenous_grid,restart_simulation
     LOGICAL::include_two_beams
-    CHARACTER(80)::dir_cur,dir_temp
+    CHARACTER(80)::dir_cur,dir_temp,x_grid_type,y_grid_type,source_type
     INTEGER::it_restart
 
 !-----------------------------------------------------------------------
@@ -45,7 +45,7 @@ MODULE CONTAIN
 !-----------------------------------------------------------------------
     REAL(8):: m_g,d_g,vth,c_s,vr_max_0,v_avg, xmin,xmax,ymin,ymax,ymid, n_inf, V_total, v_beam
     REAL(8):: ws,ts,hs,Vs,xs_min,xs_max,xs2_min,xs2_max,ys_min,ys_max,t, N_candidate_pairs_real
-    REAL(8):: Nc0,Nc_sim,m_r,collision_ratio, Num_s_exact, b_source_A, b_source_B, b_source_barrier,Theta_source
+    REAL(8):: Nc0,Nc_sim,m_r,collision_ratio, Num_s_exact, Num_s_frac, b_source_A, b_source_B, b_source_barrier,Theta_source
     REAL(8):: alpha_x,alpha_y,neg_offset,pos_offset, accommodation 
     REAL (8):: t0_total,t0_BC,t0_collisions,t0_loop,t_temp,t_total,t_BC,t_collisions,t_loop, t0_index,t_index
     REAL (8):: t0_BC1,t0_BC2,t0_BC3,t0_BC4,t0_BC5,t_BC1,t_BC2,t_BC3,t_BC4,t_BC5
@@ -213,12 +213,12 @@ PROGRAM MAIN
         IF (N_simulated > 0) THEN
 
             ! Update Cell Index -----------------------------------------------------------
-            ! CALL UPDATE_CELL_INDEX
-            CALL UPDATE_CELL_INDEX_TEMP
+            CALL UPDATE_CELL_INDEX
+            ! CALL UPDATE_CELL_INDEX_TEMP
 
             ! WRITE(*,*) "got here 3"
             ! Collisions ------------------------------------------------------------------
-            CALL RUN_COLLISIONS
+            ! CALL RUN_COLLISIONS
 
         END IF
         

@@ -11,33 +11,97 @@ SUBROUTINE UPDATE_CELL_INDEX
         i_cell_vec_prev = i_cell_vec
 
 
-        IF (use_homogenous_grid .EQV. .true.) THEN
+        ! IF (use_homogenous_grid .EQV. .true.) THEN
 
-            i_cell_vec(1:N_simulated,1) = FLOOR( (x_vec(1:N_simulated,1)-xmin)/(xmax-xmin)*nx ) + 1
+        !     i_cell_vec(1:N_simulated,1) = FLOOR( (x_vec(1:N_simulated,1)-xmin)/(xmax-xmin)*nx ) + 1
 
             
 
-            IF (ny>1) THEN
-                i_cell_vec(1:N_simulated,2) = FLOOR( (x_vec(1:N_simulated,2)-ymin)/(ymax-ymin)*ny ) + 1
-            ELSE
-                i_cell_vec(1:N_simulated,2) = 1
-            END IF
+        !     IF (ny>1) THEN
+        !         i_cell_vec(1:N_simulated,2) = FLOOR( (x_vec(1:N_simulated,2)-ymin)/(ymax-ymin)*ny ) + 1
+        !     ELSE
+        !         i_cell_vec(1:N_simulated,2) = 1
+        !     END IF
 
-            ! DO i=1,N_simulated
-            !     IF (i_cell_vec(i,2) > ny) THEN
-            !         WRITE(*,*) "x_vec= ",x_vec(i,:)
-            !         ! WRITE(*,*) "val1 = ",(x_vec(i,1)-xmin)/(xmax-xmin)
-            !         WRITE(*,*) "val1 = ",(x_vec(i,2)-ymin)/(ymax-ymin)
-            !         WRITE(*,*) "val2 = ",FLOOR( (x_vec(i,2)-ymin)/(ymax-ymin)*ny )
-            !         WRITE(*,*) "N_simulated=", N_simulated
+        !     ! DO i=1,N_simulated
+        !     !     IF (i_cell_vec(i,2) > ny) THEN
+        !     !         WRITE(*,*) "x_vec= ",x_vec(i,:)
+        !     !         ! WRITE(*,*) "val1 = ",(x_vec(i,1)-xmin)/(xmax-xmin)
+        !     !         WRITE(*,*) "val1 = ",(x_vec(i,2)-ymin)/(ymax-ymin)
+        !     !         WRITE(*,*) "val2 = ",FLOOR( (x_vec(i,2)-ymin)/(ymax-ymin)*ny )
+        !     !         WRITE(*,*) "N_simulated=", N_simulated
 
-            !         WRITE(*,*) "shape(Npc_slice)=", SHAPE(Npc_slice)
-            !         WRITE(*,*) "shape(Npc_added)=", SHAPE(Npc_added)
-            !         ! WRITE(*,*) "max(i_cell_vec)=", MAXVAL(i_cell_vec(1:N_simulated,1))
-            !     ENDIF
-            ! END DO
+        !     !         WRITE(*,*) "shape(Npc_slice)=", SHAPE(Npc_slice)
+        !     !         WRITE(*,*) "shape(Npc_added)=", SHAPE(Npc_added)
+        !     !         ! WRITE(*,*) "max(i_cell_vec)=", MAXVAL(i_cell_vec(1:N_simulated,1))
+        !     !     ENDIF
+        !     ! END DO
 
-        ELSE
+        ! ELSE
+        !     ! ! find x-cell
+        !     ! alpha_x  = -LOG(1/dx_factor)/xmax
+        !     ! n_inf = 1/(dx_0*alpha_x)
+        !     ! i_cell_vec(1:N_simulated,1) = FLOOR(n_inf*(1-EXP( -alpha_x*x_vec(1:N_simulated,1) )))+1
+
+        !     alpha_x  = -LOG(1/dx_factor)/(xmax-x_inlet)
+        !     n_inf = 1/(dx_0*alpha_x)
+        !     nmax_left = (x_inlet-xmin)/dx_inlet
+        !     DO j = 1,N_simulated
+        !         IF (x_vec(j,1) < x_inlet) THEN
+        !             i_cell_vec(j,1) = FLOOR( (x_vec(j,1)-xmin)/(x_inlet-xmin)*nmax_left ) + 1
+        !         ELSE
+        !             i_cell_vec(j,1) = FLOOR(n_inf*(1-EXP( -alpha_x*(x_vec(j,1)-x_inlet) )) + nmax_left)+1
+        !         END IF
+
+        !         ! IF (i_cell_vec(j,1) == 
+        !     END DO
+
+        !     ! j = int(N_simulated/3)
+        !     ! WRITE(*,*) "x_vec(j,1),n_inf,alpha_x,,x_inlet,nmax_left=",x_vec(j,1),n_inf,alpha_x,x_inlet,nmax_left
+        !     ! WRITE(*,*) "term1=",-alpha_x*(x_vec(j,1)-x_inlet)
+        !     ! WRITE(*,*) "term2=",n_inf*(1-EXP( -alpha_x*(x_vec(j,1)+x_inlet)))
+        !     ! WRITE(*,*) "x_vec(j,1), i_cell_vec(j,1) = ",x_vec(j,1),i_cell_vec(j,1)
+        !     ! WRITE(*,*) "max=",MAXVAL(i_cell_vec(:,1))
+
+
+
+        !     ! find y-cell
+        !     IF (ny > 1) THEN
+        !         alpha_y = -LOG(1/dy_factor) / (ymax-ymid)
+        !         n_inf = 1/(dy_0*alpha_y)
+        !         IF (MOD(ny,2)==0) THEN
+        !             pos_offset = ny/2. - 0
+        !             neg_offset = ny/2. - 1
+        !         ELSE
+        !             pos_offset = ny/2.-.5
+        !             neg_offset = ny/2.-.5
+        !         ENDIF
+
+        !         DO i = 1,N_simulated
+        !             IF (x_vec(i,2) < ymid) THEN
+        !                 i_cell_vec(i,2) = &
+        !                 FLOOR( neg_offset - FLOOR( n_inf*(1-EXP(-alpha_y*(ymid - x_vec(i,2))))) ) 
+        !             ELSE 
+        !                 i_cell_vec(i,2) = &
+        !                 CEILING( pos_offset + FLOOR( n_inf*(1-EXP(-alpha_y*(x_vec(i,2) - ymid)))) ) 
+        !             END IF
+        !         END DO
+
+        !         i_cell_vec(1:N_simulated,2) = i_cell_vec(1:N_simulated,2) + 1
+        !     ELSE
+        !         i_cell_vec(1:N_simulated,2) = 1
+        !     ENDIF
+
+        ! END IF
+        
+
+
+
+
+        IF (x_grid_type(1:5) == "HOMOG") THEN
+            i_cell_vec(1:N_simulated,1) = FLOOR( (x_vec(1:N_simulated,1)-xmin)/(xmax-xmin)*nx ) + 1
+
+        ELSE IF (x_grid_type(1:5) == "EXP_1") THEN
             ! ! find x-cell
             ! alpha_x  = -LOG(1/dx_factor)/xmax
             ! n_inf = 1/(dx_0*alpha_x)
@@ -52,8 +116,6 @@ SUBROUTINE UPDATE_CELL_INDEX
                 ELSE
                     i_cell_vec(j,1) = FLOOR(n_inf*(1-EXP( -alpha_x*(x_vec(j,1)-x_inlet) )) + nmax_left)+1
                 END IF
-
-                ! IF (i_cell_vec(j,1) == 
             END DO
 
             ! j = int(N_simulated/3)
@@ -63,8 +125,37 @@ SUBROUTINE UPDATE_CELL_INDEX
             ! WRITE(*,*) "x_vec(j,1), i_cell_vec(j,1) = ",x_vec(j,1),i_cell_vec(j,1)
             ! WRITE(*,*) "max=",MAXVAL(i_cell_vec(:,1))
 
+        ELSE IF (x_grid_type(1:5) == "EXP_2") THEN
+            WRITE(*,*) "--- symmetric x-grid not implemented yet ---"
+            STOP
+
+        ELSE
+            WRITE(*,*) "--- Can't identify x-grid type ---"
+            STOP
+        END IF
 
 
+        IF (y_grid_type(1:5) == "HOMOG") THEN
+            IF (ny>1) THEN
+                i_cell_vec(1:N_simulated,2) = FLOOR( (x_vec(1:N_simulated,2)-ymin)/(ymax-ymin)*ny ) + 1
+            ELSE
+                i_cell_vec(1:N_simulated,2) = 1
+            END IF
+
+        ELSE IF (y_grid_type(1:5) == "EXP_1") THEN
+            ! find y-cell
+            IF (ny > 1) THEN
+                alpha_y  = -LOG(1/dy_factor)/(ymax-ymin)
+                n_inf = 1/(dy_0*alpha_y)
+                DO j = 1,N_simulated
+                    i_cell_vec(j,2) = FLOOR(n_inf*(1-EXP( -alpha_y*(x_vec(j,2)) )) ) + 1
+                END DO
+
+            ELSE
+                i_cell_vec(1:N_simulated,2) = 1
+            ENDIF
+
+        ELSE IF (y_grid_type(1:5) == "EXP_2") THEN
             ! find y-cell
             IF (ny > 1) THEN
                 alpha_y = -LOG(1/dy_factor) / (ymax-ymid)
@@ -92,8 +183,20 @@ SUBROUTINE UPDATE_CELL_INDEX
                 i_cell_vec(1:N_simulated,2) = 1
             ENDIF
 
+        ELSE
+            WRITE(*,*) "--- Can't identify y-grid type ---"
+            STOP
         END IF
-        
+
+
+
+
+
+
+
+
+
+
 
         DO i = 1,N_simulated
             IF (i_cell_vec(i,1) > nx) THEN
@@ -139,128 +242,128 @@ END SUBROUTINE UPDATE_CELL_INDEX
 
 
 
-SUBROUTINE UPDATE_CELL_INDEX_TEMP
-    USE CONTAIN
-    USE PROPERTIES
-    IMPLICIT NONE
-    INTEGER::i,j
+! SUBROUTINE UPDATE_CELL_INDEX_TEMP
+!     USE CONTAIN
+!     USE PROPERTIES
+!     IMPLICIT NONE
+!     INTEGER::i,j
 
-    CALL CPU_TIME(t0_index)
+!     CALL CPU_TIME(t0_index)
 
-    ! note: if (x,y) == (0,0), then just set index to -1000 or something (or 0, since indices start with 1 here)
-    IF (N_simulated > 0) THEN
-        i_cell_vec_prev = i_cell_vec
+!     ! note: if (x,y) == (0,0), then just set index to -1000 or something (or 0, since indices start with 1 here)
+!     IF (N_simulated > 0) THEN
+!         i_cell_vec_prev = i_cell_vec
 
 
-        IF (use_homogenous_grid .EQV. .true.) THEN
+!         IF (use_homogenous_grid .EQV. .true.) THEN
 
-            i_cell_vec(1:N_simulated,1) = FLOOR( (x_vec(1:N_simulated,1)-xmin)/(xmax-xmin)*nx ) + 1
+!             i_cell_vec(1:N_simulated,1) = FLOOR( (x_vec(1:N_simulated,1)-xmin)/(xmax-xmin)*nx ) + 1
 
             
 
-            IF (ny>1) THEN
-                i_cell_vec(1:N_simulated,2) = FLOOR( (x_vec(1:N_simulated,2)-ymin)/(ymax-ymin)*ny ) + 1
-            ELSE
-                i_cell_vec(1:N_simulated,2) = 1
-            END IF
+!             IF (ny>1) THEN
+!                 i_cell_vec(1:N_simulated,2) = FLOOR( (x_vec(1:N_simulated,2)-ymin)/(ymax-ymin)*ny ) + 1
+!             ELSE
+!                 i_cell_vec(1:N_simulated,2) = 1
+!             END IF
 
-            ! DO i=1,N_simulated
-            !     IF (i_cell_vec(i,2) > ny) THEN
-            !         WRITE(*,*) "x_vec= ",x_vec(i,:)
-            !         ! WRITE(*,*) "val1 = ",(x_vec(i,1)-xmin)/(xmax-xmin)
-            !         WRITE(*,*) "val1 = ",(x_vec(i,2)-ymin)/(ymax-ymin)
-            !         WRITE(*,*) "val2 = ",FLOOR( (x_vec(i,2)-ymin)/(ymax-ymin)*ny )
-            !         WRITE(*,*) "N_simulated=", N_simulated
+!             ! DO i=1,N_simulated
+!             !     IF (i_cell_vec(i,2) > ny) THEN
+!             !         WRITE(*,*) "x_vec= ",x_vec(i,:)
+!             !         ! WRITE(*,*) "val1 = ",(x_vec(i,1)-xmin)/(xmax-xmin)
+!             !         WRITE(*,*) "val1 = ",(x_vec(i,2)-ymin)/(ymax-ymin)
+!             !         WRITE(*,*) "val2 = ",FLOOR( (x_vec(i,2)-ymin)/(ymax-ymin)*ny )
+!             !         WRITE(*,*) "N_simulated=", N_simulated
 
-            !         WRITE(*,*) "shape(Npc_slice)=", SHAPE(Npc_slice)
-            !         WRITE(*,*) "shape(Npc_added)=", SHAPE(Npc_added)
-            !         ! WRITE(*,*) "max(i_cell_vec)=", MAXVAL(i_cell_vec(1:N_simulated,1))
-            !     ENDIF
-            ! END DO
+!             !         WRITE(*,*) "shape(Npc_slice)=", SHAPE(Npc_slice)
+!             !         WRITE(*,*) "shape(Npc_added)=", SHAPE(Npc_added)
+!             !         ! WRITE(*,*) "max(i_cell_vec)=", MAXVAL(i_cell_vec(1:N_simulated,1))
+!             !     ENDIF
+!             ! END DO
 
-        ELSE
-            ! ! find x-cell
-            ! alpha_x  = -LOG(1/dx_factor)/xmax
-            ! n_inf = 1/(dx_0*alpha_x)
-            ! i_cell_vec(1:N_simulated,1) = FLOOR(n_inf*(1-EXP( -alpha_x*x_vec(1:N_simulated,1) )))+1
+!         ELSE
+!             ! ! find x-cell
+!             ! alpha_x  = -LOG(1/dx_factor)/xmax
+!             ! n_inf = 1/(dx_0*alpha_x)
+!             ! i_cell_vec(1:N_simulated,1) = FLOOR(n_inf*(1-EXP( -alpha_x*x_vec(1:N_simulated,1) )))+1
 
-            alpha_x  = -LOG(1/dx_factor)/(xmax-x_inlet)
-            n_inf = 1/(dx_0*alpha_x)
-            nmax_left = (x_inlet-xmin)/dx_inlet
-            DO j = 1,N_simulated
-                IF (x_vec(j,1) < x_inlet) THEN
-                    i_cell_vec(j,1) = FLOOR( (x_vec(j,1)-xmin)/(x_inlet-xmin)*nmax_left ) + 1
-                ELSE
-                    i_cell_vec(j,1) = FLOOR(n_inf*(1-EXP( -alpha_x*(x_vec(j,1)-x_inlet) )) + nmax_left)+1
-                END IF
+!             alpha_x  = -LOG(1/dx_factor)/(xmax-x_inlet)
+!             n_inf = 1/(dx_0*alpha_x)
+!             nmax_left = (x_inlet-xmin)/dx_inlet
+!             DO j = 1,N_simulated
+!                 IF (x_vec(j,1) < x_inlet) THEN
+!                     i_cell_vec(j,1) = FLOOR( (x_vec(j,1)-xmin)/(x_inlet-xmin)*nmax_left ) + 1
+!                 ELSE
+!                     i_cell_vec(j,1) = FLOOR(n_inf*(1-EXP( -alpha_x*(x_vec(j,1)-x_inlet) )) + nmax_left)+1
+!                 END IF
 
-                ! IF (i_cell_vec(j,1) == 
-            END DO
+!                 ! IF (i_cell_vec(j,1) == 
+!             END DO
 
-            ! j = int(N_simulated/3)
-            ! WRITE(*,*) "x_vec(j,1),n_inf,alpha_x,,x_inlet,nmax_left=",x_vec(j,1),n_inf,alpha_x,x_inlet,nmax_left
-            ! WRITE(*,*) "term1=",-alpha_x*(x_vec(j,1)-x_inlet)
-            ! WRITE(*,*) "term2=",n_inf*(1-EXP( -alpha_x*(x_vec(j,1)+x_inlet)))
-            ! WRITE(*,*) "x_vec(j,1), i_cell_vec(j,1) = ",x_vec(j,1),i_cell_vec(j,1)
-            ! WRITE(*,*) "max=",MAXVAL(i_cell_vec(:,1))
+!             ! j = int(N_simulated/3)
+!             ! WRITE(*,*) "x_vec(j,1),n_inf,alpha_x,,x_inlet,nmax_left=",x_vec(j,1),n_inf,alpha_x,x_inlet,nmax_left
+!             ! WRITE(*,*) "term1=",-alpha_x*(x_vec(j,1)-x_inlet)
+!             ! WRITE(*,*) "term2=",n_inf*(1-EXP( -alpha_x*(x_vec(j,1)+x_inlet)))
+!             ! WRITE(*,*) "x_vec(j,1), i_cell_vec(j,1) = ",x_vec(j,1),i_cell_vec(j,1)
+!             ! WRITE(*,*) "max=",MAXVAL(i_cell_vec(:,1))
 
 
 
-            ! find y-cell
-            IF (ny > 1) THEN
-                alpha_y  = -LOG(1/dy_factor)/(ymax-ymin)
-                n_inf = 1/(dy_0*alpha_y)
-                DO j = 1,N_simulated
-                    i_cell_vec(j,2) = FLOOR(n_inf*(1-EXP( -alpha_y*(x_vec(j,2)) )) ) + 1
-                END DO
+!             ! find y-cell
+!             IF (ny > 1) THEN
+!                 alpha_y  = -LOG(1/dy_factor)/(ymax-ymin)
+!                 n_inf = 1/(dy_0*alpha_y)
+!                 DO j = 1,N_simulated
+!                     i_cell_vec(j,2) = FLOOR(n_inf*(1-EXP( -alpha_y*(x_vec(j,2)) )) ) + 1
+!                 END DO
 
-            ELSE
-                i_cell_vec(1:N_simulated,2) = 1
-            ENDIF
+!             ELSE
+!                 i_cell_vec(1:N_simulated,2) = 1
+!             ENDIF
 
-        END IF
+!         END IF
         
 
-        DO i = 1,N_simulated
-            IF (i_cell_vec(i,1) > nx) THEN
-                i_cell_vec(i,1) = nx
-            END IF
-            IF (i_cell_vec(i,2) > ny) THEN
-                i_cell_vec(i,2) = ny
-            END IF
-        END DO
-        ! DO i = 1,N_simulated
-        !     IF (i_cell_vec(i,1) > nx) THEN
-        !         i_cell_vec(i,1) = nx
-        !     ELSE IF (i_cell_vec(i,1) < 1) THEN
-        !         i_cell_vec(i,1) = 1
-        !     END IF
-        !     IF (i_cell_vec(i,2) > ny) THEN
-        !         i_cell_vec(i,2) = ny
-        !     ELSE IF (i_cell_vec(i,2) < 1) THEN
-        !         i_cell_vec(i,2) = 1
-        !     END IF
-        ! END DO
+!         DO i = 1,N_simulated
+!             IF (i_cell_vec(i,1) > nx) THEN
+!                 i_cell_vec(i,1) = nx
+!             END IF
+!             IF (i_cell_vec(i,2) > ny) THEN
+!                 i_cell_vec(i,2) = ny
+!             END IF
+!         END DO
+!         ! DO i = 1,N_simulated
+!         !     IF (i_cell_vec(i,1) > nx) THEN
+!         !         i_cell_vec(i,1) = nx
+!         !     ELSE IF (i_cell_vec(i,1) < 1) THEN
+!         !         i_cell_vec(i,1) = 1
+!         !     END IF
+!         !     IF (i_cell_vec(i,2) > ny) THEN
+!         !         i_cell_vec(i,2) = ny
+!         !     ELSE IF (i_cell_vec(i,2) < 1) THEN
+!         !         i_cell_vec(i,2) = 1
+!         !     END IF
+!         ! END DO
 
 
-        IF (finding_wall_cells .EQV. .false.) THEN
+!         IF (finding_wall_cells .EQV. .false.) THEN
 
-            DO i = 1,N_simulated
-                IF (removed_from_sim(i) .eqv. .true.) THEN
-                    i_cell_vec(i,1) = 0
-                    i_cell_vec(i,2) = 0
-                END IF 
-            END DO
+!             DO i = 1,N_simulated
+!                 IF (removed_from_sim(i) .eqv. .true.) THEN
+!                     i_cell_vec(i,1) = 0
+!                     i_cell_vec(i,2) = 0
+!                 END IF 
+!             END DO
 
-            CALL SORT_ARRAYS
-
-
-        END IF
-
-    ENDIF
+!             CALL SORT_ARRAYS
 
 
-END SUBROUTINE UPDATE_CELL_INDEX_TEMP
+!         END IF
+
+!     ENDIF
+
+
+! END SUBROUTINE UPDATE_CELL_INDEX_TEMP
 
 
 
@@ -356,8 +459,8 @@ SUBROUTINE FIND_WALL_CELLS
 
 
     finding_wall_cells = .true.
-    ! CALL UPDATE_CELL_INDEX
-    CALL UPDATE_CELL_INDEX_TEMP
+    CALL UPDATE_CELL_INDEX
+    ! CALL UPDATE_CELL_INDEX_TEMP
     finding_wall_cells = .false.
 
     cell_lim_buffer = 2

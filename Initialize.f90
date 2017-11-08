@@ -31,25 +31,23 @@ SUBROUTINE INITIALIZE
     ymax = x_lim(2,2)    
     ymid = (ymin+ymax)/2
 
-    ! nx = n_cells_vec(1)
-    ! ny = n_cells_vec(2)
-    ! ny = 1
-    ! cy  = 1
 
 
-    IF (use_homogenous_grid .EQV. .true.) THEN
+    ! source_type = "DOWNSTREAM"  ! "NORMAL", "2BEAM", "DOWNSTREAM"
+    ! x_grid_type = "EXP_1"  ! "HOMOG", "EXP_1"
+    ! y_grid_type = "EXP_1"  ! "HOMOG", "EXP_1", "EXP_2"
+
+
+    ! Set up x-grid -------------------------------------------------------------------
+    IF (x_grid_type(1:5) == "HOMOG") THEN
         ! set up equally spaced grid points
         ALLOCATE( x_cells_vec(nx) )
-        ALLOCATE( y_cells_vec(ny) )
         dx = ( xmax - xmin ) / (nx)
         DO i = 1 , nx
             x_cells_vec(i) = xmin + dx*(i-1)
         END DO
-        dy = ( ymax - ymin ) / (ny)
-        DO i = 1 , ny
-            y_cells_vec(i) = ymin + dy*(i-1)
-        END DO
-    ELSE
+
+    ELSE IF (x_grid_type(1:5) == "EXP_1") THEN
         ! ! find x_cells
         ! alpha_x = -LOG(1./dx_factor)/xmax
         ! n_inf = 1/(dx_0*alpha_x)
@@ -63,6 +61,8 @@ SUBROUTINE INITIALIZE
         ! x_cells_vec = -1/alpha_x*LOG(1-i_range_x/n_inf)
 
 
+        ! this includes an extra homogeneous portion for the high-density bottlececk region
+        ! if you set that region to a large dx, then it disappears and should result in a normal 1-directional exponential
         alpha_x = -LOG(1./dx_factor)/(xmax-x_inlet)
         n_inf = 1./(dx_0*alpha_x)
 
@@ -70,9 +70,6 @@ SUBROUTINE INITIALIZE
         nmax_right = INT( n_inf*(1.-EXP(-alpha_x*(xmax-x_inlet))) )
         nmax = INT( nmax_right + nmax_left)
         nx = nmax+1
-        ! WRITE(*,*) "nmax_left,nmax_right,nmax,nx=",nmax_left,nmax_right,nmax,nx
-        ! WRITE(*,*) "x_inlet,xmin,dx_inlet=",x_inlet,xmin,dx_inlet
-        ! WRITE(*,*) "product = ",(x_inlet-xmin)/dx_inlet
 
         ALLOCATE( i_range_x(nx) )
         ALLOCATE( x_cells_vec(nx) )
@@ -88,38 +85,27 @@ SUBROUTINE INITIALIZE
         ! WRITE(*,*) "x_cells_vec=",x_cells_vec
 
 
-        ! ! find y_cells ----------------------------------------------------------------
-        ! IF (dy_0 < (ymax-ymin) ) THEN
-            
-        !     alpha_y = -LOG(1./dy_factor)/(ymax-ymid)
-        !     n_inf = 1./(dy_0*alpha_y)
-        !     nmax = INT(n_inf*( 1.-EXP( -alpha_y*(ymax-ymid) ) ))
-        !     ny = 2*(nmax+1)
+    ELSE IF (x_grid_type(1:5) == "EXP_2") THEN
+        WRITE(*,*) "--- symmetric x-grid not implemented yet ---"
+        STOP
+    ELSE
+        WRITE(*,*) "--- Can't identify x-grid type ---"
+        STOP
+    END IF
 
-        !     ALLOCATE( i_range_y(nmax+1) )
-        !     ALLOCATE( y_cells_half(nmax+1) )
-        !     ALLOCATE( y_cells_vec(ny) )
 
-        !     i_range_y = (/ (i,i=0,nmax) /)
-        !     y_cells_half = -1/alpha_y*LOG(1.-i_range_y/n_inf)
 
-        !     y_cells_vec(1) = ymin
-        !     DO i = 2,(nmax+1)
-        !         y_cells_vec(i) = ymid - y_cells_half( (nmax+1)-(i-2) )
-        !     END DO
-        !     DO i = (nmax+2),ny
-        !         y_cells_vec(i) = ymid + y_cells_half( i-(nmax+2)+1 )
-        !     END DO
-        
-        ! ELSE
+    ! Set up y-grid -------------------------------------------------------------------
+    IF (y_grid_type(1:5) == "HOMOG") THEN
+        ! set up equally spaced grid points
+        ALLOCATE( y_cells_vec(ny) )
+        dy = ( ymax - ymin ) / (ny)
+        DO i = 1 , ny
+            y_cells_vec(i) = ymin + dy*(i-1)
+        END DO
 
-        !     ny = 1
-        !     ALLOCATE( y_cells_vec(ny) )
-        !     y_cells_vec = 0
-
-        ! END IF
-
-        ! find y_cells -------------------------------------------------------
+    ELSE IF (y_grid_type(1:5) == "EXP_1") THEN
+        ! find y_cells 
         alpha_y = -LOG(1./dy_factor)/(ymax-ymin)
         n_inf = 1/(dy_0*alpha_y)
         nmax = INT(n_inf*(1-EXP(-alpha_y*(ymax-ymin) )))
@@ -131,17 +117,40 @@ SUBROUTINE INITIALIZE
         i_range_y = (/ (i,i=0,nmax) /)
         y_cells_vec = -1/alpha_y*LOG(1-i_range_y/n_inf)
 
+    ELSE IF (y_grid_type(1:5) == "EXP_2") THEN
+        ! find y_cells 
+        IF (dy_0 < (ymax-ymin) ) THEN
+            alpha_y = -LOG(1./dy_factor)/(ymax-ymid)
+            n_inf = 1./(dy_0*alpha_y)
+            nmax = INT(n_inf*( 1.-EXP( -alpha_y*(ymax-ymid) ) ))
+            ny = 2*(nmax+1)
 
+            ALLOCATE( i_range_y(nmax+1) )
+            ALLOCATE( y_cells_half(nmax+1) )
+            ALLOCATE( y_cells_vec(ny) )
 
+            i_range_y = (/ (i,i=0,nmax) /)
+            y_cells_half = -1/alpha_y*LOG(1.-i_range_y/n_inf)
 
+            y_cells_vec(1) = ymin
+            DO i = 2,(nmax+1)
+                y_cells_vec(i) = ymid - y_cells_half( (nmax+1)-(i-2) )
+            END DO
+            DO i = (nmax+2),ny
+                y_cells_vec(i) = ymid + y_cells_half( i-(nmax+2)+1 )
+            END DO
+        
+        ELSE
+            ny = 1
+            ALLOCATE( y_cells_vec(ny) )
+            y_cells_vec = 0
 
-        ! WRITE(*,*) "ny,nmax,n_inf,dy_factor=",ny,nmax,n_inf,dy_factor
-        ! WRITE(*,*) "i_range_y=",i_range_y
-        ! WRITE(*,*) "y_cells_half=",y_cells_half
-        ! WRITE(*,*) "ymin,ymax,ymid=",ymin,ymax,ymid
-        ! WRITE(*,*) "ycv=",y_cells_vec
-
+        END IF
+    ELSE
+        WRITE(*,*) "--- Can't identify y-grid type ---"
+        STOP
     END IF
+
 
 
 
@@ -199,75 +208,56 @@ SUBROUTINE INITIALIZE
     
     ts = 5.d-4                                                                      ! pulse width of source valve opening
 
-    IF (include_two_beams .EQV. .true.) THEN
+
+    ! IF (include_two_beams .EQV. .true.) THEN
+    IF (source_type(1:5) == "2BEAM") THEN
         ws = v_beam*dt
     ELSE
         ws = 10*vth*dt                                                                  ! width of source cell
     END IF
 
+    IF ( (source_type(1:6) == "NORMAL") .OR. (source_type(1:5) == "2BEAM") ) THEn
+        hs = y_inlet(2)-y_inlet(1)
 
-    ! hs = inlet_height
-    hs = y_inlet(2)-y_inlet(1)
+        xs_min = xmin - ws
+        xs_max = xmin
+        xs2_min = xmax
+        xs2_max = xmax + ws
+        ! ys_min = ymid-hs/2
+        ! ys_max = ymid+hs/2
+        ys_min = y_inlet(1)
+        ys_max = y_inlet(2)
+
+    ELSE IF (source_type(1:10) == "DOWNSTREAM") THEN
+        ! angled boundary
+
+        x_source_corners(1,1) = .0235
+        x_source_corners(1,2) = .0315-.025
+        x_source_corners(2,1) = .0216
+        x_source_corners(2,2) = .0334-.025
+        hs = SQRT( (x_source_corners(2,1)-x_source_corners(1,1))**2 + &
+                        (x_source_corners(2,2)-x_source_corners(1,2))**2 )
+
+        xs_min = x_source_corners(1,1) - ws/SQRT(2.)
+        xs_max = x_source_corners(1,1)
+
+        b_source_A = x_source_corners(1,2) - 1*x_source_corners(1,1)
+        b_source_B = x_source_corners(2,2) - 1*x_source_corners(2,1)
+        b_source_barrier = x_source_corners(1,2) - (-1)*x_source_corners(1,1)
+
+        Theta_source = Pi/4.    
+
+        ! WRITE(*,*) "ws,hs,Vs,Num_s_exact,Num_s=",ws,hs,Vs,Num_s_exact,Num_s
+        ! WRITE(*,*) "xs_min,xs_max=",xs_min,xs_max
+        ! WRITE(*,*) "bA,bB,b_barrier=",b_source_A,b_source_B,b_source_barrier
+        ! WRITE(*,*) "x_source_corners=",x_source_corners
+
+    END IF
+
     Vs = ws*hs
-    ! Num_s = INT(ns*Vs/Fn)                                                           ! Number of source particles in the reservoir
     Num_s_exact = ns*Vs/Fn
-    Num_s = CEILING(Num_s_exact)                                                           ! Number of source particles in the reservoir
-
-    xs_min = xmin - ws
-    xs_max = xmin
-    xs2_min = xmax
-    xs2_max = xmax + ws
-    ! ys_min = ymid-hs/2
-    ! ys_max = ymid+hs/2
-    ys_min = y_inlet(1)
-    ys_max = y_inlet(2)
-
-
-
-
-
-
-
-
-
-
-
-    ! temporary stuff to deal with an angled boundary
-
-    x_source_corners(1,1) = .0235
-    x_source_corners(1,2) = .0315-.025
-    x_source_corners(2,1) = .0216
-    x_source_corners(2,2) = .0334-.025
-    hs = SQRT( (x_source_corners(2,1)-x_source_corners(1,1))**2 + &
-                    (x_source_corners(2,2)-x_source_corners(1,2))**2 )
-
-    Vs = ws*hs
-    ! Num_s = INT(ns*Vs/Fn)                                                           ! Number of source particles in the reservoir
-    Num_s_exact = ns*Vs/Fn
-    Num_s = CEILING(Num_s_exact)  
-
-    xs_min = x_source_corners(1,1) - ws/SQRT(2.)
-    xs_max = x_source_corners(1,1)
-
-    b_source_A = x_source_corners(1,2) - 1*x_source_corners(1,1)
-    b_source_B = x_source_corners(2,2) - 1*x_source_corners(2,1)
-    b_source_barrier = x_source_corners(1,2) - (-1)*x_source_corners(1,1)
-
-    Theta_source = Pi/4.    
-
-    ! WRITE(*,*) "ws,hs,Vs,Num_s_exact,Num_s=",ws,hs,Vs,Num_s_exact,Num_s
-    ! WRITE(*,*) "xs_min,xs_max=",xs_min,xs_max
-    ! WRITE(*,*) "bA,bB,b_barrier=",b_source_A,b_source_B,b_source_barrier
-    ! WRITE(*,*) "x_source_corners=",x_source_corners
-
-
-
-
-
-
-
-
-
+    Num_s = CEILING(Num_s_exact)
+    Num_s_frac = Num_s_exact - FLOOR(Num_s_exact)
 
 
 
@@ -315,13 +305,18 @@ SUBROUTINE INITIALIZE
 
     CALL FIND_WALL_CELLS
 
+    WRITE(*,*) "y:"
     DO i = 1,ny
-    WRITE(*,*) i,y_cells_vec(i)
-    END DO    
-    DO i = 1,num_walls
-        WRITE(*,*) "i,cxmin,cxmax,cymin,cymax=", &
-                    i,i_cell_lim_x(i,1),i_cell_lim_x(i,2),i_cell_lim_y(i,1),i_cell_lim_y(i,2)
+        WRITE(*,*) i,y_cells_vec(i)
+    END DO   
+    WRITE(*,*) "x:"
+    DO i = 1,nx
+        WRITE(*,*) i,x_cells_vec(i)
     END DO
+    ! DO i = 1,num_walls
+    !     WRITE(*,*) "i,cxmin,cxmax,cymin,cymax=", &
+    !                 i,i_cell_lim_x(i,1),i_cell_lim_x(i,2),i_cell_lim_y(i,1),i_cell_lim_y(i,2)
+    ! END DO
 
 
 
