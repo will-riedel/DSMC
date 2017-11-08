@@ -47,13 +47,13 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM
     
     CALL RANDOM_NUMBER(xs_vec)
     ! CALL RANDOM_NUMBER(xs_vec(:,1))
-    xs_vec(:,1) = xs_vec(:,1)*(xs_max-xs_min) + xs_min
-    xs_vec(:,2) = xs_vec(:,2)*(ys_max-ys_min) + ys_min
+    xs_vec(1:Num_s,1) = xs_vec(1:Num_s,1)*(xs_max-xs_min) + xs_min
+    xs_vec(1:Num_s,2) = xs_vec(1:Num_s,2)*(ys_max-ys_min) + ys_min
     ! xs_vec(:,2) = 0.5
 
-    CALL RANDN(vs_vec(:,1),Num_s) 
-    CALL RANDN(vs_vec(:,2),Num_s) 
-    CALL RANDN(vs_vec(:,3),Num_s) 
+    CALL RANDN(vs_vec(1:Num_s,1),Num_s) 
+    CALL RANDN(vs_vec(1:Num_s,2),Num_s) 
+    CALL RANDN(vs_vec(1:Num_s,3),Num_s) 
     vs_vec = vs_vec*vth
 
     xs_vec_prev = xs_vec
@@ -63,7 +63,7 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM
 
     CALL SPECULAR_REFLECTION_SOURCE
 
-    entered_sim = (xs_vec(:,1) > xs_max)
+    entered_sim = (xs_vec(1:Num_s,1) > xs_max)
     N_entered = COUNT(entered_sim)
     i_cur(1:N_entered) = PACK(i_counting , entered_sim)
 
@@ -109,16 +109,16 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM_DOWNSTREAM
 
         CALL RANDOM_NUMBER(xs_vec_prev)
 
-        xs_vec(:,1) = xs_vec_prev(:,1)*(xs_max-xs_min)  + xs_min
-        xs_vec(:,2) = (xs_vec_prev(:,1)*(xs_max-xs_min) + xs_min) + b_source_A
+        xs_vec(1:Num_s,1) = xs_vec_prev(1:Num_s,1)*(xs_max-xs_min)  + xs_min
+        xs_vec(1:Num_s,2) = (xs_vec_prev(1:Num_s,1)*(xs_max-xs_min) + xs_min) + b_source_A
 
-        xs_vec(:,1) = xs_vec(:,1) - xs_vec_prev(:,2)*(hs)/SQRT(2.)
-        xs_vec(:,2) = xs_vec(:,2) + xs_vec_prev(:,2)*(hs)/SQRT(2.)
+        xs_vec(1:Num_s,1) = xs_vec(1:Num_s,1) - xs_vec_prev(1:Num_s,2)*(hs)/SQRT(2.)
+        xs_vec(1:Num_s,2) = xs_vec(1:Num_s,2) + xs_vec_prev(1:Num_s,2)*(hs)/SQRT(2.)
 
 
-        CALL RANDN(vs_vec(:,1),Num_s) 
-        CALL RANDN(vs_vec(:,2),Num_s) 
-        CALL RANDN(vs_vec(:,3),Num_s) 
+        CALL RANDN(vs_vec(1:Num_s,1),Num_s) 
+        CALL RANDN(vs_vec(1:Num_s,2),Num_s) 
+        CALL RANDN(vs_vec(1:Num_s,3),Num_s) 
         vs_vec = vs_vec*vth
 
         xs_vec_prev = xs_vec
@@ -127,9 +127,9 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM_DOWNSTREAM
 
 
 
-        entered_sim = ( (xs_vec(:,2) > ((-1)*xs_vec(:,1) + b_source_barrier) ) .and. & 
-                        (xs_vec(:,2) > ( (1)*xs_vec(:,1) + b_source_A)) .and. & 
-                        (xs_vec(:,2) < ( (1)*xs_vec(:,1) + b_source_B)) )
+        entered_sim = ( (xs_vec(1:Num_s,2) > ((-1)*xs_vec(1:Num_s,1) + b_source_barrier) ) .and. & 
+                        (xs_vec(1:Num_s,2) > ( (1)*xs_vec(1:Num_s,1) + b_source_A)) .and. & 
+                        (xs_vec(1:Num_s,2) < ( (1)*xs_vec(1:Num_s,1) + b_source_B)) )
         N_entered = COUNT(entered_sim)
         i_cur(1:N_entered) = PACK(i_counting , entered_sim)
 
@@ -161,8 +161,8 @@ SUBROUTINE INITIALIZE_SOURCE_TWO_STREAM
     ! Initialize beam from near side --------------------------------------------------------------
     CALL RANDOM_NUMBER(xs_vec)
     ! CALL RANDOM_NUMBER(xs_vec(:,1))
-    xs_vec(:,1) = xs_vec(:,1)*(xs_max-xs_min) + xs_min
-    xs_vec(:,2) = xs_vec(:,2)*(ys_max-ys_min) + ys_min
+    xs_vec(1:Num_s,1) = xs_vec(1:Num_s,1)*(xs_max-xs_min) + xs_min
+    xs_vec(1:Num_s,2) = xs_vec(1:Num_s,2)*(ys_max-ys_min) + ys_min
     ! xs_vec(:,2) = 0.5
 
     ! vs_vec(:,1) = v_beam
@@ -170,11 +170,11 @@ SUBROUTINE INITIALIZE_SOURCE_TWO_STREAM
     ! vs_vec(:,3) = 0
     ! WRITE(*,*) "Num_s=",Num_s
     ! WRITE(*,*) "shape = ",SHAPE(vs_vec)
-    CALL RANDN(vs_vec(:,1),Num_s) 
-    CALL RANDN(vs_vec(:,2),Num_s) 
-    CALL RANDN(vs_vec(:,3),Num_s) 
+    CALL RANDN(vs_vec(1:Num_s,1),Num_s) 
+    CALL RANDN(vs_vec(1:Num_s,2),Num_s) 
+    CALL RANDN(vs_vec(1:Num_s,3),Num_s) 
     vs_vec = vs_vec*vth/10.
-    vs_vec(:,1) = vs_vec(:,1) + v_beam
+    vs_vec(1:Num_s,1) = vs_vec(1:Num_s,1) + v_beam
 
     ! WRITE(*,*) "got here 5"
     ! WRITE(*,*) "Num_s=",Num_s
@@ -189,7 +189,7 @@ SUBROUTINE INITIALIZE_SOURCE_TWO_STREAM
     ! CALL SPECULAR_REFLECTION_SOURCE
 
     ! entered_sim = (xs_vec(:,1) > 0)
-    entered_sim = (xs_vec(:,1) > xs_max)
+    entered_sim = (xs_vec(1:Num_s,1) > xs_max)
     N_entered = COUNT(entered_sim)
     i_cur(1:N_entered) = PACK(i_counting , entered_sim)
 
@@ -207,18 +207,18 @@ SUBROUTINE INITIALIZE_SOURCE_TWO_STREAM
     ! Initialize beam from far side --------------------------------------------------------------
     CALL RANDOM_NUMBER(xs_vec)
     ! CALL RANDOM_NUMBER(xs_vec(:,1))
-    xs_vec(:,1) = xs_vec(:,1)*(xs2_max-xs2_min) + xs2_min
-    xs_vec(:,2) = xs_vec(:,2)*(ys_max-ys_min) + ys_min
+    xs_vec(1:Num_s,1) = xs_vec(1:Num_s,1)*(xs2_max-xs2_min) + xs2_min
+    xs_vec(1:Num_s,2) = xs_vec(1:Num_s,2)*(ys_max-ys_min) + ys_min
     ! xs_vec(:,2) = 0.5
 
     ! vs_vec(:,1) = -v_beam
     ! vs_vec(:,2) = 0
     ! vs_vec(:,3) = 0
-    CALL RANDN(vs_vec(:,1),Num_s) 
-    CALL RANDN(vs_vec(:,2),Num_s) 
-    CALL RANDN(vs_vec(:,3),Num_s) 
+    CALL RANDN(vs_vec(1:Num_s,1),Num_s) 
+    CALL RANDN(vs_vec(1:Num_s,2),Num_s) 
+    CALL RANDN(vs_vec(1:Num_s,3),Num_s) 
     vs_vec = vs_vec*vth/10.
-    vs_vec(:,1) = vs_vec(:,1) - v_beam
+    vs_vec(1:Num_s,1) = vs_vec(1:Num_s,1) - v_beam
 
 
     xs_vec_prev = xs_vec
@@ -230,7 +230,7 @@ SUBROUTINE INITIALIZE_SOURCE_TWO_STREAM
     ! CALL SPECULAR_REFLECTION_SOURCE
 
     ! entered_sim = (xs_vec(:,1) > 0)
-    entered_sim = (xs_vec(:,1) < xs2_min)
+    entered_sim = (xs_vec(1:Num_s,1) < xs2_min)
     N_entered = COUNT(entered_sim)
     i_cur(1:N_entered) = PACK(i_counting , entered_sim)
 

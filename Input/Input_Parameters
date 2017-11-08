@@ -3,7 +3,7 @@
 *NS_INITIAL____
 6.8d25
 *FN____________
-1.d18
+1.d19
 *X_GRID_TYPE___
 EXP_1
 *Y_GRID_TYPE___
@@ -19,11 +19,11 @@ EXP_2
 *DY_FACTOR_____
 1.d4
 *T_MAX_________
-1.5d-3
+1.4d-3
 *DT____________
-6.d-7
+3.d-8
 *DT_TO_SAVE____
-10
+325
 *N_CELLS_X_____
 1000
 *N_CELLS_Y_____

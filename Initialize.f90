@@ -23,8 +23,8 @@ SUBROUTINE INITIALIZE
     vth = SQRT(k_b*T_g/m_g)
     c_s = Pi*d_g**2
     vr_max_0 = 5*vth
-    ! x_lim = transpose(reshape( (/ 0.d0,inlet_length+gun_length+outlet_length,   0.d0,outlet_height /) , (/2,2/) ))
-    x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,.025d0 /) , (/2,2/) ))
+    x_lim = transpose(reshape( (/ 0.d0,inlet_length+gun_length+outlet_length,   0.d0,outlet_height /) , (/2,2/) ))
+    ! x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,.025d0 /) , (/2,2/) ))
     xmin = x_lim(1,1)
     xmax = x_lim(1,2)
     ymin = x_lim(2,1)
@@ -259,6 +259,8 @@ SUBROUTINE INITIALIZE
     Num_s = CEILING(Num_s_exact)
     Num_s_frac = Num_s_exact - FLOOR(Num_s_exact)
 
+   
+
 
 
     ! Set up wall geometry ---------------------------------------------------------
@@ -350,6 +352,13 @@ SUBROUTINE INITIALIZE
         N_array = N_expected+1
     END IF
     Npc_max = N_array
+
+
+    ! WRITE(*,*) "---",ws,hs,Num_s,Num_s_exact,Num_s_frac
+    ! WRITE(*,*) y_inlet
+    ! WRITE(*,*) source_type
+    ! WRITE(*,*) v_avg,N_expected
+    ! STOP
 
     ! WRITE(*,*) "N_expected,ws,dt = ",N_expected,ws,dt
 
