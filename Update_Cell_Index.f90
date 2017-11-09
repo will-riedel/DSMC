@@ -242,131 +242,6 @@ END SUBROUTINE UPDATE_CELL_INDEX
 
 
 
-! SUBROUTINE UPDATE_CELL_INDEX_TEMP
-!     USE CONTAIN
-!     USE PROPERTIES
-!     IMPLICIT NONE
-!     INTEGER::i,j
-
-!     CALL CPU_TIME(t0_index)
-
-!     ! note: if (x,y) == (0,0), then just set index to -1000 or something (or 0, since indices start with 1 here)
-!     IF (N_simulated > 0) THEN
-!         i_cell_vec_prev = i_cell_vec
-
-
-!         IF (use_homogenous_grid .EQV. .true.) THEN
-
-!             i_cell_vec(1:N_simulated,1) = FLOOR( (x_vec(1:N_simulated,1)-xmin)/(xmax-xmin)*nx ) + 1
-
-            
-
-!             IF (ny>1) THEN
-!                 i_cell_vec(1:N_simulated,2) = FLOOR( (x_vec(1:N_simulated,2)-ymin)/(ymax-ymin)*ny ) + 1
-!             ELSE
-!                 i_cell_vec(1:N_simulated,2) = 1
-!             END IF
-
-!             ! DO i=1,N_simulated
-!             !     IF (i_cell_vec(i,2) > ny) THEN
-!             !         WRITE(*,*) "x_vec= ",x_vec(i,:)
-!             !         ! WRITE(*,*) "val1 = ",(x_vec(i,1)-xmin)/(xmax-xmin)
-!             !         WRITE(*,*) "val1 = ",(x_vec(i,2)-ymin)/(ymax-ymin)
-!             !         WRITE(*,*) "val2 = ",FLOOR( (x_vec(i,2)-ymin)/(ymax-ymin)*ny )
-!             !         WRITE(*,*) "N_simulated=", N_simulated
-
-!             !         WRITE(*,*) "shape(Npc_slice)=", SHAPE(Npc_slice)
-!             !         WRITE(*,*) "shape(Npc_added)=", SHAPE(Npc_added)
-!             !         ! WRITE(*,*) "max(i_cell_vec)=", MAXVAL(i_cell_vec(1:N_simulated,1))
-!             !     ENDIF
-!             ! END DO
-
-!         ELSE
-!             ! ! find x-cell
-!             ! alpha_x  = -LOG(1/dx_factor)/xmax
-!             ! n_inf = 1/(dx_0*alpha_x)
-!             ! i_cell_vec(1:N_simulated,1) = FLOOR(n_inf*(1-EXP( -alpha_x*x_vec(1:N_simulated,1) )))+1
-
-!             alpha_x  = -LOG(1/dx_factor)/(xmax-x_inlet)
-!             n_inf = 1/(dx_0*alpha_x)
-!             nmax_left = (x_inlet-xmin)/dx_inlet
-!             DO j = 1,N_simulated
-!                 IF (x_vec(j,1) < x_inlet) THEN
-!                     i_cell_vec(j,1) = FLOOR( (x_vec(j,1)-xmin)/(x_inlet-xmin)*nmax_left ) + 1
-!                 ELSE
-!                     i_cell_vec(j,1) = FLOOR(n_inf*(1-EXP( -alpha_x*(x_vec(j,1)-x_inlet) )) + nmax_left)+1
-!                 END IF
-
-!                 ! IF (i_cell_vec(j,1) == 
-!             END DO
-
-!             ! j = int(N_simulated/3)
-!             ! WRITE(*,*) "x_vec(j,1),n_inf,alpha_x,,x_inlet,nmax_left=",x_vec(j,1),n_inf,alpha_x,x_inlet,nmax_left
-!             ! WRITE(*,*) "term1=",-alpha_x*(x_vec(j,1)-x_inlet)
-!             ! WRITE(*,*) "term2=",n_inf*(1-EXP( -alpha_x*(x_vec(j,1)+x_inlet)))
-!             ! WRITE(*,*) "x_vec(j,1), i_cell_vec(j,1) = ",x_vec(j,1),i_cell_vec(j,1)
-!             ! WRITE(*,*) "max=",MAXVAL(i_cell_vec(:,1))
-
-
-
-!             ! find y-cell
-!             IF (ny > 1) THEN
-!                 alpha_y  = -LOG(1/dy_factor)/(ymax-ymin)
-!                 n_inf = 1/(dy_0*alpha_y)
-!                 DO j = 1,N_simulated
-!                     i_cell_vec(j,2) = FLOOR(n_inf*(1-EXP( -alpha_y*(x_vec(j,2)) )) ) + 1
-!                 END DO
-
-!             ELSE
-!                 i_cell_vec(1:N_simulated,2) = 1
-!             ENDIF
-
-!         END IF
-        
-
-!         DO i = 1,N_simulated
-!             IF (i_cell_vec(i,1) > nx) THEN
-!                 i_cell_vec(i,1) = nx
-!             END IF
-!             IF (i_cell_vec(i,2) > ny) THEN
-!                 i_cell_vec(i,2) = ny
-!             END IF
-!         END DO
-!         ! DO i = 1,N_simulated
-!         !     IF (i_cell_vec(i,1) > nx) THEN
-!         !         i_cell_vec(i,1) = nx
-!         !     ELSE IF (i_cell_vec(i,1) < 1) THEN
-!         !         i_cell_vec(i,1) = 1
-!         !     END IF
-!         !     IF (i_cell_vec(i,2) > ny) THEN
-!         !         i_cell_vec(i,2) = ny
-!         !     ELSE IF (i_cell_vec(i,2) < 1) THEN
-!         !         i_cell_vec(i,2) = 1
-!         !     END IF
-!         ! END DO
-
-
-!         IF (finding_wall_cells .EQV. .false.) THEN
-
-!             DO i = 1,N_simulated
-!                 IF (removed_from_sim(i) .eqv. .true.) THEN
-!                     i_cell_vec(i,1) = 0
-!                     i_cell_vec(i,2) = 0
-!                 END IF 
-!             END DO
-
-!             CALL SORT_ARRAYS
-
-
-!         END IF
-
-!     ENDIF
-
-
-! END SUBROUTINE UPDATE_CELL_INDEX_TEMP
-
-
-
 SUBROUTINE SORT_ARRAYS
     USE CONTAIN
     USE PROPERTIES
@@ -463,7 +338,7 @@ SUBROUTINE FIND_WALL_CELLS
     ! CALL UPDATE_CELL_INDEX_TEMP
     finding_wall_cells = .false.
 
-    cell_lim_buffer = 2
+    cell_lim_buffer = 1
     DO i = 1,num_walls
         i_cell_lim_x(i,1) = MINVAL( i_cell_vec( (2*i-1):(2*i) , 1 ) ,1 ) - cell_lim_buffer
         i_cell_lim_x(i,2) = MAXVAL( i_cell_vec( (2*i-1):(2*i) , 1 ) ,1 ) + cell_lim_buffer

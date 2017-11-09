@@ -86,10 +86,24 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM_DOWNSTREAM
     USE PROPERTIES
     IMPLICIT NONE
     REAL(8)::rn, Num_s_cur, Num_s_exact_cur, Num_s_frac_cur, scale_factor
+    REAL(8)::alpha1,alpha2,scale_max,t_offset
 
     
-    ! scale_factor = t/tmax
     scale_factor = 1
+
+    ! exponential scaling based on no-collision case simulated on 10/20
+    scale_max = 2.45/6.8    ! based on simulation at ns = 6.8d25
+    alpha1 = 16900.
+    alpha2 = 4550.
+    t_offset = 15.d-6
+    IF (t < ts+t_offset) THEN
+        scale_factor = scale_max*( 1-EXP(-alpha1*t) )
+    ELSE
+        scale_factor = scale_max*EXP( -alpha2*(t-(ts+t_offset)) )
+    END IF
+
+    ! WRITE(*,*) scale_max,alpha1,alpha2,t_offset
+
 
     Num_s_exact_cur = Num_s_exact*scale_factor
     Num_s_frac_cur = Num_s_exact_cur - FLOOR(Num_s_exact_cur)

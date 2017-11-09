@@ -23,8 +23,8 @@ SUBROUTINE INITIALIZE
     vth = SQRT(k_b*T_g/m_g)
     c_s = Pi*d_g**2
     vr_max_0 = 5*vth
-    x_lim = transpose(reshape( (/ 0.d0,inlet_length+gun_length+outlet_length,   0.d0,outlet_height /) , (/2,2/) ))
-    ! x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,.025d0 /) , (/2,2/) ))
+    ! x_lim = transpose(reshape( (/ 0.d0,inlet_length+gun_length+outlet_length,   0.d0,outlet_height /) , (/2,2/) ))
+    x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,.025d0 /) , (/2,2/) ))
     xmin = x_lim(1,1)
     xmax = x_lim(1,2)
     ymin = x_lim(2,1)
@@ -93,6 +93,17 @@ SUBROUTINE INITIALIZE
         STOP
     END IF
 
+
+    cx_min_collisions = 1
+
+    ! ignore collisions before bottleneck region
+    WRITE(*,*) "Note: ignoring collisions before bottleneck"
+    DO i = 1,nx
+        IF  (x_cells_vec(i) < x_inlet) THEN
+            cx_min_collisions = i
+        END IF
+    END DO
+    cx_min_collisions = cx_min_collisions+1
 
 
     ! Set up y-grid -------------------------------------------------------------------
@@ -307,18 +318,20 @@ SUBROUTINE INITIALIZE
 
     CALL FIND_WALL_CELLS
 
-    WRITE(*,*) "y:"
-    DO i = 1,ny
-        WRITE(*,*) i,y_cells_vec(i)
-    END DO   
-    WRITE(*,*) "x:"
-    DO i = 1,nx
-        WRITE(*,*) i,x_cells_vec(i)
-    END DO
-    ! DO i = 1,num_walls
-    !     WRITE(*,*) "i,cxmin,cxmax,cymin,cymax=", &
-    !                 i,i_cell_lim_x(i,1),i_cell_lim_x(i,2),i_cell_lim_y(i,1),i_cell_lim_y(i,2)
+    ! ! print out the cell coordinates
+    ! WRITE(*,*) "y:"
+    ! DO i = 1,ny
+    !     WRITE(*,*) i,y_cells_vec(i)
+    ! END DO   
+    ! WRITE(*,*) "x:"
+    ! DO i = 1,nx
+    !     WRITE(*,*) i,x_cells_vec(i)
     ! END DO
+    ! WRITE(*,*) SHAPE(x_cells_vec)
+    ! ! DO i = 1,num_walls
+    ! !     WRITE(*,*) "i,cxmin,cxmax,cymin,cymax=", &
+    ! !                 i,i_cell_lim_x(i,1),i_cell_lim_x(i,2),i_cell_lim_y(i,1),i_cell_lim_y(i,2)
+    ! ! END DO
 
 
 
@@ -329,6 +342,7 @@ SUBROUTINE INITIALIZE
 
 
     if (include_two_beams .EQV. .true.) THEN
+    ! IF (source_type(1:5) == "2BEAM") THEN
         include_source = .true.
     END IF
 
@@ -337,6 +351,8 @@ SUBROUTINE INITIALIZE
         ! N_all = 0
         N_simulated = 0
         IF (include_two_beams .EQV. .true.) THEN
+        ! IF (source_type(1:5) == "2BEAM") THEN
+
             v_avg = v_beam*2 ! the factor of 2 is for both sides
             ! N_expected = 2*Num_s*nt
             N_expected = CEILING(2*Num_s_exact*nt)
@@ -344,6 +360,12 @@ SUBROUTINE INITIALIZE
             v_avg = SQRT(8*k_b*T_g/(Pi*m_g))
             N_expected = INT( ns*v_avg*MIN(tmax,ts)*(hs*1)/(4*Fn) )     ! hs*1 = cross-sectional area of inlet
         END IF
+
+        ! a lot fewer are going to get in at the downstream part
+        IF (source_type(1:10) == "DOWNSTREAM") THEN
+            N_expected  = N_expected/5.
+        END IF
+
         N_array = INT(N_expected*1.25)
     ELSE
         ! N_all  = INT(V_total*n/Fn)

@@ -9,7 +9,8 @@ SUBROUTINE RUN_COLLISIONS
 
     CALL CPU_TIME(t0_collisions)
 
-    DO cx = 1,nx
+    ! DO cx = 1,nx
+    DO cx = cx_min_collisions,nx
         DO cy = 1,ny
 
             ! collision processing
