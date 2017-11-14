@@ -10,6 +10,10 @@ SUBROUTINE INITIALIZE
      ! WRITE(*,*) "it_restart=",it_restart    
      ! WRITE(*,*) "nt=",nt
 
+    CALL CPU_TIME(t0_init)
+
+
+
     IF (restart_simulation .EQV. .false.) THEN
         it_restart = -1
         ! it_restart = 0
@@ -93,19 +97,6 @@ SUBROUTINE INITIALIZE
         STOP
     END IF
 
-
-    cx_min_collisions = 1
-
-    ! ignore collisions before bottleneck region
-    WRITE(*,*) "Note: ignoring collisions before bottleneck"
-    DO i = 1,nx
-        IF  (x_cells_vec(i) < x_inlet) THEN
-            cx_min_collisions = i
-        END IF
-    END DO
-    cx_min_collisions = cx_min_collisions+1
-
-
     ! Set up y-grid -------------------------------------------------------------------
     IF (y_grid_type(1:5) == "HOMOG") THEN
         ! set up equally spaced grid points
@@ -163,6 +154,29 @@ SUBROUTINE INITIALIZE
     END IF
 
 
+    ! set the minimum cells to start collisions
+    cx_min_collisions = 1
+    cy_min_collisions = 1
+
+    ! ignore collisions before bottleneck region
+    WRITE(*,*) "Note: ignoring collisions before bottleneck"
+    DO i = 1,nx
+        IF  (x_cells_vec(i) < x_inlet) THEN
+            cx_min_collisions = i
+        END IF
+    END DO
+    cx_min_collisions = cx_min_collisions+1
+
+    DO i = 1,ny
+        IF  (y_cells_vec(i) < .0025) THEN
+            cy_min_collisions = i
+        END IF
+    END DO
+
+
+    WRITE(*,*) "cx_min_collisions=",cx_min_collisions
+    WRITE(*,*) "cy_min_collisions=",cy_min_collisions
+
 
 
     n_cells=nx*ny
@@ -207,11 +221,11 @@ SUBROUTINE INITIALIZE
     t_index = 0
     t_collisions = 0
     t_BC = 0
-    t_BC1 = 0
-    t_BC2 = 0
-    t_BC3 = 0
-    t_BC4 = 0
-    t_BC5 = 0
+    ! t_BC1 = 0
+    ! t_BC2 = 0
+    ! t_BC3 = 0
+    ! t_BC4 = 0
+    ! t_BC5 = 0
     t_loop = 0
     n_saved = 0
 
@@ -578,6 +592,9 @@ SUBROUTINE INITIALIZE
 
     END IF
 
+
+    CALL CPU_TIME(t_temp)
+    t_init = t_init + (t_temp-t0_init)
 
     CALL UPDATE_CELL_INDEX
 

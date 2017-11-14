@@ -48,9 +48,10 @@ MODULE CONTAIN
     REAL(8):: Nc0,Nc_sim,m_r,collision_ratio, Num_s_exact, Num_s_frac, b_source_A, b_source_B, b_source_barrier,Theta_source
     REAL(8):: alpha_x,alpha_y,neg_offset,pos_offset, accommodation 
     REAL (8):: t0_total,t0_BC,t0_collisions,t0_loop,t_temp,t_total,t_BC,t_collisions,t_loop, t0_index,t_index
-    REAL (8):: t0_BC1,t0_BC2,t0_BC3,t0_BC4,t0_BC5,t_BC1,t_BC2,t_BC3,t_BC4,t_BC5
+    ! REAL (8):: t0_BC1,t0_BC2,t0_BC3,t0_BC4,t0_BC5,t_BC1,t_BC2,t_BC3,t_BC4,t_BC5
+    REAL(8)::t0_source,t_source,t0_init,t_init,t0_save,t_save
     INTEGER:: N_all,N_simulated, nt, n_saved, nw, N_expected, N_array, Num_s, N_entered, cx,cy,Npc_max, ii
-    INTEGER:: nmax, nmax_left,nmax_right, nx, ny, n_cells, cx_min_collisions
+    INTEGER:: nmax, nmax_left,nmax_right, nx, ny, n_cells, cx_min_collisions, cy_min_collisions
     INTEGER:: N_candidate_pairs,N_accepted_pairs,Npc_cur, num_walls, N_collisions, N_added, N_removed, N_specular, N_diffuse
     REAL(8), DIMENSION(2,2):: x_lim, Rotation_mat_neg, Rotation_mat_pos, x_source_corners
     REAL(8), DIMENSION(2):: y_inlet,xy_w
@@ -176,6 +177,9 @@ PROGRAM MAIN
 ! !*******************MAIN LOOP******************************
 ! !-----------------------------------------------------------------------
 
+    WRITE(*,*) "ns,n,N_expected,N_array=",ns,n,N_expected
+    WRITE(*,*) "nx,ny=",nx,ny
+
     DO ii = it_restart+2,nt
         t = t_vec(ii)
         IF (MOD(ii-1,dt_to_save) == 0) THEN
@@ -197,6 +201,7 @@ PROGRAM MAIN
             x_vec(1:N_simulated,:) = x_vec(1:N_simulated,:) + dt*v_vec(1:N_simulated,1:2)
         END IF
 
+        ! WRITE(*,*) "got here 1"
         ! Boundary Condition implementation -------------------------------------------
         ! (removing exiting particles should be absorbed into BC implementation)
         IF (N_simulated > 0) THEN
@@ -206,6 +211,7 @@ PROGRAM MAIN
             ! CALL SPECULAR_REFLECTION_1D
         END IF
 
+        ! WRITE(*,*) "got here 2"
         ! Input from Source/Reservoir -------------------------------------------------
         CALL INITIALIZE_SOURCE
 
@@ -269,6 +275,9 @@ PROGRAM MAIN
     WRITE(*,*) "computation time (collisions) = ",t_collisions
     WRITE(*,*) "computation time (looping in collisions)=",t_loop
     WRITE(*,*) "computation time (indexing)=",t_index
+    WRITE(*,*) "computation time (source)=",t_source
+    WRITE(*,*) "computation time (initialization)=",t_init
+    WRITE(*,*) "computation time (saving)=",t_save
 
     ! WRITE(*,*) "t0_BC1 = ",t_BC1
     ! WRITE(*,*) "t0_BC2 = ",t_BC2

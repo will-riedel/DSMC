@@ -1,29 +1,29 @@
 *N_INITIAL_____
-1.d22
+1.d24
 *NS_INITIAL____
-1.d22
+1.d24
 *FN____________
-1.d13
+1.d12
 *X_GRID_TYPE___
 EXP_1
 *Y_GRID_TYPE___
 EXP_1
 *DX_INIT_______
-3.37d-3
+3.37d-6
 *DY_INIT_______
-3.37d-4
+3.37d-6
 *DX_INLET______
-3.37d-4
+1.0
 *DX_FACTOR_____
 1.d4
 *DY_FACTOR_____
 1.d4
 *T_MAX_________
-6.d-5
+7.d-4
 *DT____________
-6.d-8
+6.d-10
 *DT_TO_SAVE____
-7
+4570
 *N_CELLS_X_____
 1000
 *N_CELLS_Y_____
@@ -51,7 +51,7 @@ DOWNSTREAM
 *RESTART_INDEX_
 546
 *DIRECTORY_CUR_
-data_0
+data_d
 
 
 

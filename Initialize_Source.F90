@@ -5,6 +5,8 @@ SUBROUTINE INITIALIZE_SOURCE
     REAL(8)::rn
 
 
+    CALL CPU_TIME(t0_source)
+
 
     IF (include_source .EQV. .true.) THEN
 
@@ -34,6 +36,9 @@ SUBROUTINE INITIALIZE_SOURCE
 
     END IF
 
+    CALL CPU_TIME(t_temp)
+    t_source = t_source + (t_temp-t0_source)
+
 END SUBROUTINE INITIALIZE_SOURCE
 
 
@@ -45,7 +50,7 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM
     IMPLICIT NONE
 
     
-    CALL RANDOM_NUMBER(xs_vec)
+    CALL RANDOM_NUMBER(xs_vec(1:Num_s,:))
     ! CALL RANDOM_NUMBER(xs_vec(:,1))
     xs_vec(1:Num_s,1) = xs_vec(1:Num_s,1)*(xs_max-xs_min) + xs_min
     xs_vec(1:Num_s,2) = xs_vec(1:Num_s,2)*(ys_max-ys_min) + ys_min
@@ -65,10 +70,12 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM
 
     entered_sim = (xs_vec(1:Num_s,1) > xs_max)
     N_entered = COUNT(entered_sim)
-    i_cur(1:N_entered) = PACK(i_counting , entered_sim)
+
 
 
     IF (N_entered > 0) THEN
+        ! i_cur(1:N_entered) = PACK(i_counting , entered_sim)
+        i_cur(1:N_entered) = PACK(i_counting(1:Num_s) , entered_sim(1:Num_s))
         x_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = xs_vec(i_cur(1:N_entered),:)
         v_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = vs_vec(i_cur(1:N_entered),:)
         N_simulated = N_simulated + N_entered
@@ -87,8 +94,8 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM_DOWNSTREAM
     IMPLICIT NONE
     REAL(8)::rn, Num_s_cur, Num_s_exact_cur, Num_s_frac_cur, scale_factor
     REAL(8)::alpha1,alpha2,scale_max,t_offset
+    INTEGER::j
 
-    
     scale_factor = 1
 
     ! exponential scaling based on no-collision case simulated on 10/20
@@ -118,10 +125,8 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM_DOWNSTREAM
     END IF
 
 
-
     IF (Num_s > 0) THEN
-
-        CALL RANDOM_NUMBER(xs_vec_prev)
+        CALL RANDOM_NUMBER(xs_vec_prev(1:Num_s,:))
 
         xs_vec(1:Num_s,1) = xs_vec_prev(1:Num_s,1)*(xs_max-xs_min)  + xs_min
         xs_vec(1:Num_s,2) = (xs_vec_prev(1:Num_s,1)*(xs_max-xs_min) + xs_min) + b_source_A
@@ -139,19 +144,20 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM_DOWNSTREAM
         vs_vec_prev = vs_vec
         xs_vec = xs_vec + dt*vs_vec(:,1:2)
 
-
-
         entered_sim = ( (xs_vec(1:Num_s,2) > ((-1)*xs_vec(1:Num_s,1) + b_source_barrier) ) .and. & 
                         (xs_vec(1:Num_s,2) > ( (1)*xs_vec(1:Num_s,1) + b_source_A)) .and. & 
                         (xs_vec(1:Num_s,2) < ( (1)*xs_vec(1:Num_s,1) + b_source_B)) )
         N_entered = COUNT(entered_sim)
-        i_cur(1:N_entered) = PACK(i_counting , entered_sim)
+
 
 
         IF (N_entered > 0) THEN
+            i_cur(1:N_entered) = PACK(i_counting(1:Num_s) , entered_sim(1:Num_s))
+
             x_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = xs_vec(i_cur(1:N_entered),:)
             v_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = vs_vec(i_cur(1:N_entered),:)
             N_simulated = N_simulated + N_entered
+            WRITE(*,*) "got here s-7"
         END IF
 
         N_added_total(ii) = N_entered            
@@ -173,8 +179,8 @@ SUBROUTINE INITIALIZE_SOURCE_TWO_STREAM
 
 
     ! Initialize beam from near side --------------------------------------------------------------
-    CALL RANDOM_NUMBER(xs_vec)
-    ! CALL RANDOM_NUMBER(xs_vec(:,1))
+    ! CALL RANDOM_NUMBER(xs_vec)
+    CALL RANDOM_NUMBER(xs_vec(1:Num_s,:))
     xs_vec(1:Num_s,1) = xs_vec(1:Num_s,1)*(xs_max-xs_min) + xs_min
     xs_vec(1:Num_s,2) = xs_vec(1:Num_s,2)*(ys_max-ys_min) + ys_min
     ! xs_vec(:,2) = 0.5
@@ -205,10 +211,12 @@ SUBROUTINE INITIALIZE_SOURCE_TWO_STREAM
     ! entered_sim = (xs_vec(:,1) > 0)
     entered_sim = (xs_vec(1:Num_s,1) > xs_max)
     N_entered = COUNT(entered_sim)
-    i_cur(1:N_entered) = PACK(i_counting , entered_sim)
+
 
 
     IF (N_entered > 0) THEN
+        ! i_cur(1:N_entered) = PACK(i_counting , entered_sim)
+        i_cur(1:N_entered) = PACK(i_counting(1:Num_s) , entered_sim(1:Num_s))
         x_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = xs_vec(i_cur(1:N_entered),:)
         v_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = vs_vec(i_cur(1:N_entered),:)
         ! N_all = N_all + N_entered
@@ -246,10 +254,12 @@ SUBROUTINE INITIALIZE_SOURCE_TWO_STREAM
     ! entered_sim = (xs_vec(:,1) > 0)
     entered_sim = (xs_vec(1:Num_s,1) < xs2_min)
     N_entered = COUNT(entered_sim)
-    i_cur(1:N_entered) = PACK(i_counting , entered_sim)
+
 
 
     IF (N_entered > 0) THEN
+        i_cur(1:N_entered) = PACK(i_counting , entered_sim)
+        i_cur(1:N_entered) = PACK(i_counting(1:Num_s) , entered_sim(1:Num_s))
         x_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = xs_vec(i_cur(1:N_entered),:)
         v_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = vs_vec(i_cur(1:N_entered),:)
         ! N_all = N_all + N_entered

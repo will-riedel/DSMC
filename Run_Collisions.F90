@@ -11,7 +11,9 @@ SUBROUTINE RUN_COLLISIONS
 
     ! DO cx = 1,nx
     DO cx = cx_min_collisions,nx
-        DO cy = 1,ny
+        ! DO cy = 1,ny
+        DO cy = cy_min_collisions,ny
+
 
             ! collision processing
             N_candidate_pairs = 0

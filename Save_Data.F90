@@ -4,6 +4,9 @@ SUBROUTINE SAVE_DATA
     IMPLICIT NONE
     ! CHARACTER(80)::filename
 
+    CALL CPU_TIME(t0_save)
+
+
     ! save position data
     WRITE(filename,"('/x_',I7.7,'.txt')") (ii-1)
     filename = dir_cur(1:dir_cur_length) // filename
@@ -243,16 +246,18 @@ SUBROUTINE SAVE_DATA
     ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
     ! WRITE(1) vs_vec(1:Num_s,:)
     ! CLOSE(1)
-    ! save source position data
-    WRITE(filename,"('/xs_',I7.7,'.txt')") (ii-1)
-    filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
-    WRITE(1,"(E12.5)") xs_vec(1:Num_s,:)
-    CLOSE(1)
+    
+    ! ! save source position data
+    ! WRITE(filename,"('/xs_',I7.7,'.txt')") (ii-1)
+    ! filename = dir_cur(1:dir_cur_length) // filename
+    ! OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    ! WRITE(1,"(E12.5)") xs_vec(1:Num_s,:)
+    ! CLOSE(1)
 
 
 
-
+    CALL CPU_TIME(t_temp)
+    t_save = t_save + (t_temp-t0_save)
 
 END SUBROUTINE SAVE_DATA
 

@@ -17,7 +17,7 @@
 #time you think you need; default is 2 hours
 #format could be dd-hh:mm:ss, hh:mm:ss, mm:ss, or mm
 #max is 2 days
-#SBATCH --time=4:00:00
+#SBATCH --time=16:00:00
 
 
 #################
@@ -53,7 +53,7 @@ module load python/2.7.5
 
 cd /home/wriedel/DSMC_FORTRAN
 
-cp input_parameter_files/Input_Parameters_full_1D_b Input/Input_Parameters
+cp input_parameter_files/Input_Parameters_b Input/Input_Parameters
 
 rm Main
 make
