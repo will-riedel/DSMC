@@ -39,7 +39,7 @@
 
 #################
 #memory per node; default is 4000 MB per CPU
-#SBATCH --mem=12000
+#SBATCH --mem=64000
 
 #################
 # Have SLURM send you an email when the job ends or fails

@@ -157,7 +157,7 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM_DOWNSTREAM
             x_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = xs_vec(i_cur(1:N_entered),:)
             v_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = vs_vec(i_cur(1:N_entered),:)
             N_simulated = N_simulated + N_entered
-            WRITE(*,*) "got here s-7"
+            ! WRITE(*,*) "got here s-7"
         END IF
 
         N_added_total(ii) = N_entered            
