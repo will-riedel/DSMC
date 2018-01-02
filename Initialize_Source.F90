@@ -48,8 +48,9 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM
     USE CONTAIN
     USE PROPERTIES
     IMPLICIT NONE
+    INTEGER::j,i_temp
 
-    
+
     CALL RANDOM_NUMBER(xs_vec(1:Num_s,:))
     ! CALL RANDOM_NUMBER(xs_vec(:,1))
     xs_vec(1:Num_s,1) = xs_vec(1:Num_s,1)*(xs_max-xs_min) + xs_min
@@ -65,19 +66,34 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM
     vs_vec_prev = vs_vec
     xs_vec = xs_vec + dt*vs_vec(:,1:2)
 
-
     CALL SPECULAR_REFLECTION_SOURCE
 
     entered_sim = (xs_vec(1:Num_s,1) > xs_max)
+    ! entered_sim = (vs_vec(1:Num_s,1) > 0)
     N_entered = COUNT(entered_sim)
 
 
-
+    ! WRITE(*,*) "GH 5.3: Num_s, N_entered = ",Num_s,N_entered
     IF (N_entered > 0) THEN
         ! i_cur(1:N_entered) = PACK(i_counting , entered_sim)
-        i_cur(1:N_entered) = PACK(i_counting(1:Num_s) , entered_sim(1:Num_s))
-        x_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = xs_vec(i_cur(1:N_entered),:)
-        v_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = vs_vec(i_cur(1:N_entered),:)
+
+        ! i_cur(1:N_entered) = PACK(i_counting(1:Num_s) , entered_sim(1:Num_s))
+        ! x_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = xs_vec(i_cur(1:N_entered),:)
+        ! v_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = vs_vec(i_cur(1:N_entered),:)
+
+        i_temp = N_simulated+1
+        DO j = 1,Num_s
+            IF (entered_sim(j) .eqv. .true.) THEN
+                x_vec(i_temp,:) = xs_vec(j,:)
+                v_vec(i_temp,:) = vs_vec(j,:)
+                i_temp = i_temp+1
+            END IF
+        END DO
+
+
+
+
+        
         N_simulated = N_simulated + N_entered
     END IF
 
@@ -92,9 +108,9 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM_DOWNSTREAM
     USE CONTAIN
     USE PROPERTIES
     IMPLICIT NONE
-    REAL(8)::rn, Num_s_cur, Num_s_exact_cur, Num_s_frac_cur, scale_factor
+    REAL(8)::rn, Num_s_exact_cur, Num_s_frac_cur, scale_factor
     REAL(8)::alpha1,alpha2,scale_max,t_offset
-    INTEGER::j
+    ! INTEGER::j
 
     scale_factor = 1
 

@@ -22,18 +22,26 @@ SUBROUTINE INITIALIZE
 
 
     ! simulation geometry and gas properties -----------------------------------------    
+
     m_g = 2*m_p
     d_g = dH2
+    WRITE(*,*) "Note: using Hydrogen"
+    ! m_g = 28*m_p
+    ! d_g = dN2
+    ! WRITE(*,*) "Note: using Nitrogen"
+
     vth = SQRT(k_b*T_g/m_g)
     c_s = Pi*d_g**2
     vr_max_0 = 5*vth
-    ! x_lim = transpose(reshape( (/ 0.d0,inlet_length+gun_length+outlet_length,   0.d0,outlet_height /) , (/2,2/) ))
-    x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,.025d0 /) , (/2,2/) ))
+    x_lim = transpose(reshape( (/ 0.d0,inlet_length+gun_length+outlet_length,   0.d0,outlet_height /) , (/2,2/) ))
+    ! x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,.025d0 /) , (/2,2/) ))
     xmin = x_lim(1,1)
     xmax = x_lim(1,2)
     ymin = x_lim(2,1)
     ymax = x_lim(2,2)    
     ymid = (ymin+ymax)/2
+
+    ! WRITE(*,*) "kb,T,m,vth=",k_b,T_g,m_g,vth
 
 
 
@@ -158,20 +166,20 @@ SUBROUTINE INITIALIZE
     cx_min_collisions = 1
     cy_min_collisions = 1
 
-    ! ignore collisions before bottleneck region
-    WRITE(*,*) "Note: ignoring collisions before bottleneck"
-    DO i = 1,nx
-        IF  (x_cells_vec(i) < x_inlet) THEN
-            cx_min_collisions = i
-        END IF
-    END DO
-    cx_min_collisions = cx_min_collisions+1
+    ! ! ignore collisions before bottleneck region
+    ! WRITE(*,*) "Note: ignoring collisions before bottleneck"
+    ! DO i = 1,nx
+    !     IF  (x_cells_vec(i) < x_inlet) THEN
+    !         cx_min_collisions = i
+    !     END IF
+    ! END DO
+    ! cx_min_collisions = cx_min_collisions+1
 
-    DO i = 1,ny
-        IF  (y_cells_vec(i) < .0025) THEN
-            cy_min_collisions = i
-        END IF
-    END DO
+    ! DO i = 1,ny
+    !     IF  (y_cells_vec(i) < .0025) THEN
+    !         cy_min_collisions = i
+    !     END IF
+    ! END DO
 
 
     WRITE(*,*) "cx_min_collisions=",cx_min_collisions
@@ -284,7 +292,6 @@ SUBROUTINE INITIALIZE
     Num_s = CEILING(Num_s_exact)
     Num_s_frac = Num_s_exact - FLOOR(Num_s_exact)
 
-   
 
 
 
@@ -542,6 +549,7 @@ SUBROUTINE INITIALIZE
     i_cross(:) = 0
     i_first(:) = 0
 
+    N_entered = 0
 
 
     IF (restart_simulation .EQV. .false.) THEN

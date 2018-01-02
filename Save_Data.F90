@@ -6,6 +6,8 @@ SUBROUTINE SAVE_DATA
 
     CALL CPU_TIME(t0_save)
 
+    ! use format = ES11.2E3 for output?
+
 
     ! save position data
     WRITE(filename,"('/x_',I7.7,'.txt')") (ii-1)
@@ -16,7 +18,8 @@ SUBROUTINE SAVE_DATA
     ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
     ! WRITE(1) N_simulated*ndim
     ! WRITE(1) x_vec(1:N_simulated,:)
-    WRITE(1,"(E12.5)") x_vec(1:N_simulated,:)
+    ! WRITE(1,"(E12.5)") x_vec(1:N_simulated,:)
+    WRITE(1,"(E12.5E3)") x_vec(1:N_simulated,:)
     CLOSE(1)
 
     ! save velocity data
@@ -28,7 +31,9 @@ SUBROUTINE SAVE_DATA
     ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
     ! WRITE(1) N_simulated*3
     ! WRITE(1) v_vec(1:N_simulated,:)
-    WRITE(1,"(E12.5)") v_vec(1:N_simulated,:)
+
+    ! WRITE(1,"(E12.5)") v_vec(1:N_simulated,:)
+    WRITE(1,"(E12.5E3)") v_vec(1:N_simulated,:)
     CLOSE(1)
 
     ! save cell data (this is probably not required)

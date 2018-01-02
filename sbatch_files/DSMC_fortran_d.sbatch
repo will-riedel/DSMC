@@ -17,7 +17,7 @@
 #time you think you need; default is 2 hours
 #format could be dd-hh:mm:ss, hh:mm:ss, mm:ss, or mm
 #max is 2 days
-#SBATCH --time=18:00:00
+#SBATCH --time=6:00:00
 
 
 #################
@@ -39,7 +39,7 @@
 
 #################
 #memory per node; default is 4000 MB per CPU
-#SBATCH --mem=64000
+#SBATCH --mem=4000
 
 #################
 # Have SLURM send you an email when the job ends or fails
@@ -49,7 +49,7 @@
 #-----------------------------------------------------------------------------
 #now run normal batch commands
 # note the "CMD BATCH is an R specific command
-module load python/2.7.5
+# module load python/2.7.5
 
 cd /home/wriedel/DSMC_FORTRAN
 

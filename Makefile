@@ -13,9 +13,20 @@ EXC1 = Main
 
 # FC = mpif90
 FC = gfortran
+# FC = ifort
 
 # FCFLAGS = -I$(HPC_PETSC_DIR)/include
-FCFLAGS = 
+
+# for gfortran: -Ofast optimizes for speed, -Og optimizes for debugging
+# FCFLAGS = 
+# gfortran
+# FCFLAGS = -O3 -fbacktrace -Wall
+FCFLAGS = -O3
+# ifort
+# FCFLAGS = -fast -assume buffered_io -xCORE-AVX2
+# FCFLAGS = -fast -assume buffered_io
+# FCFLAGS = -fast
+
 # LDFLAGS = -shared-intel
 LDFLAGS = 
 

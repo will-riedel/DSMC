@@ -39,7 +39,7 @@
 
 #################
 #memory per node; default is 4000 MB per CPU
-#SBATCH --mem=4000
+#SBATCH --mem=8000
 
 #################
 # Have SLURM send you an email when the job ends or fails
@@ -49,9 +49,11 @@
 #-----------------------------------------------------------------------------
 #now run normal batch commands
 # note the "CMD BATCH is an R specific command
-module load python/2.7.5
+# module load python/2.7.5
+# module load ifort
 
 cd /home/wriedel/DSMC_FORTRAN
+# cd /home/users/wriedel/DSMC_FORTRAN
 
 cp input_parameter_files/Input_Parameters_b Input/Input_Parameters
 

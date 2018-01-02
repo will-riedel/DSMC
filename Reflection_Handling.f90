@@ -372,16 +372,36 @@ SUBROUTINE SPECULAR_REFLECTION_1D
 
     DO j = 1,Num_r
 
-        IF (close_outlet .EQV. .false.) THEN
-            IF (x_vec(j,1)>xmax) THEN
+        ! IF (close_outlet .EQV. .false.) THEN
+        !     IF (x_vec(j,1)>xmax) THEN
+        !         removed_from_sim(j) = .true.
+        !     END IF
+        ! END IF
+        ! IF (close_inlet .EQV. .false.) THEN
+        !     IF (x_vec(j,1)<xmin) THEN
+        !         removed_from_sim(j) = .true.
+        !     END IF
+        ! END IF
+
+
+        IF (x_vec(j,1) > xmax) THEN
+            IF (close_outlet .EQV. .true.) THEN
+                x_vec(j,1) = 2*xmax - x_vec(j,1)
+                v_vec(j,1) = -v_vec(j,1)
+            ELSE
                 removed_from_sim(j) = .true.
             END IF
-        END IF
-        IF (close_inlet .EQV. .false.) THEN
-            IF (x_vec(j,1)<xmin) THEN
+
+        ELSE IF (x_vec(j,1) < xmin) THEN
+            IF (close_inlet .EQV. .true.) THEN
+                x_vec(j,1) = 2*xmin - x_vec(j,1)
+                v_vec(j,1) = -v_vec(j,1)
+            ELSE
                 removed_from_sim(j) = .true.
             END IF
+
         END IF
+
 
     END DO
 

@@ -92,17 +92,18 @@ MODULE PROPERTIES
 ! gas properties
     REAL(8), PARAMETER:: T_g = 293.d0
     REAL(8), PARAMETER:: dH2 = 2.89d-10
+    REAL(8), PARAMETER:: dN2 = 3.64d-10
 
 ! gun geometry dimensions
-    ! REAL(8), PARAMETER:: inlet_height = 1.d0
+    REAL(8), PARAMETER:: inlet_height = 1.d0
     ! REAL(8), PARAMETER:: inlet_height = 0.01d0
     ! REAL(8), PARAMETER:: inlet_height = 0.5
-    REAL(8), PARAMETER:: inlet_height = 0.025
+    ! REAL(8), PARAMETER:: inlet_height = 0.025
     REAL(8), PARAMETER:: inlet_length = .1d0
     REAL(8), PARAMETER:: gun_length = .26d0
     REAL(8), PARAMETER:: gun_height = .05d0
-    ! REAL(8), PARAMETER:: outlet_height = 1.d0
-    REAL(8), PARAMETER:: outlet_height = 0.05
+    REAL(8), PARAMETER:: outlet_height = 1.d0
+    ! REAL(8), PARAMETER:: outlet_height = 0.05
     REAL(8), PARAMETER:: outlet_length = .25d0
 
 ! number of dimensions (keep at 2 right now, even for 1-D simulation)
@@ -126,7 +127,8 @@ PROGRAM MAIN
     IMPLICIT NONE
     INTEGER:: i
     ! CHARACTER(80)::filename
-    CHARACTER(10)::str_file_num, line
+
+    WRITE(*,*) "Starting computation..."
 
     ! N_array = 1.d8
     ! ALLOCATE(x_vec(N_array,2))
@@ -168,18 +170,20 @@ PROGRAM MAIN
 !-----------------------------------------------------------------------
 !*******************READ INPUT FILE************************
 !-----------------------------------------------------------------------
+! WRITE(*,*) "GH 1"
     CALL INPUT_PARAMETERS_READIN
 !-----------------------------------------------------------------------
 !*******************SET INITIAL CONDITIONS*****************
 !-----------------------------------------------------------------------
+! WRITE(*,*) "GH 2"
     CALL INITIALIZE
 ! !-----------------------------------------------------------------------
 ! !*******************MAIN LOOP******************************
 ! !-----------------------------------------------------------------------
 
-    WRITE(*,*) "ns,n,N_expected,N_array=",ns,n,N_expected
-    WRITE(*,*) "nx,ny=",nx,ny
-
+    ! WRITE(*,*) "ns,n,N_expected,N_array=",ns,n,N_expected
+    ! WRITE(*,*) "nx,ny=",nx,ny
+    ! WRITE(*,*) "GH 3"
     DO ii = it_restart+2,nt
         t = t_vec(ii)
         IF (MOD(ii-1,dt_to_save) == 0) THEN
@@ -201,28 +205,28 @@ PROGRAM MAIN
             x_vec(1:N_simulated,:) = x_vec(1:N_simulated,:) + dt*v_vec(1:N_simulated,1:2)
         END IF
 
-        ! WRITE(*,*) "got here 1"
+        ! WRITE(*,*) "GH 4"
         ! Boundary Condition implementation -------------------------------------------
         ! (removing exiting particles should be absorbed into BC implementation)
         IF (N_simulated > 0) THEN
             Num_r = N_simulated
             counter = 0
-            CALL COMPUTE_REFLECTION
-            ! CALL SPECULAR_REFLECTION_1D
+            ! CALL COMPUTE_REFLECTION
+            CALL SPECULAR_REFLECTION_1D
         END IF
 
-        ! WRITE(*,*) "got here 2"
+        ! WRITE(*,*) "GH 5"
         ! Input from Source/Reservoir -------------------------------------------------
         CALL INITIALIZE_SOURCE
 
-        ! WRITE(*,*) "got here 2.5"
+        ! WRITE(*,*) "GH 6"
         IF (N_simulated > 0) THEN
 
             ! Update Cell Index -----------------------------------------------------------
             CALL UPDATE_CELL_INDEX
             ! CALL UPDATE_CELL_INDEX_TEMP
 
-            ! WRITE(*,*) "got here 3"
+            ! WRITE(*,*) "GH 7"
             ! Collisions ------------------------------------------------------------------
             CALL RUN_COLLISIONS
 
@@ -232,6 +236,7 @@ PROGRAM MAIN
         N_total(ii) = N_simulated
 
         ! NOTE: saving with the label (ii-1)
+        ! WRITE(*,*) "GH 8"
         IF ( ( MOD(ii-1,dt_to_save) == 0 ) .or. ( ii == nt ) ) THEN
             CALL SAVE_DATA
         END IF
