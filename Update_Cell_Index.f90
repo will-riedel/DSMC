@@ -142,6 +142,20 @@ SUBROUTINE UPDATE_CELL_INDEX
                 i_cell_vec(1:N_simulated,2) = 1
             END IF
 
+        ELSE IF (y_grid_type(1:5) == "SPLIT") THEN
+            IF (ny>1) THEN
+
+                DO i = 1,N_simulated
+                    IF (x_vec(i,1) < x_split) THEN
+                        i_cell_vec(i,2) = FLOOR( (x_vec(i,2)-ymin)/(ymax-ymin)*ny ) + 1
+                    ELSE 
+                        i_cell_vec(i,2) = FLOOR( (x_vec(i,2)-ymin)/(ymax-ymin)*ny_b ) + 1
+                    END IF
+                END DO
+            ELSE
+                i_cell_vec(1:N_simulated,2) = 1
+            END IF
+
         ELSE IF (y_grid_type(1:5) == "EXP_1") THEN
             ! find y-cell
             IF (ny > 1) THEN
@@ -344,6 +358,14 @@ SUBROUTINE FIND_WALL_CELLS
         i_cell_lim_x(i,2) = MAXVAL( i_cell_vec( (2*i-1):(2*i) , 1 ) ,1 ) + cell_lim_buffer
         i_cell_lim_y(i,1) = MINVAL( i_cell_vec( (2*i-1):(2*i) , 2 ) ,1 ) - cell_lim_buffer
         i_cell_lim_y(i,2) = MAXVAL( i_cell_vec( (2*i-1):(2*i) , 2 ) ,1 ) + cell_lim_buffer
+
+        xw1 = x_walls(1,i)
+        xw2 = x_walls(3,i)
+        IF ( (xw1 == x_split) .and. (xw2 == x_split) ) THEN
+            i_cell_lim_y(i,1) = 1
+            i_cell_lim_y(i,2) = ny
+        END IF
+
     END DO
 
 

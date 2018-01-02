@@ -43,6 +43,12 @@ SUBROUTINE INPUT_PARAMETERS_READIN
         ELSE IF (line == '*NS_INITIAL____') THEN
           ! density of the source
           READ(100,*) ns
+        ELSE IF (line == '*N_INITIAL_B___') THEN
+          ! initial density
+          READ(100,*) n_b
+        ELSE IF (line == '*NS_INITIAL_B__') THEN
+          ! density of the source
+          READ(100,*) ns_b
         ELSE IF (line == '*FN____________') THEN
           ! number of particles represented by each superparticle
           READ(100,*) Fn

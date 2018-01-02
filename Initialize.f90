@@ -6,10 +6,6 @@ SUBROUTINE INITIALIZE
     INTEGER::i,j,current_sum
     ! This suboutine initializes various matrices/parameters in the simulation
 
-     ! WRITE(*,*) "ii=",ii    
-     ! WRITE(*,*) "it_restart=",it_restart    
-     ! WRITE(*,*) "nt=",nt
-
     CALL CPU_TIME(t0_init)
 
 
@@ -33,21 +29,21 @@ SUBROUTINE INITIALIZE
     vth = SQRT(k_b*T_g/m_g)
     c_s = Pi*d_g**2
     vr_max_0 = 5*vth
-    x_lim = transpose(reshape( (/ 0.d0,inlet_length+gun_length+outlet_length,   0.d0,outlet_height /) , (/2,2/) ))
+    ! x_lim = transpose(reshape( (/ 0.d0,inlet_length+gun_length+outlet_length,   0.d0,outlet_height /) , (/2,2/) ))
     ! x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,.025d0 /) , (/2,2/) ))
+    x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,0.2d0 /) , (/2,2/) ))
     xmin = x_lim(1,1)
     xmax = x_lim(1,2)
     ymin = x_lim(2,1)
     ymax = x_lim(2,2)    
     ymid = (ymin+ymax)/2
 
-    ! WRITE(*,*) "kb,T,m,vth=",k_b,T_g,m_g,vth
-
 
 
     ! source_type = "DOWNSTREAM"  ! "NORMAL", "2BEAM", "DOWNSTREAM"
     ! x_grid_type = "EXP_1"  ! "HOMOG", "EXP_1"
-    ! y_grid_type = "EXP_1"  ! "HOMOG", "EXP_1", "EXP_2"
+    ! y_grid_type = "EXP_1"  ! "HOMOG", "EXP_1", "EXP_2" , "SPLIT"
+    ! iniital_distribution = "HOMOG"  ! "HOMOG", "SPLIT"
 
 
     ! Set up x-grid -------------------------------------------------------------------
@@ -106,13 +102,34 @@ SUBROUTINE INITIALIZE
     END IF
 
     ! Set up y-grid -------------------------------------------------------------------
+    ny_b = INT(ny*(ns_b/ns))
+    x_split = 1.d10
     IF (y_grid_type(1:5) == "HOMOG") THEN
         ! set up equally spaced grid points
+        ALLOCATE( y_cells_vec(ny) )
+        ALLOCATE( y_cells_vec_b(ny_b) )
+        dy = ( ymax - ymin ) / (ny)
+        DO i = 1 , ny
+            y_cells_vec(i) = ymin + dy*(i-1)
+        END DO
+
+
+    ELSE IF (y_grid_type(1:5) == "SPLIT") THEN
+        ! set up two sets of equally spaced grid points, one to use on each side of the split
+
         ALLOCATE( y_cells_vec(ny) )
         dy = ( ymax - ymin ) / (ny)
         DO i = 1 , ny
             y_cells_vec(i) = ymin + dy*(i-1)
         END DO
+
+        ALLOCATE( y_cells_vec_b(ny_b) )
+        dy = ( ymax - ymin ) / (ny_b)
+        DO i = 1 , ny_b
+            y_cells_vec_b(i) = ymin + dy*(i-1)
+        END DO
+
+        x_split = (xmax-xmin)/2 + xmin
 
     ELSE IF (y_grid_type(1:5) == "EXP_1") THEN
         ! find y_cells 
@@ -123,6 +140,8 @@ SUBROUTINE INITIALIZE
 
         ALLOCATE( i_range_y(ny) )
         ALLOCATE( y_cells_vec(ny) )
+        ALLOCATE( y_cells_vec_b(ny_b) )
+
 
         i_range_y = (/ (i,i=0,nmax) /)
         y_cells_vec = -1/alpha_y*LOG(1-i_range_y/n_inf)
@@ -138,6 +157,8 @@ SUBROUTINE INITIALIZE
             ALLOCATE( i_range_y(nmax+1) )
             ALLOCATE( y_cells_half(nmax+1) )
             ALLOCATE( y_cells_vec(ny) )
+            ALLOCATE( y_cells_vec_b(ny_b) )
+
 
             i_range_y = (/ (i,i=0,nmax) /)
             y_cells_half = -1/alpha_y*LOG(1.-i_range_y/n_inf)
@@ -154,6 +175,7 @@ SUBROUTINE INITIALIZE
             ny = 1
             ALLOCATE( y_cells_vec(ny) )
             y_cells_vec = 0
+            ALLOCATE( y_cells_vec_b(ny_b) )
 
         END IF
     ELSE
@@ -162,52 +184,45 @@ SUBROUTINE INITIALIZE
     END IF
 
 
+
     ! set the minimum cells to start collisions
     cx_min_collisions = 1
     cy_min_collisions = 1
-
-    ! ! ignore collisions before bottleneck region
-    ! WRITE(*,*) "Note: ignoring collisions before bottleneck"
-    ! DO i = 1,nx
-    !     IF  (x_cells_vec(i) < x_inlet) THEN
-    !         cx_min_collisions = i
-    !     END IF
-    ! END DO
-    ! cx_min_collisions = cx_min_collisions+1
-
-    ! DO i = 1,ny
-    !     IF  (y_cells_vec(i) < .0025) THEN
-    !         cy_min_collisions = i
-    !     END IF
-    ! END DO
-
-
-    WRITE(*,*) "cx_min_collisions=",cx_min_collisions
-    WRITE(*,*) "cy_min_collisions=",cy_min_collisions
-
 
 
     n_cells=nx*ny
     ALLOCATE(dx_cells_vec(nx))
     ALLOCATE(dy_cells_vec(ny))
+    ALLOCATE(dy_cells_vec_b(ny_b))
+    
+
     dx_cells_vec(1:(nx-1)) = x_cells_vec(2:nx) - x_cells_vec(1:(nx-1))
     dx_cells_vec(nx) = xmax - x_cells_vec(nx)
     IF (ny == 1) THEN
         ! dy_cells_vec = 1
         dy_cells_vec = (ymax-ymin)
+        dy_cells_vec_b = (ymax-ymin)
     ELSE
         dy_cells_vec(1:(ny-1)) = y_cells_vec(2:ny) - y_cells_vec(1:(ny-1))
         dy_cells_vec(ny) = ymax - y_cells_vec(ny)
+        dy_cells_vec_b(1:(ny_b-1)) = y_cells_vec_b(2:ny_b) - y_cells_vec_b(1:(ny_b-1))
+        dy_cells_vec_b(ny_b) = ymax - y_cells_vec_b(ny_b)
     END IF
     ALLOCATE(Vc(nx,ny))
     DO cx = 1,nx
-        DO cy = 1,ny
-            Vc(cx,cy) = dx_cells_vec(cx)*dy_cells_vec(cy)
-        END DO
+        IF (x_cells_vec(cx) < x_split) THEN
+            DO cy = 1,ny
+                Vc(cx,cy) = dx_cells_vec(cx)*dy_cells_vec(cy)
+            END DO
+        ELSE 
+            DO cy = 1,ny_b
+                Vc(cx,cy) = dx_cells_vec(cx)*dy_cells_vec_b(cy)
+            END DO
+        END IF
     END DO
 
     V_total = ( xmax-xmin ) * ( ymax-ymin )                 ! total simulation volume
-    
+
     ! WRITE(*,*) "dx_cells_vec="
     ! DO j = 1,nx
     !     WRITE(*,*) dx_cells_vec(j)
@@ -229,11 +244,6 @@ SUBROUTINE INITIALIZE
     t_index = 0
     t_collisions = 0
     t_BC = 0
-    ! t_BC1 = 0
-    ! t_BC2 = 0
-    ! t_BC3 = 0
-    ! t_BC4 = 0
-    ! t_BC5 = 0
     t_loop = 0
     n_saved = 0
 
@@ -244,12 +254,13 @@ SUBROUTINE INITIALIZE
 
     ! IF (include_two_beams .EQV. .true.) THEN
     IF (source_type(1:5) == "2BEAM") THEN
-        ws = v_beam*dt
+        ! ws = v_beam*dt
+        ws = MAX(v_beam*dt,10*vth*dt)
     ELSE
         ws = 10*vth*dt                                                                  ! width of source cell
     END IF
 
-    IF ( (source_type(1:6) == "NORMAL") .OR. (source_type(1:5) == "2BEAM") ) THEn
+    IF ( (source_type(1:6) == "NORMAL") .OR. (source_type(1:5) == "2BEAM") ) THEN
         hs = y_inlet(2)-y_inlet(1)
 
         xs_min = xmin - ws
@@ -292,7 +303,9 @@ SUBROUTINE INITIALIZE
     Num_s = CEILING(Num_s_exact)
     Num_s_frac = Num_s_exact - FLOOR(Num_s_exact)
 
-
+    Num_s_exact_b = ns_b*Vs/Fn
+    Num_s_b = CEILING(Num_s_exact_b)
+    Num_s_frac_b = Num_s_exact_b - FLOOR(Num_s_exact_b)
 
 
     ! Set up wall geometry ---------------------------------------------------------
@@ -339,22 +352,6 @@ SUBROUTINE INITIALIZE
 
     CALL FIND_WALL_CELLS
 
-    ! ! print out the cell coordinates
-    ! WRITE(*,*) "y:"
-    ! DO i = 1,ny
-    !     WRITE(*,*) i,y_cells_vec(i)
-    ! END DO   
-    ! WRITE(*,*) "x:"
-    ! DO i = 1,nx
-    !     WRITE(*,*) i,x_cells_vec(i)
-    ! END DO
-    ! WRITE(*,*) SHAPE(x_cells_vec)
-    ! ! DO i = 1,num_walls
-    ! !     WRITE(*,*) "i,cxmin,cxmax,cymin,cymax=", &
-    ! !                 i,i_cell_lim_x(i,1),i_cell_lim_x(i,2),i_cell_lim_y(i,1),i_cell_lim_y(i,2)
-    ! ! END DO
-
-
 
     N_specular = 0
     N_diffuse = 0
@@ -362,21 +359,25 @@ SUBROUTINE INITIALIZE
     ! set up vectors/IC's ----------------------------------------------------------
 
 
-    if (include_two_beams .EQV. .true.) THEN
+    ! ! if (include_two_beams .EQV. .true.) THEN
     ! IF (source_type(1:5) == "2BEAM") THEN
-        include_source = .true.
-    END IF
+    !     include_source = .true.
+    ! END IF
 
     ! calculate expected total number of particles in simulation ()
     IF (include_source .EQV. .true.) THEN
         ! N_all = 0
         N_simulated = 0
-        IF (include_two_beams .EQV. .true.) THEN
-        ! IF (source_type(1:5) == "2BEAM") THEN
+        ! IF (include_two_beams .EQV. .true.) THEN
+        IF (source_type(1:5) == "2BEAM") THEN
 
-            v_avg = v_beam*2 ! the factor of 2 is for both sides
-            ! N_expected = 2*Num_s*nt
-            N_expected = CEILING(2*Num_s_exact*nt)
+            ! ! v_avg = v_beam*2 ! the factor of 2 is for both sides
+            ! ! N_expected = 2*Num_s*nt
+            ! ! N_expected = CEILING(2*Num_s_exact*nt)
+            ! N_expected = CEILING((Num_s_exact+Num_s_exact_b)*nt)    ! this was used for when using beams, not reservoirs
+            v_avg = SQRT(8*k_b*T_g/(Pi*m_g))
+            N_expected = INT( ns*v_avg*MIN(tmax,ts)*(hs*1)/(4*Fn) ) + INT( ns_b*v_avg*MIN(tmax,ts)*(hs*1)/(4*Fn) )     ! hs*1 = cross-sectional area of inlet
+
         ELSE
             v_avg = SQRT(8*k_b*T_g/(Pi*m_g))
             N_expected = INT( ns*v_avg*MIN(tmax,ts)*(hs*1)/(4*Fn) )     ! hs*1 = cross-sectional area of inlet
@@ -574,16 +575,6 @@ SUBROUTINE INITIALIZE
         filename = dir_cur(1:dir_cur_length)
         ! WRITE(*,*) "cp Input/Input_Parameters " // dir_cur(1:dir_cur_length) // "/Input_Parameters" 
         CALL SYSTEM( "cp Input/Input_Parameters " // dir_cur(1:dir_cur_length) // "/Input_Parameters" )
-
-        ! WRITE(filename,"('Output/data/x_',I7.7,'.txt')") (it_restart)
-        ! WRITE(filename,"(dir_cur(1:dir_cur_length),'/x_',I7.7,'.txt')") (it_restart)
-        ! WRITE(filename,"('/x_',I7.7,'.txt')") (25)
-        ! WRITE(*,*) filename, "$$$"
-        ! filename = dir_cur(1:dir_cur_length) // filename
-        ! WRITE(*,*) filename, "$$$"
-
-        ! WRITE(*,*) "got here"
-        ! STOP
         
     ELSE
         CALL RESTART_PARAMETERS_READIN

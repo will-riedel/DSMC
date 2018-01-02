@@ -5,7 +5,7 @@ MODULE CONTAIN
 !-----------------------------------------------------------------------
 !*******************INPUT PARAMETERS*************************
 !-----------------------------------------------------------------------
-    REAL(8)::n,ns,Fn
+    REAL(8)::n,ns,Fn, n_b,ns_b, x_split
     INTEGER::n_cells_x,n_cells_y
     INTEGER::dt_to_save
     REAL(8)::tmax,dt
@@ -19,6 +19,7 @@ MODULE CONTAIN
 !*******************DYNAMIC ARRAYS*************************
 !-----------------------------------------------------------------------
     REAL(8), ALLOCATABLE, DIMENSION(:):: x_cells_vec, y_cells_vec, y_cells_half, dx_cells_vec, dy_cells_vec
+    REAL(8), ALLOCATABLE, DIMENSION(:):: y_cells_vec_b, dy_cells_vec_b
     REAL(8), ALLOCATABLE, DIMENSION(:):: counter_vec, i_range_x,i_range_y, t_vec
     INTEGER, ALLOCATABLE, DIMENSION(:):: N_total,N_candidate_pairs_total,N_accepted_pairs_total,N_collisions_total,N_added_total
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: Vc, x_walls, vr_max, x_vec,v_vec, ncp_remainder
@@ -46,12 +47,13 @@ MODULE CONTAIN
     REAL(8):: m_g,d_g,vth,c_s,vr_max_0,v_avg, xmin,xmax,ymin,ymax,ymid, n_inf, V_total, v_beam
     REAL(8):: ws,ts,hs,Vs,xs_min,xs_max,xs2_min,xs2_max,ys_min,ys_max,t, N_candidate_pairs_real
     REAL(8):: Nc0,Nc_sim,m_r,collision_ratio, Num_s_exact, Num_s_frac, b_source_A, b_source_B, b_source_barrier,Theta_source
+    REAL(8):: Num_s_exact_b, Num_s_frac_b
     REAL(8):: alpha_x,alpha_y,neg_offset,pos_offset, accommodation 
     REAL (8):: t0_total,t0_BC,t0_collisions,t0_loop,t_temp,t_total,t_BC,t_collisions,t_loop, t0_index,t_index
     ! REAL (8):: t0_BC1,t0_BC2,t0_BC3,t0_BC4,t0_BC5,t_BC1,t_BC2,t_BC3,t_BC4,t_BC5
     REAL(8)::t0_source,t_source,t0_init,t_init,t0_save,t_save
-    INTEGER:: N_all,N_simulated, nt, n_saved, nw, N_expected, N_array, Num_s, N_entered, cx,cy,Npc_max, ii
-    INTEGER:: nmax, nmax_left,nmax_right, nx, ny, n_cells, cx_min_collisions, cy_min_collisions
+    INTEGER:: N_all,N_simulated, nt, n_saved, nw, N_expected, N_array, Num_s, Num_s_b, N_entered, cx,cy,Npc_max, ii
+    INTEGER:: nmax, nmax_left,nmax_right, nx, ny, ny_b, n_cells, cx_min_collisions, cy_min_collisions
     INTEGER:: N_candidate_pairs,N_accepted_pairs,Npc_cur, num_walls, N_collisions, N_added, N_removed, N_specular, N_diffuse
     REAL(8), DIMENSION(2,2):: x_lim, Rotation_mat_neg, Rotation_mat_pos, x_source_corners
     REAL(8), DIMENSION(2):: y_inlet,xy_w
@@ -211,8 +213,8 @@ PROGRAM MAIN
         IF (N_simulated > 0) THEN
             Num_r = N_simulated
             counter = 0
-            ! CALL COMPUTE_REFLECTION
-            CALL SPECULAR_REFLECTION_1D
+            CALL COMPUTE_REFLECTION
+            ! CALL SPECULAR_REFLECTION_1D
         END IF
 
         ! WRITE(*,*) "GH 5"
