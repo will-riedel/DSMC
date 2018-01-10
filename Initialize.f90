@@ -31,7 +31,7 @@ SUBROUTINE INITIALIZE
     vr_max_0 = 5*vth
     ! x_lim = transpose(reshape( (/ 0.d0,inlet_length+gun_length+outlet_length,   0.d0,outlet_height /) , (/2,2/) ))
     ! x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,.025d0 /) , (/2,2/) ))
-    x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,0.2d0 /) , (/2,2/) ))
+    x_lim = transpose(reshape( (/ 0.d0,0.8d0,   0.d0,0.2d0 /) , (/2,2/) ))
     xmin = x_lim(1,1)
     xmax = x_lim(1,2)
     ymin = x_lim(2,1)
@@ -129,7 +129,8 @@ SUBROUTINE INITIALIZE
             y_cells_vec_b(i) = ymin + dy*(i-1)
         END DO
 
-        x_split = (xmax-xmin)/2 + xmin
+        ! x_split = (xmax-xmin)/2 + xmin
+        x_split = x_inlet
 
     ELSE IF (y_grid_type(1:5) == "EXP_1") THEN
         ! find y_cells 
@@ -185,6 +186,7 @@ SUBROUTINE INITIALIZE
 
 
 
+
     ! set the minimum cells to start collisions
     cx_min_collisions = 1
     cy_min_collisions = 1
@@ -209,20 +211,36 @@ SUBROUTINE INITIALIZE
         dy_cells_vec_b(ny_b) = ymax - y_cells_vec_b(ny_b)
     END IF
     ALLOCATE(Vc(nx,ny))
+    Vc(:,:) = 1
     DO cx = 1,nx
-        IF (x_cells_vec(cx) < x_split) THEN
+        IF (y_grid_type(1:5) == "SPLIT") THEN
+            IF (x_cells_vec(cx) < x_split) THEN
+                DO cy = 1,ny
+                    Vc(cx,cy) = dx_cells_vec(cx)*dy_cells_vec(cy)
+                END DO
+            ELSE 
+                DO cy = 1,ny_b
+                    Vc(cx,cy) = dx_cells_vec(cx)*dy_cells_vec_b(cy)
+                END DO
+            END IF
+
+        ELSE
             DO cy = 1,ny
-                Vc(cx,cy) = dx_cells_vec(cx)*dy_cells_vec(cy)
-            END DO
-        ELSE 
-            DO cy = 1,ny_b
-                Vc(cx,cy) = dx_cells_vec(cx)*dy_cells_vec_b(cy)
+                    Vc(cx,cy) = dx_cells_vec(cx)*dy_cells_vec(cy)
             END DO
         END IF
     END DO
 
     V_total = ( xmax-xmin ) * ( ymax-ymin )                 ! total simulation volume
 
+    ! WRITE(*,*) "x_cells_vec="
+    ! DO j = 1,nx
+    !     WRITE(*,*) x_cells_vec(j)
+    ! END DO
+    ! WRITE(*,*) "y_cells_vec="
+    ! DO j = 1,ny
+    !     WRITE(*,*) y_cells_vec(j)
+    ! END DO
     ! WRITE(*,*) "dx_cells_vec="
     ! DO j = 1,nx
     !     WRITE(*,*) dx_cells_vec(j)
@@ -231,6 +249,11 @@ SUBROUTINE INITIALIZE
     ! DO j = 1,ny
     !     WRITE(*,*) dy_cells_vec(j)
     ! END DO
+
+
+
+    ! WRITE(*,*) "x_cells_vec=",x_cells_vec
+    ! WRITE(*,*) "y_cells_vec=",y_cells_vec
 
     ! time step parameters ---------------------------------------------------------
     nt = INT(tmax/dt)+1
@@ -249,7 +272,8 @@ SUBROUTINE INITIALIZE
 
     ! source/reservoir parameters --------------------------------------------------
     
-    ts = 5.d-4                                                                      ! pulse width of source valve opening
+    ! ts = 5.d-4                                                                      ! pulse width of source valve opening
+    ts = 1.d10                                                                    ! pulse width of source valve opening
 
 
     ! IF (include_two_beams .EQV. .true.) THEN
@@ -358,17 +382,15 @@ SUBROUTINE INITIALIZE
 
     ! set up vectors/IC's ----------------------------------------------------------
 
-
-    ! ! if (include_two_beams .EQV. .true.) THEN
-    ! IF (source_type(1:5) == "2BEAM") THEN
-    !     include_source = .true.
-    ! END IF
-
     ! calculate expected total number of particles in simulation ()
     IF (include_source .EQV. .true.) THEN
-        ! N_all = 0
-        N_simulated = 0
-        ! IF (include_two_beams .EQV. .true.) THEN
+
+        ! N_simulated = 0
+        N_init_a = INT(.5*V_total*n/Fn)
+        N_init_b = INT(.5*V_total*n_b/Fn)
+        N_simulated =  N_init_a + N_init_b
+
+
         IF (source_type(1:5) == "2BEAM") THEN
 
             ! ! v_avg = v_beam*2 ! the factor of 2 is for both sides
@@ -383,19 +405,39 @@ SUBROUTINE INITIALIZE
             N_expected = INT( ns*v_avg*MIN(tmax,ts)*(hs*1)/(4*Fn) )     ! hs*1 = cross-sectional area of inlet
         END IF
 
-        ! a lot fewer are going to get in at the downstream part
-        IF (source_type(1:10) == "DOWNSTREAM") THEN
-            N_expected  = N_expected/5.
-        END IF
+        ! ! a lot fewer are going to get in at the downstream part
+        ! IF (source_type(1:10) == "DOWNSTREAM") THEN
+        !     N_expected  = N_expected/5.
+        ! END IF
 
-        N_array = INT(N_expected*1.25)
+        N_array = INT(N_expected*1.25) + N_simulated
+        N_expected = N_expected + N_simulated
     ELSE
-        ! N_all  = INT(V_total*n/Fn)
-        N_simulated = INT(V_total*n/Fn)
+        ! N_simulated = INT(V_total*n/Fn)
+        N_init_a = INT(.5*V_total*n/Fn)
+        N_init_b = INT(.5*V_total*n_b/Fn)
+        N_simulated =  N_init_a + N_init_b
+
         N_expected = N_simulated
         N_array = N_expected+1
     END IF
     Npc_max = N_array
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     ! WRITE(*,*) "---",ws,hs,Num_s,Num_s_exact,Num_s_frac
@@ -473,12 +515,14 @@ SUBROUTINE INITIALIZE
     ALLOCATE(N_accepted_pairs_total(nt))
     ALLOCATE(N_collisions_total(nt))
     ALLOCATE(N_added_total(nt))
+    ALLOCATE(flux_upstream_total(nt))
+    ALLOCATE(flux_downstream_total(nt))
     ALLOCATE(Npc_slice(nx,ny))
     ALLOCATE(starting_index(nx,ny))
     ALLOCATE(final_index(nx,ny))
 
     ALLOCATE(Npc_added(nx,ny))
-    ALLOCATE(ncp_remainder(nx,ny))
+    ! ALLOCATE(ncp_remainder(nx,ny))
     ALLOCATE(vr_max(nx,ny))
     
     N_total(:) = 0
@@ -491,7 +535,7 @@ SUBROUTINE INITIALIZE
     final_index(:,:) = 0
 
     Npc_added(:,:) = 0
-    ncp_remainder(:,:) = 0
+    ! ncp_remainder(:,:) = 0
     vr_max(:,:) = vr_max_0
 
 
@@ -554,15 +598,35 @@ SUBROUTINE INITIALIZE
 
 
     IF (restart_simulation .EQV. .false.) THEN
-        IF (N_simulated >= 0) THEN
-            CALL RANDOM_NUMBER(x_vec)
-            x_vec(:,1) = x_vec(:,1)*(xmax-xmin)+xmin
-            x_vec(:,2) = x_vec(:,2)*(ymax-ymin)+ymin
-            CALL RANDN(v_vec(:,1),N_simulated)
-            CALL RANDN(v_vec(:,2),N_simulated)
-            CALL RANDN(v_vec(:,3),N_simulated)
-            v_vec = v_vec*vth
-            ! x_vec(:,2) = 0.5
+
+        IF (initial_distribution(1:5) == "HOMOG") THEN
+            IF (N_simulated >= 0) THEN
+                CALL RANDOM_NUMBER(x_vec)
+                x_vec(:,1) = x_vec(:,1)*(xmax-xmin)+xmin
+                x_vec(:,2) = x_vec(:,2)*(ymax-ymin)+ymin
+                CALL RANDN(v_vec(:,1),N_simulated)
+                CALL RANDN(v_vec(:,2),N_simulated)
+                CALL RANDN(v_vec(:,3),N_simulated)
+                v_vec = v_vec*vth
+                ! x_vec(:,2) = 0.5
+            END IF
+
+
+        ELSE IF (initial_distribution(1:5) == "SPLIT") THEN
+            IF (N_simulated > 2) THEN
+                CALL RANDOM_NUMBER(x_vec)
+                x_vec(1:N_init_a,1) = x_vec(1:N_init_a,1)*(x_split-xmin)+xmin
+                x_vec((N_init_a+1):(N_init_a+N_init_b),1) = x_vec((N_init_a+1):(N_init_a+N_init_b),1)*(xmax-x_split)+x_split
+                x_vec(:,2) = x_vec(:,2)*(ymax-ymin)+ymin
+                CALL RANDN(v_vec(:,1),N_simulated)
+                CALL RANDN(v_vec(:,2),N_simulated)
+                CALL RANDN(v_vec(:,3),N_simulated)
+                v_vec = v_vec*vth
+                ! x_vec(:,2) = 0.5
+            END IF
+
+        ELSE 
+            WRITE(*,*) "Error interpreting initial distribution input"
         END IF
 
 

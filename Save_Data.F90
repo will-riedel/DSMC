@@ -16,8 +16,6 @@ SUBROUTINE SAVE_DATA
     ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
     OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
     ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
-    ! WRITE(1) N_simulated*ndim
-    ! WRITE(1) x_vec(1:N_simulated,:)
     ! WRITE(1,"(E12.5)") x_vec(1:N_simulated,:)
     WRITE(1,"(E12.5E3)") x_vec(1:N_simulated,:)
     CLOSE(1)
@@ -29,9 +27,6 @@ SUBROUTINE SAVE_DATA
     ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
     OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
     ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
-    ! WRITE(1) N_simulated*3
-    ! WRITE(1) v_vec(1:N_simulated,:)
-
     ! WRITE(1,"(E12.5)") v_vec(1:N_simulated,:)
     WRITE(1,"(E12.5E3)") v_vec(1:N_simulated,:)
     CLOSE(1)
@@ -43,7 +38,6 @@ SUBROUTINE SAVE_DATA
     ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
     OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
     ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
-    ! WRITE(1) N_simulated*ndim
     ! WRITE(1) i_cell_vec(1:N_simulated,:)
     WRITE(1,"(I0)") i_cell_vec(1:N_simulated,:)
     CLOSE(1)
@@ -109,16 +103,16 @@ SUBROUTINE SAVE_DATA
     ! WRITE(1) N_added_total
     WRITE(1,"(I0)") N_added_total
     CLOSE(1)
-    WRITE(filename,"('/ncp_remainder.txt')")
-    filename = dir_cur(1:dir_cur_length) // filename
-    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
-    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
-    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
-    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
-    ! WRITE(1) nx*ny
-    ! WRITE(1) ncp_remainder
-    WRITE(1,"(E12.5)") ncp_remainder
-    CLOSE(1)
+    ! WRITE(filename,"('/ncp_remainder.txt')")
+    ! filename = dir_cur(1:dir_cur_length) // filename
+    ! ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    ! ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    ! OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    ! ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    ! ! WRITE(1) nx*ny
+    ! ! WRITE(1) ncp_remainder
+    ! WRITE(1,"(E12.5)") ncp_remainder
+    ! CLOSE(1)
     WRITE(filename,"('/N_total.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
     ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
@@ -140,6 +134,16 @@ SUBROUTINE SAVE_DATA
     WRITE(1,"(E12.5)") x_walls(:,1:num_walls)
     CLOSE(1)
 
+    WRITE(filename,"('/flux_downstream_total.txt')")
+    filename = dir_cur(1:dir_cur_length) // filename
+    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    WRITE(1,"(I0)") flux_downstream_total
+    CLOSE(1)
+    WRITE(filename,"('/flux_upstream_total.txt')")
+    filename = dir_cur(1:dir_cur_length) // filename
+    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    WRITE(1,"(I0)") flux_upstream_total
+    CLOSE(1)
 
     ! save miscellaneous data
 
@@ -171,8 +175,17 @@ SUBROUTINE SAVE_DATA
     WRITE(1,"(A)") "*ns"   
     WRITE(1,"(E12.5)") ns
     WRITE(1,"(A)") "*"
+    WRITE(1,"(A)") "*n_b"   
+    WRITE(1,"(E12.5)") n_b
+    WRITE(1,"(A)") "*"
+    WRITE(1,"(A)") "*ns_b"   
+    WRITE(1,"(E12.5)") ns_b
+    WRITE(1,"(A)") "*"
     WRITE(1,"(A)") "*Fn"   
     WRITE(1,"(E12.5)") Fn
+    WRITE(1,"(A)") "*"
+    WRITE(1,"(A)") "*m_g"   
+    WRITE(1,"(E12.5)") m_g
     WRITE(1,"(A)") "*"
     WRITE(1,"(A)") "*nx"   
     WRITE(1,"(I0)") nx

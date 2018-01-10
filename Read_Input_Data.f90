@@ -62,6 +62,9 @@ SUBROUTINE INPUT_PARAMETERS_READIN
           READ(100,*) n_cells_y
           n_cells_vec(2) = n_cells_y
           ny = n_cells_y
+        ELSE IF (line == '*INITIAL_DISTR_') THEN
+          ! number of cells in the y direction (if using homogeneous grid)
+          READ(100,*) initial_distribution
         ELSE IF (line == '*T_MAX_________') THEN
           ! end time of the simulation
           READ(100,*) tmax
@@ -365,11 +368,11 @@ SUBROUTINE RESTART_PARAMETERS_READIN
     READ(1,*) N_added_total(1:(it_restart+1))
     CLOSE(1)
 
-    WRITE(filename,"('/ncp_remainder.txt')")
-    filename = dir_cur(1:dir_cur_length) // filename
-    OPEN(UNIT=1,FILE=filename,STATUS='old')! ,access='direct',recl=4,iostat=ok)
-    READ(1,*) ncp_remainder
-    CLOSE(1)
+    ! WRITE(filename,"('/ncp_remainder.txt')")
+    ! filename = dir_cur(1:dir_cur_length) // filename
+    ! OPEN(UNIT=1,FILE=filename,STATUS='old')! ,access='direct',recl=4,iostat=ok)
+    ! READ(1,*) ncp_remainder
+    ! CLOSE(1)
 
 
 

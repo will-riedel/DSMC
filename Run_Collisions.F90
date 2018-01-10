@@ -3,7 +3,7 @@ SUBROUTINE RUN_COLLISIONS
     USE PROPERTIES
     IMPLICIT NONE
 
-    REAL(8):: rn, vr, cosT,sinT,alpha,alpha2
+    REAL(8):: rn, ncp_frac, vr, cosT,sinT,alpha,alpha2
     INTEGER:: i,j,k,u, cell_start,cell_end
     REAL(8),DIMENSION(3)::normal_vec,v_temp !,v0,v1
 
@@ -27,9 +27,18 @@ SUBROUTINE RUN_COLLISIONS
 
 
                 N_candidate_pairs_real = .5*Npc_cur*(Npc_cur-1)*Fn*c_s*vr_max(cx,cy)*dt/Vc(cx,cy)   ! number of candidate collision pairs
-                N_candidate_pairs_real = N_candidate_pairs_real + ncp_remainder(cx,cy)
-                ncp_remainder(cx,cy) = MOD(N_candidate_pairs_real,1.0)
-                N_candidate_pairs = FLOOR(N_candidate_pairs_real)
+                ! N_candidate_pairs_real = N_candidate_pairs_real + ncp_remainder(cx,cy)
+                ! ncp_remainder(cx,cy) = MOD(N_candidate_pairs_real,1.0)
+                ! N_candidate_pairs = FLOOR(N_candidate_pairs_real)
+
+                CALL RANDOM_NUMBER(rn)
+                ncp_frac = MOD(N_candidate_pairs_real,1.0)
+                IF (rn < ncp_frac) THEN
+                    N_candidate_pairs = CEILING(N_candidate_pairs_real)
+                ELSE
+                    N_candidate_pairs = FLOOR(N_candidate_pairs_real)
+                END IF
+
 
                 CALL CPU_TIME(t0_loop)
                 DO k=1,N_candidate_pairs

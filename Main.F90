@@ -12,7 +12,7 @@ MODULE CONTAIN
     REAL(8)::dx_0,dy_0,dx_factor,dy_factor,dx_inlet, x_inlet
     LOGICAL::include_source,close_inlet,close_outlet,include_gun_boundaries,use_homogenous_grid,restart_simulation
     LOGICAL::include_two_beams
-    CHARACTER(80)::dir_cur,dir_temp,x_grid_type,y_grid_type,source_type
+    CHARACTER(80)::dir_cur,dir_temp,x_grid_type,y_grid_type,source_type,initial_distribution
     INTEGER::it_restart
 
 !-----------------------------------------------------------------------
@@ -22,7 +22,8 @@ MODULE CONTAIN
     REAL(8), ALLOCATABLE, DIMENSION(:):: y_cells_vec_b, dy_cells_vec_b
     REAL(8), ALLOCATABLE, DIMENSION(:):: counter_vec, i_range_x,i_range_y, t_vec
     INTEGER, ALLOCATABLE, DIMENSION(:):: N_total,N_candidate_pairs_total,N_accepted_pairs_total,N_collisions_total,N_added_total
-    REAL(8), ALLOCATABLE, DIMENSION(:,:):: Vc, x_walls, vr_max, x_vec,v_vec, ncp_remainder
+    INTEGER, ALLOCATABLE, DIMENSION(:):: flux_upstream_total,flux_downstream_total
+    REAL(8), ALLOCATABLE, DIMENSION(:,:):: Vc, x_walls, vr_max, x_vec,v_vec!,ncp_remainder
     INTEGER, ALLOCATABLE, DIMENSION(:,:):: i_cell_vec, i_cell_vec_prev, Npc_slice
     INTEGER, ALLOCATABLE, DIMENSION(:,:):: starting_index, final_index, Npc_added, i_cell_lim_x, i_cell_lim_y
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_prev,v_vec_prev, xs_vec,vs_vec,xs_vec_prev,vs_vec_prev
@@ -53,6 +54,7 @@ MODULE CONTAIN
     ! REAL (8):: t0_BC1,t0_BC2,t0_BC3,t0_BC4,t0_BC5,t_BC1,t_BC2,t_BC3,t_BC4,t_BC5
     REAL(8)::t0_source,t_source,t0_init,t_init,t0_save,t_save
     INTEGER:: N_all,N_simulated, nt, n_saved, nw, N_expected, N_array, Num_s, Num_s_b, N_entered, cx,cy,Npc_max, ii
+    INTEGER:: N_init_a,N_init_b
     INTEGER:: nmax, nmax_left,nmax_right, nx, ny, ny_b, n_cells, cx_min_collisions, cy_min_collisions
     INTEGER:: N_candidate_pairs,N_accepted_pairs,Npc_cur, num_walls, N_collisions, N_added, N_removed, N_specular, N_diffuse
     REAL(8), DIMENSION(2,2):: x_lim, Rotation_mat_neg, Rotation_mat_pos, x_source_corners
@@ -285,6 +287,8 @@ PROGRAM MAIN
     WRITE(*,*) "computation time (source)=",t_source
     WRITE(*,*) "computation time (initialization)=",t_init
     WRITE(*,*) "computation time (saving)=",t_save
+
+    WRITE(*,*) "flux down, up = ",SUM(flux_downstream_total),SUM(flux_upstream_total)
 
     ! WRITE(*,*) "t0_BC1 = ",t_BC1
     ! WRITE(*,*) "t0_BC2 = ",t_BC2

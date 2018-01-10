@@ -232,7 +232,6 @@ SUBROUTINE INITIALIZE_SOURCE_TWO_STREAM
     N_entered = COUNT(entered_sim)
 
 
-
     IF (N_entered > 0) THEN
         ! i_cur(1:N_entered) = PACK(i_counting , entered_sim)
         i_cur(1:N_entered) = PACK(i_counting(1:Num_s) , entered_sim(1:Num_s))
@@ -274,7 +273,6 @@ SUBROUTINE INITIALIZE_SOURCE_TWO_STREAM
     ! entered_sim = (xs_vec(:,1) > 0)
     entered_sim = (xs_vec(1:Num_s_b,1) < xs2_min)
     N_entered = COUNT(entered_sim)
-
 
 
     IF (N_entered > 0) THEN

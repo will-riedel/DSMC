@@ -166,12 +166,13 @@ SUBROUTINE COMPUTE_REFLECTION
                             IF ( (close_outlet .EQV. .false.) .and. ((xw1==xmax).and.(xw2==xmax)) ) THEN
                                     removed_from_sim(j) = .true.
                                 ! END IF
-                            ! ELSE IF ( (close_inlet .EQV. .false.) .and. ((xw1==xmin).and.(xw2==xmin)) ) THEN
                             ! ! ELSE IF ( (close_inlet .EQV. .false.) .and. (x_vec(j,2) < ((-1)*x_vec(j,1) + b_source_barrier)) ) THEN
                             !         removed_from_sim(j) = .true.
                             !     ! END IF
-                            ELSE IF ( (close_inlet .EQV. .false.) .and. (xr_vec(j,2) < ((-1)*xr_vec(j,1) + b_source_barrier)) ) THEN
                             ! ELSE IF ( (close_inlet .EQV. .false.) .and. (x_vec(j,2) < ((-1)*x_vec(j,1) + b_source_barrier)) ) THEN
+                            
+                            ELSE IF ( (close_inlet .EQV. .false.) .and. ((xw1==xmin).and.(xw2==xmin)) ) THEN
+                            ! ELSE IF ( (close_inlet .EQV. .false.) .and. (xr_vec(j,2) < ((-1)*xr_vec(j,1) + b_source_barrier)) ) THEN
                                     removed_from_sim(j) = .true.
                                 ! END IF
                             ELSE
@@ -315,6 +316,12 @@ SUBROUTINE COMPUTE_REFLECTION
     ! CALL CPU_TIME(t_temp)
     ! t_BC4 = t_BC4 + (t_temp-t0_BC4)
 
+
+    IF (initial_distribution(1:5) == "SPLIT") THEN
+        ! x_vec is wrong here, it's actually after movement but before reflection
+        flux_downstream_total(ii) = COUNT( (xr_vec_prev(1:Num_r,1) < x_split) .and. (xr_vec_new(1:Num_r,1) > x_split) )
+        flux_upstream_total(ii) = COUNT( (xr_vec_prev(1:Num_r,1) > x_split) .and. (xr_vec_new(1:Num_r,1) < x_split) )
+    END IF
 
     x_vec(1:Num_r,:) = xr_vec_new(1:Num_r,:)
     v_vec(1:Num_r,:) = vr_vec_new(1:Num_r,:)

@@ -216,8 +216,17 @@ SUBROUTINE UPDATE_CELL_INDEX
             IF (i_cell_vec(i,1) > nx) THEN
                 i_cell_vec(i,1) = nx
             END IF
-            IF (i_cell_vec(i,2) > ny) THEN
-                i_cell_vec(i,2) = ny
+            ! IF (i_cell_vec(i,2) > ny) THEN
+            !         i_cell_vec(i,2) = ny
+            !     END IF
+            IF (x_vec(i,1) < x_split) THEN
+                IF (i_cell_vec(i,2) > ny) THEN
+                    i_cell_vec(i,2) = ny
+                END IF
+            ELSE
+                IF (i_cell_vec(i,2) > ny_b) THEN
+                    i_cell_vec(i,2) = ny_b
+                END IF
             END IF
         END DO
         ! DO i = 1,N_simulated
@@ -237,10 +246,12 @@ SUBROUTINE UPDATE_CELL_INDEX
         IF (finding_wall_cells .EQV. .false.) THEN
 
             DO i = 1,N_simulated
-                IF (removed_from_sim(i) .eqv. .true.) THEN
+                ! IF (removed_from_sim(i) .eqv. .true.) THEN
+                IF ( (removed_from_sim(i) .eqv. .true.) & 
+                    .or. (x_vec(i,1) < xmin) .or. (x_vec(i,1) > xmax) &
+                    .or. (x_vec(i,2) < ymin) .or. (x_vec(i,2) > ymax) ) THEN
                     i_cell_vec(i,1) = 0
                     i_cell_vec(i,2) = 0
-                    ! WRITE(*,*) "removing ",i
                 END IF 
             END DO
 
