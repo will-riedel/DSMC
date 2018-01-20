@@ -216,16 +216,19 @@ SUBROUTINE UPDATE_CELL_INDEX
             IF (i_cell_vec(i,1) > nx) THEN
                 i_cell_vec(i,1) = nx
             END IF
-            ! IF (i_cell_vec(i,2) > ny) THEN
-            !         i_cell_vec(i,2) = ny
-            !     END IF
-            IF (x_vec(i,1) < x_split) THEN
-                IF (i_cell_vec(i,2) > ny) THEN
-                    i_cell_vec(i,2) = ny
+            IF (y_grid_type(1:5) == "SPLIT") THEN
+                IF (x_vec(i,1) < x_split) THEN
+                    IF (i_cell_vec(i,2) > ny) THEN
+                        i_cell_vec(i,2) = ny
+                    END IF
+                ELSE
+                    IF (i_cell_vec(i,2) > ny_b) THEN
+                        i_cell_vec(i,2) = ny_b
+                    END IF
                 END IF
             ELSE
-                IF (i_cell_vec(i,2) > ny_b) THEN
-                    i_cell_vec(i,2) = ny_b
+                IF (i_cell_vec(i,2) > ny) THEN
+                    i_cell_vec(i,2) = ny
                 END IF
             END IF
         END DO

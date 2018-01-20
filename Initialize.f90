@@ -43,7 +43,7 @@ SUBROUTINE INITIALIZE
     ! source_type = "DOWNSTREAM"  ! "NORMAL", "2BEAM", "DOWNSTREAM"
     ! x_grid_type = "EXP_1"  ! "HOMOG", "EXP_1"
     ! y_grid_type = "EXP_1"  ! "HOMOG", "EXP_1", "EXP_2" , "SPLIT"
-    ! iniital_distribution = "HOMOG"  ! "HOMOG", "SPLIT"
+    ! iniital_distribution = "HOMOG"  ! "EMPTY", "HOMOG", "SPLIT"
 
 
     ! Set up x-grid -------------------------------------------------------------------
@@ -103,7 +103,8 @@ SUBROUTINE INITIALIZE
 
     ! Set up y-grid -------------------------------------------------------------------
     ny_b = INT(ny*(ns_b/ns))
-    x_split = 1.d10
+    ! x_split = 1.d10
+    x_split = x_inlet
     IF (y_grid_type(1:5) == "HOMOG") THEN
         ! set up equally spaced grid points
         ALLOCATE( y_cells_vec(ny) )
@@ -130,7 +131,7 @@ SUBROUTINE INITIALIZE
         END DO
 
         ! x_split = (xmax-xmin)/2 + xmin
-        x_split = x_inlet
+        ! x_split = x_inlet
 
     ELSE IF (y_grid_type(1:5) == "EXP_1") THEN
         ! find y_cells 
@@ -383,13 +384,25 @@ SUBROUTINE INITIALIZE
     ! set up vectors/IC's ----------------------------------------------------------
 
     ! calculate expected total number of particles in simulation ()
-    IF (include_source .EQV. .true.) THEN
 
-        ! N_simulated = 0
+    
+
+    IF (initial_distribution(1:5) == "EMPTY") THEN
+        N_simulated = 0
+    ELSE IF (initial_distribution(1:5) == "HOMOG") THEN
+        N_init_a = INT(V_total*n/Fn)
+        N_simulated =  N_init_a
+    ELSE IF (initial_distribution(1:5) == "SPLIT") THEN
         N_init_a = INT(.5*V_total*n/Fn)
         N_init_b = INT(.5*V_total*n_b/Fn)
         N_simulated =  N_init_a + N_init_b
+    ELSE
+        WRITE(*,*) "Error interpreting initial distribution input"
+        STOP
+    END IF
 
+
+    IF (include_source .EQV. .true.) THEN
 
         IF (source_type(1:5) == "2BEAM") THEN
 
@@ -405,30 +418,15 @@ SUBROUTINE INITIALIZE
             N_expected = INT( ns*v_avg*MIN(tmax,ts)*(hs*1)/(4*Fn) )     ! hs*1 = cross-sectional area of inlet
         END IF
 
-        ! ! a lot fewer are going to get in at the downstream part
-        ! IF (source_type(1:10) == "DOWNSTREAM") THEN
-        !     N_expected  = N_expected/5.
-        ! END IF
-
         N_array = INT(N_expected*1.25) + N_simulated
         N_expected = N_expected + N_simulated
-    ELSE
-        ! N_simulated = INT(V_total*n/Fn)
-        N_init_a = INT(.5*V_total*n/Fn)
-        N_init_b = INT(.5*V_total*n_b/Fn)
-        N_simulated =  N_init_a + N_init_b
 
+    ELSE
         N_expected = N_simulated
         N_array = N_expected+1
+
     END IF
     Npc_max = N_array
-
-
-
-
-
-
-
 
 
 
@@ -599,7 +597,9 @@ SUBROUTINE INITIALIZE
 
     IF (restart_simulation .EQV. .false.) THEN
 
-        IF (initial_distribution(1:5) == "HOMOG") THEN
+        IF (initial_distribution(1:5) == "EMPTY") THEN
+            ! no initialization
+        ELSE IF (initial_distribution(1:5) == "HOMOG") THEN
             IF (N_simulated >= 0) THEN
                 CALL RANDOM_NUMBER(x_vec)
                 x_vec(:,1) = x_vec(:,1)*(xmax-xmin)+xmin
@@ -610,7 +610,6 @@ SUBROUTINE INITIALIZE
                 v_vec = v_vec*vth
                 ! x_vec(:,2) = 0.5
             END IF
-
 
         ELSE IF (initial_distribution(1:5) == "SPLIT") THEN
             IF (N_simulated > 2) THEN
@@ -627,6 +626,7 @@ SUBROUTINE INITIALIZE
 
         ELSE 
             WRITE(*,*) "Error interpreting initial distribution input"
+            STOP
         END IF
 
 
