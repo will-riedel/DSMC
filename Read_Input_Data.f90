@@ -65,6 +65,12 @@ SUBROUTINE INPUT_PARAMETERS_READIN
         ELSE IF (line == '*INITIAL_DISTR_') THEN
           ! number of cells in the y direction (if using homogeneous grid)
           READ(100,*) initial_distribution
+        ELSE IF (line == '*GEOMETRY_TYPE_') THEN
+          ! cartesian geometry or cylindrical/axial symmetry
+          READ(100,*) geometry_type
+        ELSE IF (line == '*RADIAL_WEIGHTF') THEN
+          ! cartesian geometry or cylindrical/axial symmetry
+          READ(100,*) RWF_input
         ELSE IF (line == '*T_MAX_________') THEN
           ! end time of the simulation
           READ(100,*) tmax
@@ -95,9 +101,13 @@ SUBROUTINE INPUT_PARAMETERS_READIN
         ELSE IF (line == '*ACCOMMODATION_') THEN
           ! include the boundaries of the gun geometry
           READ(100,*) accommodation
-        ELSE IF (line == '*USE_HOMOG_GRID') THEN
-          ! whether to use a homogeneous grid or the geometric one
-          READ(100,*) use_homogenous_grid
+        ! ELSE IF (line == '*USE_HOMOG_GRID') THEN
+        !   ! whether to use a homogeneous grid or the geometric one
+        !   READ(100,*) use_homogenous_grid
+        ! use_homogenous_grid = .false.
+        ELSE IF (line == '*INCLUDE_COLL__') THEN
+          ! whether to include source at inlet
+          READ(100,*) include_collisions
         ELSE IF (line == '*DX_INIT_______') THEN
           ! initial cell-size (at center of inlet)
           READ(100,*) dx_0

@@ -24,6 +24,8 @@ SUBROUTINE INITIALIZE_SOURCE
                 Num_s_b = FLOOR(Num_s_exact_b)
             END IF
 
+            ! WRITE(*,*) "GH 5.2: Num_s_exact, Num_s, source_type= ",Num_s_exact,Num_s,source_type
+
             IF (Num_s > 0) THEN
                 IF (source_type(1:5) == "2BEAM") THEN
                     CALL INITIALIZE_SOURCE_TWO_STREAM
@@ -52,17 +54,25 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM
     IMPLICIT NONE
     INTEGER::j,i_temp
 
+    ! WRITE(*,*) "GH 5.3: shape(xs_vec), shape(vs_vec) = ",SHAPE(xs_vec),SHAPE(vs_vec)
+    ! WRITE(*,*) "xs_min,xs_max,ys_min,ys_max=",xs_min,xs_max,ys_min,ys_max
+    ! ! WRITE(*,*) "vth,dt=",vth,dt
+
 
     CALL RANDOM_NUMBER(xs_vec(1:Num_s,:))
     ! CALL RANDOM_NUMBER(xs_vec(:,1))
     xs_vec(1:Num_s,1) = xs_vec(1:Num_s,1)*(xs_max-xs_min) + xs_min
     xs_vec(1:Num_s,2) = xs_vec(1:Num_s,2)*(ys_max-ys_min) + ys_min
     ! xs_vec(:,2) = 0.5
+    ! WRITE(*,*) "GH 5.4"
+
 
     CALL RANDN(vs_vec(1:Num_s,1),Num_s) 
     CALL RANDN(vs_vec(1:Num_s,2),Num_s) 
     CALL RANDN(vs_vec(1:Num_s,3),Num_s) 
     vs_vec = vs_vec*vth
+    ! WRITE(*,*) "GH 5.5"
+
 
     xs_vec_prev = xs_vec
     vs_vec_prev = vs_vec
@@ -70,12 +80,13 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM
 
     CALL SPECULAR_REFLECTION_SOURCE
 
+
     entered_sim = (xs_vec(1:Num_s,1) > xs_max)
     ! entered_sim = (vs_vec(1:Num_s,1) > 0)
     N_entered = COUNT(entered_sim)
 
 
-    ! WRITE(*,*) "GH 5.3: Num_s, N_entered = ",Num_s,N_entered
+    ! WRITE(*,*) "GH 5.6: Num_s, N_entered = ",Num_s,N_entered
     IF (N_entered > 0) THEN
         ! i_cur(1:N_entered) = PACK(i_counting , entered_sim)
 
@@ -288,5 +299,79 @@ SUBROUTINE INITIALIZE_SOURCE_TWO_STREAM
 
 
 END SUBROUTINE INITIALIZE_SOURCE_TWO_STREAM
+
+
+
+
+
+SUBROUTINE UPDATE_WEIGHTS
+    USE CONTAIN
+    USE PROPERTIES
+    IMPLICIT NONE
+    INTEGER::i,j,i_cur,N_duplicated
+    REAL(8)::rn,w1,w2
+
+
+
+    ! weight_factor_vec_old(1:N_simulated) = weight_factor_vec(1:N_simulated)
+    ! weight_factor_vec(1:N_simulated) = 1 + RWF * x_vec(1:N_simulated,2) / ymax
+
+    i_cur = N_simulated + 1
+    N_duplicated = 0
+    DO i = 1,N_simulated
+        ! w1 = weight_factor_vec_old(i)
+        ! w2 = weight_factor_vec(i)
+        w1 = weight_factor_vec(i)
+        w2 = 1 + RWF*x_vec(i,2)/ymax
+
+        IF (w2 > w1) THEN      
+            ! particle moving out / increasing in weight factor
+            ! chance of destruction
+            CALL RANDOM_NUMBER(rn)
+            IF (rn < w2/w1) THEN
+                ! Destroy particle
+            END IF
+
+        ELSE
+            ! particle moving in / decreasing in weaght factor
+            ! chance of duplication
+            CALL RANDOM_NUMBER(rn)
+            IF (rn < (w1-w2)/w2) THEN
+                ! Duplicate particle
+
+                x_vec(i_cur,:) = x_vec(i,:)
+                v_vec(i_cur,1:2) = v_vec(i,1:2)
+                v_vec(i_cur,3) = v_vec(i,3)
+
+
+                i_cur = i_cur + 1
+                N_duplicated = N_duplicated + 1
+            END IF
+
+        END IF
+        N_simulated = N_simulated + N_duplicated
+
+
+    ! i_temp = N_simulated+1
+    ! DO j = 1,Num_s
+    !     IF (entered_sim(j) .eqv. .true.) THEN
+    !         x_vec(i_temp,:) = xs_vec(j,:)
+    !         v_vec(i_temp,:) = vs_vec(j,:)
+    !         i_temp = i_temp+1
+    !     END IF
+    ! END DO
+    
+    ! N_simulated = N_simulated + N_entered
+
+
+
+
+
+END SUBROUTINE UPDATE_WEIGHTS
+
+
+
+
+
 
 

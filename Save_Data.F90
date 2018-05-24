@@ -8,6 +8,7 @@ SUBROUTINE SAVE_DATA
 
     ! use format = ES11.2E3 for output?
 
+    ! WRITE(*,*) "GH 8.1"
 
     ! save position data
     WRITE(filename,"('/x_',I7.7,'.txt')") (ii-1)
@@ -20,6 +21,8 @@ SUBROUTINE SAVE_DATA
     WRITE(1,"(E12.5E3)") x_vec(1:N_simulated,:)
     CLOSE(1)
 
+    ! WRITE(*,*) "GH 8.2"
+
     ! save velocity data
     WRITE(filename,"('/v_',I7.7,'.txt')") (ii-1)
     filename = dir_cur(1:dir_cur_length) // filename
@@ -30,6 +33,9 @@ SUBROUTINE SAVE_DATA
     ! WRITE(1,"(E12.5)") v_vec(1:N_simulated,:)
     WRITE(1,"(E12.5E3)") v_vec(1:N_simulated,:)
     CLOSE(1)
+
+    ! WRITE(*,*) "GH 8.3"
+
 
     ! save cell data (this is probably not required)
     WRITE(filename,"('/i_',I7.7,'.txt')") (ii-1)
@@ -42,6 +48,9 @@ SUBROUTINE SAVE_DATA
     WRITE(1,"(I0)") i_cell_vec(1:N_simulated,:)
     CLOSE(1)
 
+    ! WRITE(*,*) "GH 8.4"
+
+
     ! ! save num_per_cell data? This also seems way unnecessary
     WRITE(filename,"('/Npc_',I7.7,'.txt')") (ii-1)
     filename = dir_cur(1:dir_cur_length) // filename
@@ -53,6 +62,9 @@ SUBROUTINE SAVE_DATA
     ! WRITE(1) Npc_slice
     WRITE(1,"(I0)") Npc_slice
     CLOSE(1)
+
+    ! WRITE(*,*) "GH 8.5"
+
 
     ! save some tracking vectors
     WRITE(filename,"('/n_collisions_total.txt')")
@@ -73,6 +85,9 @@ SUBROUTINE SAVE_DATA
     ! CALL SYSTEM( "rm " // dir_cur(1:dir_cur_length) // "_temp.txt" )
     ! WRITE(*,*) ( "rm " // dir_cur(1:dir_cur_length) // "_temp.txt" )
 
+    ! WRITE(*,*) "GH 8.6"
+
+
     WRITE(filename,"('/N_candidate_pairs_total.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
     ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
@@ -83,6 +98,9 @@ SUBROUTINE SAVE_DATA
     ! WRITE(1) N_candidate_pairs_total
     WRITE(1,"(I0)") N_candidate_pairs_total
     CLOSE(1)
+
+    ! WRITE(*,*) "GH 8.7"
+
     WRITE(filename,"('/N_accepted_pairs_total.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
     ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
@@ -93,6 +111,9 @@ SUBROUTINE SAVE_DATA
     ! WRITE(1) N_accepted_pairs_total
     WRITE(1,"(I0)") N_accepted_pairs_total
     CLOSE(1)
+
+    ! WRITE(*,*) "GH 8.8"
+
     WRITE(filename,"('/N_added_total.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
     ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
@@ -113,6 +134,9 @@ SUBROUTINE SAVE_DATA
     ! ! WRITE(1) ncp_remainder
     ! WRITE(1,"(E12.5)") ncp_remainder
     ! CLOSE(1)
+
+    ! WRITE(*,*) "GH 8.9"
+
     WRITE(filename,"('/N_total.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
     ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
@@ -123,6 +147,9 @@ SUBROUTINE SAVE_DATA
     ! WRITE(1) N_total
     WRITE(1,"(I0)") N_total
     CLOSE(1)
+
+    ! WRITE(*,*) "GH 8.10"
+
     WRITE(filename,"('/x_walls.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
     ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
@@ -134,6 +161,8 @@ SUBROUTINE SAVE_DATA
     WRITE(1,"(E12.5)") x_walls(:,1:num_walls)
     CLOSE(1)
 
+    ! WRITE(*,*) "GH 8.11"
+
     WRITE(filename,"('/flux_downstream_total.txt')")
     filename = dir_cur(1:dir_cur_length) // filename
     OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
@@ -144,6 +173,9 @@ SUBROUTINE SAVE_DATA
     OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
     WRITE(1,"(I0)") flux_upstream_total
     CLOSE(1)
+
+    ! WRITE(*,*) "GH 8.12"
+
 
     ! save miscellaneous data
 
@@ -216,9 +248,12 @@ SUBROUTINE SAVE_DATA
     WRITE(1,"(A)") "*"
     WRITE(1,"(A)") "*include_gun_boundaries"   
     WRITE(1,"(L)") include_gun_boundaries
+    ! WRITE(1,"(A)") "*"
+    ! WRITE(1,"(A)") "*use_homogenous_grid"   
+    ! WRITE(1,"(L)") use_homogenous_grid
     WRITE(1,"(A)") "*"
-    WRITE(1,"(A)") "*use_homogenous_grid"   
-    WRITE(1,"(L)") use_homogenous_grid
+    WRITE(1,"(A)") "*include_collisions"   
+    WRITE(1,"(L)") include_collisions
     WRITE(1,"(A)") "*"
     WRITE(1,"(A)") "*dx_0"   
     WRITE(1,"(E12.5)") dx_0

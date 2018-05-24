@@ -258,6 +258,10 @@ SUBROUTINE UPDATE_CELL_INDEX
                 END IF 
             END DO
 
+
+
+
+
             CALL SORT_ARRAYS
 
 
@@ -333,7 +337,19 @@ SUBROUTINE SORT_ARRAYS
 
 END SUBROUTINE SORT_ARRAYS
 
+SUBROUTINE UPDATE_WEIGHTS
+    USE CONTAIN
+    USE PROPERTIES
+    IMPLICIT NONE
+    INTEGER::i,j
 
+
+    weight_factor_vec_old(1:N_simulateD) = weight_factor_vec(1:N_simulated)
+    weight_factor_vec(1:N_simulated) = 1 + RWF * x_vec(1:N_simulated,2) / ymax
+
+
+
+END SUBROUTINE UPDATE_WEIGHTS
 
 
 SUBROUTINE FIND_WALL_CELLS

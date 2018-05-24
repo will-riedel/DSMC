@@ -5,21 +5,21 @@ MODULE CONTAIN
 !-----------------------------------------------------------------------
 !*******************INPUT PARAMETERS*************************
 !-----------------------------------------------------------------------
-    REAL(8)::n,ns,Fn, n_b,ns_b, x_split
+    REAL(8)::n,ns,Fn, n_b,ns_b, RWF, RWF_input, x_split
     INTEGER::n_cells_x,n_cells_y
     INTEGER::dt_to_save
     REAL(8)::tmax,dt
     REAL(8)::dx_0,dy_0,dx_factor,dy_factor,dx_inlet, x_inlet
     LOGICAL::include_source,close_inlet,close_outlet,include_gun_boundaries,use_homogenous_grid,restart_simulation
-    LOGICAL::include_two_beams
-    CHARACTER(80)::dir_cur,dir_temp,x_grid_type,y_grid_type,source_type,initial_distribution
+    LOGICAL::include_two_beams, include_collisions
+    CHARACTER(80)::dir_cur,dir_temp,x_grid_type,y_grid_type,source_type,initial_distribution,geometry_type
     INTEGER::it_restart
 
 !-----------------------------------------------------------------------
 !*******************DYNAMIC ARRAYS*************************
 !-----------------------------------------------------------------------
     REAL(8), ALLOCATABLE, DIMENSION(:):: x_cells_vec, y_cells_vec, y_cells_half, dx_cells_vec, dy_cells_vec
-    REAL(8), ALLOCATABLE, DIMENSION(:):: y_cells_vec_b, dy_cells_vec_b
+    REAL(8), ALLOCATABLE, DIMENSION(:):: y_cells_vec_b, dy_cells_vec_b, weight_factor_vec,weight_factor_vec_old
     REAL(8), ALLOCATABLE, DIMENSION(:):: counter_vec, i_range_x,i_range_y, t_vec
     INTEGER, ALLOCATABLE, DIMENSION(:):: N_total,N_candidate_pairs_total,N_accepted_pairs_total,N_collisions_total,N_added_total
     INTEGER, ALLOCATABLE, DIMENSION(:):: flux_upstream_total,flux_downstream_total
@@ -110,6 +110,8 @@ MODULE PROPERTIES
     ! REAL(8), PARAMETER:: outlet_height = 0.05
     REAL(8), PARAMETER:: outlet_length = .25d0
 
+! 
+
 ! number of dimensions (keep at 2 right now, even for 1-D simulation)
     INTEGER, PARAMETER:: ndim = 2
 
@@ -187,8 +189,8 @@ PROGRAM MAIN
 
     ! WRITE(*,*) "ns,n,N_expected,N_array=",ns,n,N_expected
     ! WRITE(*,*) "nx,ny=",nx,ny
-    ! WRITE(*,*) "GH 3"
     DO ii = it_restart+2,nt
+        ! WRITE(*,*) "GH 3"
         t = t_vec(ii)
         IF (MOD(ii-1,dt_to_save) == 0) THEN
             WRITE(*,*) ii-1,", t=",t,", N=",N_simulated,' ------------------------'
@@ -232,7 +234,9 @@ PROGRAM MAIN
 
             ! WRITE(*,*) "GH 7"
             ! Collisions ------------------------------------------------------------------
-            CALL RUN_COLLISIONS
+            IF (include_collisions .EQV. .true.) THEN
+                CALL RUN_COLLISIONS
+            END IF
 
         END IF
         

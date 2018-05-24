@@ -27,6 +27,7 @@ SUBROUTINE RUN_COLLISIONS
 
 
                 N_candidate_pairs_real = .5*Npc_cur*(Npc_cur-1)*Fn*c_s*vr_max(cx,cy)*dt/Vc(cx,cy)   ! number of candidate collision pairs
+                ! N_candidate_pairs_real = .5*Npc_cur*(Npc_cur-1)*Fn*RWF*c_s*vr_max(cx,cy)*dt/Vc(cx,cy)   ! number of candidate collision pairs
                 ! N_candidate_pairs_real = N_candidate_pairs_real + ncp_remainder(cx,cy)
                 ! ncp_remainder(cx,cy) = MOD(N_candidate_pairs_real,1.0)
                 ! N_candidate_pairs = FLOOR(N_candidate_pairs_real)

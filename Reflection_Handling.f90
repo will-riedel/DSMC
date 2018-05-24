@@ -445,7 +445,7 @@ SUBROUTINE SPECULAR_REFLECTION_SOURCE
 
     CALL CPU_TIME(t0_BC)
 
-    ! Num_r = Num_s
+    Num_r = Num_s
 
     collision_occured(1:Num_r,1) = (xs_vec(1:Num_r,2)<y_inlet(1))
     collision_occured(1:Num_r,2) = (xs_vec(1:Num_r,2)>y_inlet(2))

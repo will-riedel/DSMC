@@ -19,26 +19,31 @@ SUBROUTINE INITIALIZE
 
     ! simulation geometry and gas properties -----------------------------------------    
 
-    m_g = 2*m_p
-    d_g = dH2
-    WRITE(*,*) "Note: using Hydrogen"
-    ! m_g = 28*m_p
-    ! d_g = dN2
-    ! WRITE(*,*) "Note: using Nitrogen"
+    ! m_g = 2*m_p
+    ! d_g = dH2
+    ! WRITE(*,*) "Note: using Hydrogen"
+    m_g = 28*m_p
+    d_g = dN2
+    WRITE(*,*) "Note: using Nitrogen"
 
     vth = SQRT(k_b*T_g/m_g)
     c_s = Pi*d_g**2
     vr_max_0 = 5*vth
     ! x_lim = transpose(reshape( (/ 0.d0,inlet_length+gun_length+outlet_length,   0.d0,outlet_height /) , (/2,2/) ))
-    ! x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,.025d0 /) , (/2,2/) ))
-    x_lim = transpose(reshape( (/ 0.d0,0.8d0,   0.d0,0.2d0 /) , (/2,2/) ))
+    x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,.05d0 /) , (/2,2/) ))  ! full-gun geometry, I think
+    ! x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,.025d0 /) , (/2,2/) ))  ! half-gun geometry, I think
+    ! x_lim = transpose(reshape( (/ 0.d0,0.8d0,   0.d0,0.2d0 /) , (/2,2/) ))      ! split problem
     xmin = x_lim(1,1)
     xmax = x_lim(1,2)
     ymin = x_lim(2,1)
     ymax = x_lim(2,2)    
     ymid = (ymin+ymax)/2
 
-
+    IF (geometry_type(1:11) == "CYLINDRICAL") THEN
+        RWF = RWF_input
+    ELSE
+        RWF = 1
+    END IF
 
     ! source_type = "DOWNSTREAM"  ! "NORMAL", "2BEAM", "DOWNSTREAM"
     ! x_grid_type = "EXP_1"  ! "HOMOG", "EXP_1"
@@ -47,6 +52,10 @@ SUBROUTINE INITIALIZE
 
 
     ! Set up x-grid -------------------------------------------------------------------
+
+    ! x_split = 1.d10
+    x_split = x_inlet
+
     IF (x_grid_type(1:5) == "HOMOG") THEN
         ! set up equally spaced grid points
         ALLOCATE( x_cells_vec(nx) )
@@ -54,6 +63,8 @@ SUBROUTINE INITIALIZE
         DO i = 1 , nx
             x_cells_vec(i) = xmin + dx*(i-1)
         END DO
+
+        x_split = 1.d10
 
     ELSE IF (x_grid_type(1:5) == "EXP_1") THEN
         ! ! find x_cells
@@ -92,6 +103,7 @@ SUBROUTINE INITIALIZE
 
         ! WRITE(*,*) "x_cells_vec=",x_cells_vec
 
+        x_split = 1.d10
 
     ELSE IF (x_grid_type(1:5) == "EXP_2") THEN
         WRITE(*,*) "--- symmetric x-grid not implemented yet ---"
@@ -103,8 +115,7 @@ SUBROUTINE INITIALIZE
 
     ! Set up y-grid -------------------------------------------------------------------
     ny_b = INT(ny*(ns_b/ns))
-    ! x_split = 1.d10
-    x_split = x_inlet
+    
     IF (y_grid_type(1:5) == "HOMOG") THEN
         ! set up equally spaced grid points
         ALLOCATE( y_cells_vec(ny) )
@@ -458,6 +469,8 @@ SUBROUTINE INITIALIZE
     ALLOCATE(v_vec_unsorted(N_array,3))
     ALLOCATE(i_cell_vec_unsorted(N_array,2))
 
+    ALLOCATE(weight_factor_vec(N_array))
+    ALLOCATE(weight_factor_vec_old(N_array))
     ALLOCATE(reflected_out(N_array))
     ALLOCATE(reflected_in(N_array))
     ALLOCATE(removed_from_sim(N_array))
@@ -528,9 +541,12 @@ SUBROUTINE INITIALIZE
     N_accepted_pairs_total(:) = 0
     N_collisions_total(:) = 0
     N_added_total(:) = 0
+    flux_upstream_total(:) = 0
+    flux_downstream_total(:) = 0
     Npc_slice(:,:) = 0
     starting_index(:,:) = 0
     final_index(:,:) = 0
+
 
     Npc_added(:,:) = 0
     ! ncp_remainder(:,:) = 0
@@ -658,6 +674,13 @@ SUBROUTINE INITIALIZE
 
     CALL CPU_TIME(t_temp)
     t_init = t_init + (t_temp-t0_init)
+
+
+    IF (geometry_type(1:11) == "CYLINDRICAL") THEN    
+        CALL UPDATE_WEIGHTS
+    ELSE
+        weight_factor_vec(:) = 1
+    END IF
 
     CALL UPDATE_CELL_INDEX
 
