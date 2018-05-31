@@ -3,7 +3,7 @@ SUBROUTINE RUN_COLLISIONS
     USE PROPERTIES
     IMPLICIT NONE
 
-    REAL(8):: rn, ncp_frac, vr, cosT,sinT,alpha,alpha2
+    REAL(8):: rn, ncp_frac, vr, cosT,sinT,alpha,alpha2,WF_avg
     INTEGER:: i,j,k,u, cell_start,cell_end
     REAL(8),DIMENSION(3)::normal_vec,v_temp !,v0,v1
 
@@ -25,9 +25,10 @@ SUBROUTINE RUN_COLLISIONS
                 cell_end = cell_start + Npc_cur - 1
                 i_cur(1:Npc_cur) = (/ (u,u=cell_start,cell_end) /)
 
+                WF_avg = SUM( weight_factor_vec(cell_start:cell_end) ) / Npc_cur
 
-                N_candidate_pairs_real = .5*Npc_cur*(Npc_cur-1)*Fn*c_s*vr_max(cx,cy)*dt/Vc(cx,cy)   ! number of candidate collision pairs
-                ! N_candidate_pairs_real = .5*Npc_cur*(Npc_cur-1)*Fn*RWF*c_s*vr_max(cx,cy)*dt/Vc(cx,cy)   ! number of candidate collision pairs
+                ! N_candidate_pairs_real = .5*Npc_cur*(Npc_cur-1)*Fn*c_s*vr_max(cx,cy)*dt/Vc(cx,cy)   ! number of candidate collision pairs
+                N_candidate_pairs_real = .5*Npc_cur*(Npc_cur-1)*Fn*WF_avg*c_s*vr_max(cx,cy)*dt/Vc(cx,cy)   ! number of candidate collision pairs
                 ! N_candidate_pairs_real = N_candidate_pairs_real + ncp_remainder(cx,cy)
                 ! ncp_remainder(cx,cy) = MOD(N_candidate_pairs_real,1.0)
                 ! N_candidate_pairs = FLOOR(N_candidate_pairs_real)

@@ -224,6 +224,7 @@ SUBROUTINE INITIALIZE
     END IF
     ALLOCATE(Vc(nx,ny))
     Vc(:,:) = 1
+
     DO cx = 1,nx
         IF (y_grid_type(1:5) == "SPLIT") THEN
             IF (x_cells_vec(cx) < x_split) THEN
@@ -238,34 +239,26 @@ SUBROUTINE INITIALIZE
 
         ELSE
             DO cy = 1,ny
-                    Vc(cx,cy) = dx_cells_vec(cx)*dy_cells_vec(cy)
+                IF (geometry_type(1:11) == "CYLINDRICAL") THEN   
+                    Vc(cx,cy) = dx_cells_vec(cx)*dy_cells_vec(cy)*(y_cells_vec(cy)+dy/2)*2*Pi       ! assumes dtheta = 2*pi (so r*d_theta = 2*pi*r)
+                ELSE
+                    Vc(cx,cy) = dx_cells_vec(cx)*dy_cells_vec(cy)       ! assumes dz = 1
+                END if
             END DO
         END IF
     END DO
 
-    V_total = ( xmax-xmin ) * ( ymax-ymin )                 ! total simulation volume
+    ! V_total = ( xmax-xmin ) * ( ymax-ymin )                 ! total simulation volume
+    V_total = SUM(Vc)      
 
-    ! WRITE(*,*) "x_cells_vec="
-    ! DO j = 1,nx
-    !     WRITE(*,*) x_cells_vec(j)
-    ! END DO
-    ! WRITE(*,*) "y_cells_vec="
-    ! DO j = 1,ny
-    !     WRITE(*,*) y_cells_vec(j)
-    ! END DO
-    ! WRITE(*,*) "dx_cells_vec="
-    ! DO j = 1,nx
-    !     WRITE(*,*) dx_cells_vec(j)
-    ! END DO
-    ! WRITE(*,*) "dy_cells_vec="
-    ! DO j = 1,ny
-    !     WRITE(*,*) dy_cells_vec(j)
-    ! END DO
-
-
-
-    ! WRITE(*,*) "x_cells_vec=",x_cells_vec
-    ! WRITE(*,*) "y_cells_vec=",y_cells_vec
+    IF (geometry_type(1:11) == "CYLINDRICAL") THEN
+        ALLOCATE(WF_cell_vec(nx,ny))
+        DO i = 1,nx
+            DO j = 1,ny
+                WF_cell_vec(i,j) = 1 + RWF*(y_cells_vec(j)+dy/2)/ymax
+            END DO
+        END DO
+    END IF                                 ! total simulation volume
 
     ! time step parameters ---------------------------------------------------------
     nt = INT(tmax/dt)+1
@@ -397,15 +390,35 @@ SUBROUTINE INITIALIZE
     ! calculate expected total number of particles in simulation ()
 
     
+    
 
     IF (initial_distribution(1:5) == "EMPTY") THEN
         N_simulated = 0
     ELSE IF (initial_distribution(1:5) == "HOMOG") THEN
-        N_init_a = INT(V_total*n/Fn)
+        IF (geometry_type(1:9) == "CARTESIAN") THEN
+            N_init_a = INT(V_total*n/Fn)
+        ELSE IF (geometry_type(1:11) == "CYLINDRICAL") THEN
+            ! N_init_a = INT(V_total*n/(Fn*RWF))
+            N_init_a = INT(SUM(Vc*n/(Fn*WF_cell_vec)))
+
+        ELSE
+            WRITE(*,*) "Error interpreting geometry type"
+            STOP
+        END IF
+
         N_simulated =  N_init_a
     ELSE IF (initial_distribution(1:5) == "SPLIT") THEN
-        N_init_a = INT(.5*V_total*n/Fn)
-        N_init_b = INT(.5*V_total*n_b/Fn)
+        IF (geometry_type(1:9) == "CARTESIAN") THEN
+            N_init_a = INT(.5*V_total*n/Fn)
+            N_init_b = INT(.5*V_total*n_b/Fn)
+        ELSE IF (geometry_type(1:11) == "CYLINDRICAL") THEN
+            N_init_a = INT(.5*V_total*n/(Fn*RWF))
+            N_init_b = INT(.5*V_total*n_b/(Fn*RWF))
+        ELSE
+            WRITE(*,*) "Error interpreting geometry type"
+            STOP
+        END IF
+        
         N_simulated =  N_init_a + N_init_b
     ELSE
         WRITE(*,*) "Error interpreting initial distribution input"
@@ -437,8 +450,12 @@ SUBROUTINE INITIALIZE
         N_array = N_expected+1
 
     END IF
+    IF (geometry_type(1:11) == "CYLINDRICAL") THEN    
+        N_array = N_array*1.5    
+    END IF    
     Npc_max = N_array
 
+    WRITE(*,*) "N_init_a,N_simulated,N_expected,N_array=",N_init_a,N_simulated,N_expected,N_array
 
 
 
@@ -470,7 +487,8 @@ SUBROUTINE INITIALIZE
     ALLOCATE(i_cell_vec_unsorted(N_array,2))
 
     ALLOCATE(weight_factor_vec(N_array))
-    ALLOCATE(weight_factor_vec_old(N_array))
+    ALLOCATE(weight_factor_vec_prev(N_array))
+    ALLOCATE(weight_factor_vec_unsorted(N_array))
     ALLOCATE(reflected_out(N_array))
     ALLOCATE(reflected_in(N_array))
     ALLOCATE(removed_from_sim(N_array))
@@ -677,9 +695,17 @@ SUBROUTINE INITIALIZE
 
 
     IF (geometry_type(1:11) == "CYLINDRICAL") THEN    
-        CALL UPDATE_WEIGHTS
+        ! CALL UPDATE_WEIGHTS
+        weight_factor_vec(:) = 1 + RWF*x_vec(:,2)/ymax
+        weight_factor_vec_prev(:) = 1 + RWF*x_vec(:,2)/ymax
+
+
+
+        
+
     ELSE
         weight_factor_vec(:) = 1
+        weight_factor_vec_prev(:) = 1
     END IF
 
     CALL UPDATE_CELL_INDEX

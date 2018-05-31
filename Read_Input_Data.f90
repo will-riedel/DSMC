@@ -67,6 +67,7 @@ SUBROUTINE INPUT_PARAMETERS_READIN
           READ(100,*) initial_distribution
         ELSE IF (line == '*GEOMETRY_TYPE_') THEN
           ! cartesian geometry or cylindrical/axial symmetry
+          ! either CYLINDRICAL or CARTESIAN right now, although really anything but cylindrical is the same
           READ(100,*) geometry_type
         ELSE IF (line == '*RADIAL_WEIGHTF') THEN
           ! cartesian geometry or cylindrical/axial symmetry

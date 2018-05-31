@@ -78,6 +78,11 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM
     vs_vec_prev = vs_vec
     xs_vec = xs_vec + dt*vs_vec(:,1:2)
 
+
+    IF (geometry_type(1:11) == "CYLINDRICAL") THEN   
+        CALL ROTATE_SOURCE_TO_AXIAL_PLANE
+    END IF
+
     CALL SPECULAR_REFLECTION_SOURCE
 
 
@@ -99,6 +104,11 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM
             IF (entered_sim(j) .eqv. .true.) THEN
                 x_vec(i_temp,:) = xs_vec(j,:)
                 v_vec(i_temp,:) = vs_vec(j,:)
+
+                weight_factor_vec(i_temp) = &
+                            1 + RWF*x_vec(i_temp,2)/ymax
+
+
                 i_temp = i_temp+1
             END IF
         END DO
@@ -111,6 +121,7 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM
     END IF
 
     N_added_total(ii) = N_entered            
+    ! N_added_total(ii) = N_added_total(ii) + N_entered            
 
 
 END SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM
@@ -185,6 +196,11 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM_DOWNSTREAM
 
             x_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = xs_vec(i_cur(1:N_entered),:)
             v_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = vs_vec(i_cur(1:N_entered),:)
+
+            weight_factor_vec( (N_simulated+1):(N_simulated+1+N_entered) ) = &
+                            1 + RWF*x_vec( (N_simulated+1):(N_simulated+1+N_entered) , 2 )/ymax
+
+
             N_simulated = N_simulated + N_entered
             ! WRITE(*,*) "got here s-7"
         END IF
@@ -248,6 +264,10 @@ SUBROUTINE INITIALIZE_SOURCE_TWO_STREAM
         i_cur(1:N_entered) = PACK(i_counting(1:Num_s) , entered_sim(1:Num_s))
         x_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = xs_vec(i_cur(1:N_entered),:)
         v_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = vs_vec(i_cur(1:N_entered),:)
+
+        weight_factor_vec( (N_simulated+1):(N_simulated+1+N_entered) ) = &
+                            1 + RWF*x_vec( (N_simulated+1):(N_simulated+1+N_entered) , 2 )/ymax
+
         ! N_all = N_all + N_entered
         N_simulated = N_simulated + N_entered
     END IF
@@ -291,6 +311,10 @@ SUBROUTINE INITIALIZE_SOURCE_TWO_STREAM
         i_cur(1:N_entered) = PACK(i_counting(1:Num_s_b) , entered_sim(1:Num_s_b))
         x_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = xs_vec(i_cur(1:N_entered),:)
         v_vec( (N_simulated+1):(N_simulated+1+N_entered) , : ) = vs_vec(i_cur(1:N_entered),:)
+
+        weight_factor_vec( (N_simulated+1):(N_simulated+1+N_entered) ) = &
+                            1 + RWF*x_vec( (N_simulated+1):(N_simulated+1+N_entered) , 2 )/ymax
+
         ! N_all = N_all + N_entered
         N_simulated = N_simulated + N_entered
     END IF
@@ -301,73 +325,6 @@ SUBROUTINE INITIALIZE_SOURCE_TWO_STREAM
 END SUBROUTINE INITIALIZE_SOURCE_TWO_STREAM
 
 
-
-
-
-SUBROUTINE UPDATE_WEIGHTS
-    USE CONTAIN
-    USE PROPERTIES
-    IMPLICIT NONE
-    INTEGER::i,j,i_cur,N_duplicated
-    REAL(8)::rn,w1,w2
-
-
-
-    ! weight_factor_vec_old(1:N_simulated) = weight_factor_vec(1:N_simulated)
-    ! weight_factor_vec(1:N_simulated) = 1 + RWF * x_vec(1:N_simulated,2) / ymax
-
-    i_cur = N_simulated + 1
-    N_duplicated = 0
-    DO i = 1,N_simulated
-        ! w1 = weight_factor_vec_old(i)
-        ! w2 = weight_factor_vec(i)
-        w1 = weight_factor_vec(i)
-        w2 = 1 + RWF*x_vec(i,2)/ymax
-
-        IF (w2 > w1) THEN      
-            ! particle moving out / increasing in weight factor
-            ! chance of destruction
-            CALL RANDOM_NUMBER(rn)
-            IF (rn < w2/w1) THEN
-                ! Destroy particle
-            END IF
-
-        ELSE
-            ! particle moving in / decreasing in weaght factor
-            ! chance of duplication
-            CALL RANDOM_NUMBER(rn)
-            IF (rn < (w1-w2)/w2) THEN
-                ! Duplicate particle
-
-                x_vec(i_cur,:) = x_vec(i,:)
-                v_vec(i_cur,1:2) = v_vec(i,1:2)
-                v_vec(i_cur,3) = v_vec(i,3)
-
-
-                i_cur = i_cur + 1
-                N_duplicated = N_duplicated + 1
-            END IF
-
-        END IF
-        N_simulated = N_simulated + N_duplicated
-
-
-    ! i_temp = N_simulated+1
-    ! DO j = 1,Num_s
-    !     IF (entered_sim(j) .eqv. .true.) THEN
-    !         x_vec(i_temp,:) = xs_vec(j,:)
-    !         v_vec(i_temp,:) = vs_vec(j,:)
-    !         i_temp = i_temp+1
-    !     END IF
-    ! END DO
-    
-    ! N_simulated = N_simulated + N_entered
-
-
-
-
-
-END SUBROUTINE UPDATE_WEIGHTS
 
 
 

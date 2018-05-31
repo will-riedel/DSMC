@@ -19,12 +19,13 @@ MODULE CONTAIN
 !*******************DYNAMIC ARRAYS*************************
 !-----------------------------------------------------------------------
     REAL(8), ALLOCATABLE, DIMENSION(:):: x_cells_vec, y_cells_vec, y_cells_half, dx_cells_vec, dy_cells_vec
-    REAL(8), ALLOCATABLE, DIMENSION(:):: y_cells_vec_b, dy_cells_vec_b, weight_factor_vec,weight_factor_vec_old
+    REAL(8), ALLOCATABLE, DIMENSION(:):: y_cells_vec_b, dy_cells_vec_b
+    REAL(8), ALLOCATABLE, DIMENSION(:):: weight_factor_vec,weight_factor_vec_prev,weight_factor_vec_unsorted
     REAL(8), ALLOCATABLE, DIMENSION(:):: counter_vec, i_range_x,i_range_y, t_vec
     INTEGER, ALLOCATABLE, DIMENSION(:):: N_total,N_candidate_pairs_total,N_accepted_pairs_total,N_collisions_total,N_added_total
     INTEGER, ALLOCATABLE, DIMENSION(:):: flux_upstream_total,flux_downstream_total
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: Vc, x_walls, vr_max, x_vec,v_vec!,ncp_remainder
-    INTEGER, ALLOCATABLE, DIMENSION(:,:):: i_cell_vec, i_cell_vec_prev, Npc_slice
+    INTEGER, ALLOCATABLE, DIMENSION(:,:):: i_cell_vec, i_cell_vec_prev, Npc_slice, WF_cell_vec
     INTEGER, ALLOCATABLE, DIMENSION(:,:):: starting_index, final_index, Npc_added, i_cell_lim_x, i_cell_lim_y
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_prev,v_vec_prev, xs_vec,vs_vec,xs_vec_prev,vs_vec_prev
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_unsorted,v_vec_unsorted, i_cell_vec_unsorted
@@ -65,7 +66,7 @@ MODULE CONTAIN
     CHARACTER(80)::filename
 
     CHARACTER(16):: string_in
-    INTEGER:: Num_r,counter, dir_cur_length,dir_temp_length, cell_lim_buffer
+    INTEGER:: Num_r,counter, dir_cur_length,dir_temp_length, cell_lim_buffer,i_duplicated,N_duplicated,N_deleted
     REAL(8):: xw1,xw2,yw1,yw2,xw1_0,yw1_0,xw2_0,yw2_0,m_w,b_w,Theta
 
 
@@ -204,12 +205,19 @@ PROGRAM MAIN
 
         x_vec_prev = x_vec
         v_vec_prev = v_vec
+        weight_factor_vec_prev = weight_factor_vec
 
         ! collisionless motion --------------------------------------------------------
         ! x_vec = x_vec + dt*v_vec(:,1:2)
         IF (N_simulated > 0) THEN
             x_vec(1:N_simulated,:) = x_vec(1:N_simulated,:) + dt*v_vec(1:N_simulated,1:2)
+
+            IF (geometry_type(1:11) == "CYLINDRICAL") THEN   
+                CALL ROTATE_TO_AXIAL_PLANE
+            END IF
         END IF
+
+       
 
         ! WRITE(*,*) "GH 4"
         ! Boundary Condition implementation -------------------------------------------
@@ -221,14 +229,46 @@ PROGRAM MAIN
             ! CALL SPECULAR_REFLECTION_1D
         END IF
 
+
+
+
         ! WRITE(*,*) "GH 5"
         ! Input from Source/Reservoir -------------------------------------------------
         CALL INITIALIZE_SOURCE
 
+    
+
+
+
         ! WRITE(*,*) "GH 6"
         IF (N_simulated > 0) THEN
 
+            ! DO i = 1,N_simulated
+            !     IF (x_vec(i,2) > ymax) THEN
+            !         WRITE(*,*) "After Source Initialization: i=,y = ",i,x_vec(i,2)
+            !     END IF
+            ! END DO
+
+            ! should likely update weighting_factors here ---------------------------------
+            IF (geometry_type(1:11) == "CYLINDRICAL") THEN    
+                CALL UPDATE_WEIGHTS
+            END IF
+
+            ! DO i = 1,N_simulated
+            !     IF (x_vec(i,2) > ymax) THEN
+            !         WRITE(*,*) "After Weights: i=,y = ",i,x_vec(i,2)
+            !     END IF
+            ! END DO
+
+                    ! Check to see if N_simulated went too high this timestep
+            IF (N_simulated > N_array) THEN
+                WRITE(*,*) "ERROR: N_simulated exceeds allocated array size"
+                WRITE(*,*) "N_sim,N_array =",N_simulated, N_array
+                STOP
+            END IF
+
             ! Update Cell Index -----------------------------------------------------------
+            ! WRITE(*,*) "updating index..."
             CALL UPDATE_CELL_INDEX
             ! CALL UPDATE_CELL_INDEX_TEMP
 

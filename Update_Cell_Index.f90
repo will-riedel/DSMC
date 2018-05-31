@@ -6,95 +6,13 @@ SUBROUTINE UPDATE_CELL_INDEX
 
     CALL CPU_TIME(t0_index)
 
+
+
+    ! calculate cell for each particle ----------------------------------------
+
     ! note: if (x,y) == (0,0), then just set index to -1000 or something (or 0, since indices start with 1 here)
     IF (N_simulated > 0) THEN
         i_cell_vec_prev = i_cell_vec
-
-
-        ! IF (use_homogenous_grid .EQV. .true.) THEN
-
-        !     i_cell_vec(1:N_simulated,1) = FLOOR( (x_vec(1:N_simulated,1)-xmin)/(xmax-xmin)*nx ) + 1
-
-            
-
-        !     IF (ny>1) THEN
-        !         i_cell_vec(1:N_simulated,2) = FLOOR( (x_vec(1:N_simulated,2)-ymin)/(ymax-ymin)*ny ) + 1
-        !     ELSE
-        !         i_cell_vec(1:N_simulated,2) = 1
-        !     END IF
-
-        !     ! DO i=1,N_simulated
-        !     !     IF (i_cell_vec(i,2) > ny) THEN
-        !     !         WRITE(*,*) "x_vec= ",x_vec(i,:)
-        !     !         ! WRITE(*,*) "val1 = ",(x_vec(i,1)-xmin)/(xmax-xmin)
-        !     !         WRITE(*,*) "val1 = ",(x_vec(i,2)-ymin)/(ymax-ymin)
-        !     !         WRITE(*,*) "val2 = ",FLOOR( (x_vec(i,2)-ymin)/(ymax-ymin)*ny )
-        !     !         WRITE(*,*) "N_simulated=", N_simulated
-
-        !     !         WRITE(*,*) "shape(Npc_slice)=", SHAPE(Npc_slice)
-        !     !         WRITE(*,*) "shape(Npc_added)=", SHAPE(Npc_added)
-        !     !         ! WRITE(*,*) "max(i_cell_vec)=", MAXVAL(i_cell_vec(1:N_simulated,1))
-        !     !     ENDIF
-        !     ! END DO
-
-        ! ELSE
-        !     ! ! find x-cell
-        !     ! alpha_x  = -LOG(1/dx_factor)/xmax
-        !     ! n_inf = 1/(dx_0*alpha_x)
-        !     ! i_cell_vec(1:N_simulated,1) = FLOOR(n_inf*(1-EXP( -alpha_x*x_vec(1:N_simulated,1) )))+1
-
-        !     alpha_x  = -LOG(1/dx_factor)/(xmax-x_inlet)
-        !     n_inf = 1/(dx_0*alpha_x)
-        !     nmax_left = (x_inlet-xmin)/dx_inlet
-        !     DO j = 1,N_simulated
-        !         IF (x_vec(j,1) < x_inlet) THEN
-        !             i_cell_vec(j,1) = FLOOR( (x_vec(j,1)-xmin)/(x_inlet-xmin)*nmax_left ) + 1
-        !         ELSE
-        !             i_cell_vec(j,1) = FLOOR(n_inf*(1-EXP( -alpha_x*(x_vec(j,1)-x_inlet) )) + nmax_left)+1
-        !         END IF
-
-        !         ! IF (i_cell_vec(j,1) == 
-        !     END DO
-
-        !     ! j = int(N_simulated/3)
-        !     ! WRITE(*,*) "x_vec(j,1),n_inf,alpha_x,,x_inlet,nmax_left=",x_vec(j,1),n_inf,alpha_x,x_inlet,nmax_left
-        !     ! WRITE(*,*) "term1=",-alpha_x*(x_vec(j,1)-x_inlet)
-        !     ! WRITE(*,*) "term2=",n_inf*(1-EXP( -alpha_x*(x_vec(j,1)+x_inlet)))
-        !     ! WRITE(*,*) "x_vec(j,1), i_cell_vec(j,1) = ",x_vec(j,1),i_cell_vec(j,1)
-        !     ! WRITE(*,*) "max=",MAXVAL(i_cell_vec(:,1))
-
-
-
-        !     ! find y-cell
-        !     IF (ny > 1) THEN
-        !         alpha_y = -LOG(1/dy_factor) / (ymax-ymid)
-        !         n_inf = 1/(dy_0*alpha_y)
-        !         IF (MOD(ny,2)==0) THEN
-        !             pos_offset = ny/2. - 0
-        !             neg_offset = ny/2. - 1
-        !         ELSE
-        !             pos_offset = ny/2.-.5
-        !             neg_offset = ny/2.-.5
-        !         ENDIF
-
-        !         DO i = 1,N_simulated
-        !             IF (x_vec(i,2) < ymid) THEN
-        !                 i_cell_vec(i,2) = &
-        !                 FLOOR( neg_offset - FLOOR( n_inf*(1-EXP(-alpha_y*(ymid - x_vec(i,2))))) ) 
-        !             ELSE 
-        !                 i_cell_vec(i,2) = &
-        !                 CEILING( pos_offset + FLOOR( n_inf*(1-EXP(-alpha_y*(x_vec(i,2) - ymid)))) ) 
-        !             END IF
-        !         END DO
-
-        !         i_cell_vec(1:N_simulated,2) = i_cell_vec(1:N_simulated,2) + 1
-        !     ELSE
-        !         i_cell_vec(1:N_simulated,2) = 1
-        !     ENDIF
-
-        ! END IF
-        
-
 
 
 
@@ -210,8 +128,6 @@ SUBROUTINE UPDATE_CELL_INDEX
 
 
 
-
-
         DO i = 1,N_simulated
             IF (i_cell_vec(i,1) > nx) THEN
                 i_cell_vec(i,1) = nx
@@ -253,9 +169,21 @@ SUBROUTINE UPDATE_CELL_INDEX
                 IF ( (removed_from_sim(i) .eqv. .true.) & 
                     .or. (x_vec(i,1) < xmin) .or. (x_vec(i,1) > xmax) &
                     .or. (x_vec(i,2) < ymin) .or. (x_vec(i,2) > ymax) ) THEN
+                    ! WRITE(*,*) "setting i_cell to 0,0"
                     i_cell_vec(i,1) = 0
                     i_cell_vec(i,2) = 0
                 END IF 
+            
+
+                ! IF (i_cell_vec(i,1) > 0) THEN
+                ! ELSE    
+                !     WRITE(*,*) "i,i_cell,x=",i,i_cell_vec(i,:),x_vec(i,:)
+                !     WRITE(*,*)"xmin,x,xmax = ",xmin,x_vec(i,1),xmax
+                !     WRITE(*,*)"ymin,y,ymax = ",ymin,x_vec(i,2),ymax
+                !     WRITE(*,*) "rfs = ",removed_from_sim(i)
+                ! END IF
+
+
             END DO
 
 
@@ -314,6 +242,8 @@ SUBROUTINE SORT_ARRAYS
     x_vec_unsorted(1:N_simulated,:) = x_vec(1:N_simulated,:)
     v_vec_unsorted(1:N_simulated,:) = v_vec(1:N_simulated,:)
     i_cell_vec_unsorted(1:N_simulated,:) = i_cell_vec(1:N_simulated,:)
+    weight_factor_vec_unsorted(1:N_simulated) = weight_factor_vec(1:N_simulated)
+
     ! removed_from_sim_unsorted = removed_from_sim
     DO i = 1,N_simulated
         cx = i_cell_vec_unsorted(i,1)
@@ -325,31 +255,25 @@ SUBROUTINE SORT_ARRAYS
             x_vec(i_sorted,:) = x_vec_unsorted(i,:)
             v_vec(i_sorted,:) = v_vec_unsorted(i,:)
             i_cell_vec(i_sorted,:) = i_cell_vec_unsorted(i,:)
+            weight_factor_vec(i_sorted) = weight_factor_vec_unsorted(i)
+        ! ELSE
+        !     WRITE(*,*) "i,i_sorted,x,i_cell=",i,i_sorted,x_vec_unsorted(i,:),i_cell_vec_unsorted(i,:)
         END IF
     END DO
 
     removed_from_sim(1:N_simulated) = .false.   
+    ! removed_from_sim(:) = .false.         ! I think technically better but not necessary right now
     N_simulated = current_sum
     N_total(ii-1) = N_simulated
+
+
 
     CALL CPU_TIME(t_temp)
     t_index = t_index + (t_temp-t0_index)
 
 END SUBROUTINE SORT_ARRAYS
 
-SUBROUTINE UPDATE_WEIGHTS
-    USE CONTAIN
-    USE PROPERTIES
-    IMPLICIT NONE
-    INTEGER::i,j
 
-
-    weight_factor_vec_old(1:N_simulateD) = weight_factor_vec(1:N_simulated)
-    weight_factor_vec(1:N_simulated) = 1 + RWF * x_vec(1:N_simulated,2) / ymax
-
-
-
-END SUBROUTINE UPDATE_WEIGHTS
 
 
 SUBROUTINE FIND_WALL_CELLS

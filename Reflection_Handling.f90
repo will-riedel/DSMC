@@ -22,7 +22,7 @@ SUBROUTINE COMPUTE_REFLECTION
     ! collision_occured_any(1:Num_r) = .false.
     ! reflected_in(1:Num_r) = .false.
     ! reflected_out(1:Num_r) = .false.
-    removed_from_sim(1:Num_r) = .false.
+    ! removed_from_sim(1:Num_r) = .false.
     collision_dt(1:Num_r,:) = 1.d10
 
     ! Find where collisions occur, and intersection between each point and each wall
@@ -375,7 +375,7 @@ SUBROUTINE SPECULAR_REFLECTION_1D
 
     CALL CPU_TIME(t0_BC)
 
-    removed_from_sim(1:Num_r) = .false.
+    ! removed_from_sim(1:Num_r) = .false.
 
     DO j = 1,Num_r
 
