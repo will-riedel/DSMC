@@ -3,7 +3,7 @@ SUBROUTINE RUN_COLLISIONS
     USE PROPERTIES
     IMPLICIT NONE
 
-    REAL(8):: rn, ncp_frac, vr, cosT,sinT,alpha,alpha2,WF_avg
+    REAL(8):: rn, ncp_frac, vr, cosT,sinT,alpha,alpha2
     INTEGER:: i,j,k,u, cell_start,cell_end
     REAL(8),DIMENSION(3)::normal_vec,v_temp !,v0,v1
 

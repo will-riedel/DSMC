@@ -25,7 +25,7 @@ MODULE CONTAIN
     INTEGER, ALLOCATABLE, DIMENSION(:):: N_total,N_candidate_pairs_total,N_accepted_pairs_total,N_collisions_total,N_added_total
     INTEGER, ALLOCATABLE, DIMENSION(:):: flux_upstream_total,flux_downstream_total
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: Vc, x_walls, vr_max, x_vec,v_vec!,ncp_remainder
-    INTEGER, ALLOCATABLE, DIMENSION(:,:):: i_cell_vec, i_cell_vec_prev, Npc_slice, WF_cell_vec
+    INTEGER, ALLOCATABLE, DIMENSION(:,:):: i_cell_vec, i_cell_vec_prev, Npc_slice, WF_cell_vec, Vs_cell_vec
     INTEGER, ALLOCATABLE, DIMENSION(:,:):: starting_index, final_index, Npc_added, i_cell_lim_x, i_cell_lim_y
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_prev,v_vec_prev, xs_vec,vs_vec,xs_vec_prev,vs_vec_prev
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: x_vec_unsorted,v_vec_unsorted, i_cell_vec_unsorted
@@ -49,7 +49,7 @@ MODULE CONTAIN
     REAL(8):: m_g,d_g,vth,c_s,vr_max_0,v_avg, xmin,xmax,ymin,ymax,ymid, n_inf, V_total, v_beam
     REAL(8):: ws,ts,hs,Vs,xs_min,xs_max,xs2_min,xs2_max,ys_min,ys_max,t, N_candidate_pairs_real
     REAL(8):: Nc0,Nc_sim,m_r,collision_ratio, Num_s_exact, Num_s_frac, b_source_A, b_source_B, b_source_barrier,Theta_source
-    REAL(8):: Num_s_exact_b, Num_s_frac_b
+    REAL(8):: Num_s_exact_b, Num_s_frac_b, WF_avg
     REAL(8):: alpha_x,alpha_y,neg_offset,pos_offset, accommodation 
     REAL (8):: t0_total,t0_BC,t0_collisions,t0_loop,t_temp,t_total,t_BC,t_collisions,t_loop, t0_index,t_index
     ! REAL (8):: t0_BC1,t0_BC2,t0_BC3,t0_BC4,t0_BC5,t_BC1,t_BC2,t_BC3,t_BC4,t_BC5

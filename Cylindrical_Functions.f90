@@ -143,7 +143,7 @@ SUBROUTINE UPDATE_WEIGHTS
 
     ! WRITE(*,*) "N_deleted = ",N_deleted
 
-    WRITE(*,*) "N_deleted,N_duplicated,N_simulated,N_array = ",-N_deleted,N_duplicated,N_simulated,N_array
+    ! WRITE(*,*) "N_deleted,N_duplicated,N_simulated,N_array = ",-N_deleted,N_duplicated,N_simulated,N_array
     
 
 

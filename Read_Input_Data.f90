@@ -143,7 +143,8 @@ SUBROUTINE INPUT_PARAMETERS_READIN
           ! directory of current data
           READ(100,*) dir_cur
           ! WRITE(*,*) "found directory"
-          dir_cur = "Output/" // dir_cur
+          ! dir_cur = "Output/" // dir_cur
+          dir_cur = "/Users/willriedel/DSMC_FORTRAN_Output/" // dir_cur
           dir_cur_length = LEN_TRIM(dir_cur)
           EXIT
         ELSE

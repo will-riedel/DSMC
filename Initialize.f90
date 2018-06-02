@@ -30,9 +30,11 @@ SUBROUTINE INITIALIZE
     c_s = Pi*d_g**2
     vr_max_0 = 5*vth
     ! x_lim = transpose(reshape( (/ 0.d0,inlet_length+gun_length+outlet_length,   0.d0,outlet_height /) , (/2,2/) ))
-    x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,.05d0 /) , (/2,2/) ))  ! full-gun geometry, I think
+    ! x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,.05d0 /) , (/2,2/) ))  ! full-gun geometry, I think
     ! x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,.025d0 /) , (/2,2/) ))  ! half-gun geometry, I think
     ! x_lim = transpose(reshape( (/ 0.d0,0.8d0,   0.d0,0.2d0 /) , (/2,2/) ))      ! split problem
+    x_lim = transpose(reshape( (/ 0.d0,0.2761d0,   0.d0,.025d0 /) , (/2,2/) ))  ! updated gun-geometry
+
     xmin = x_lim(1,1)
     xmax = x_lim(1,2)
     ymin = x_lim(2,1)
@@ -327,12 +329,25 @@ SUBROUTINE INITIALIZE
 
     END IF
 
-    Vs = ws*hs
-    Num_s_exact = ns*Vs/Fn
+    IF (geometry_type(1:9) == "CARTESIAN") THEN
+        Vs = ws*hs
+        Num_s_exact = ns*Vs/Fn
+        Num_s_exact_b = ns_b*Vs/Fn
+    ELSE IF (geometry_type(1:11) == "CYLINDRICAL") THEN
+        ALLOCATE(Vs_cell_vec(nx,ny))
+        ! Vs_cell_vec = dy*2*Pi*(y_cells_vec+dy/2)*ws
+        ! Num_s_exact = SUM(ns*Vs_cell_vec/(Fn*WF_cell_vec))
+        ! Num_s_exact = SUM(ns_b*Vs_cell_vec/(Fn*WF_cell_vec))
+        WF_avg = 1 + RWF*(.5*(ys_min + ys_max)/ymax)
+        Vs = Pi*(ys_max**2 - ys_min**2)*ws
+        Num_s_exact = ns*Vs/(Fn*WF_avg)
+        Num_s_exact = ns_b*Vs/(Fn*WF_avg)
+    ELSE
+        WRITE(*,*) "Error: can't parse geometry type"
+    END IF
+
     Num_s = CEILING(Num_s_exact)
     Num_s_frac = Num_s_exact - FLOOR(Num_s_exact)
-
-    Num_s_exact_b = ns_b*Vs/Fn
     Num_s_b = CEILING(Num_s_exact_b)
     Num_s_frac_b = Num_s_exact_b - FLOOR(Num_s_exact_b)
 
@@ -439,7 +454,12 @@ SUBROUTINE INITIALIZE
 
         ELSE
             v_avg = SQRT(8*k_b*T_g/(Pi*m_g))
-            N_expected = INT( ns*v_avg*MIN(tmax,ts)*(hs*1)/(4*Fn) )     ! hs*1 = cross-sectional area of inlet
+            IF (geometry_type(1:9) == "CARTESIAN") THEN    
+                N_expected = INT( ns*v_avg*MIN(tmax,ts)*(hs*1)/(4*Fn) )     ! hs*1 = cross-sectional area of inlet
+            ELSE IF (geometry_type(1:11) == "CYLINDRICAL") THEN    
+                N_expected = INT( ns*v_avg*MIN(tmax,ts)*(hs*1)/(4*Fn*RWF) )     ! hs*1 = cross-sectional area of inlet
+            END IF
+
         END IF
 
         N_array = INT(N_expected*1.25) + N_simulated
