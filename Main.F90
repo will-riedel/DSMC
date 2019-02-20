@@ -12,7 +12,7 @@ MODULE CONTAIN
     REAL(8)::dx_0,dy_0,dx_factor,dy_factor,dx_inlet, x_inlet
     LOGICAL::include_source,close_inlet,close_outlet,include_gun_boundaries,use_homogenous_grid,restart_simulation
     LOGICAL::include_two_beams, include_collisions
-    CHARACTER(80)::dir_cur,dir_temp,x_grid_type,y_grid_type,source_type,initial_distribution,geometry_type
+    CHARACTER(80)::dir_cur,dir_temp,x_grid_type,y_grid_type,source_type,initial_distribution,geometry_type,gas_type
     INTEGER::it_restart
 
 !-----------------------------------------------------------------------
@@ -21,7 +21,7 @@ MODULE CONTAIN
     REAL(8), ALLOCATABLE, DIMENSION(:):: x_cells_vec, y_cells_vec, y_cells_half, dx_cells_vec, dy_cells_vec
     REAL(8), ALLOCATABLE, DIMENSION(:):: y_cells_vec_b, dy_cells_vec_b
     REAL(8), ALLOCATABLE, DIMENSION(:):: weight_factor_vec,weight_factor_vec_prev,weight_factor_vec_unsorted
-    REAL(8), ALLOCATABLE, DIMENSION(:):: counter_vec, i_range_x,i_range_y, t_vec
+    REAL(8), ALLOCATABLE, DIMENSION(:):: counter_vec, i_range_x,i_range_y, t_vec, NWF_escaped_total
     INTEGER, ALLOCATABLE, DIMENSION(:):: N_total,N_candidate_pairs_total,N_accepted_pairs_total,N_collisions_total,N_added_total
     INTEGER, ALLOCATABLE, DIMENSION(:):: flux_upstream_total,flux_downstream_total
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: Vc, x_walls, vr_max, x_vec,v_vec!,ncp_remainder
@@ -74,7 +74,7 @@ MODULE CONTAIN
 !-----------------------------------------------------------------------
 !*******************TEMPORARY/SCRATCH VARIBLES*************************
 !-----------------------------------------------------------------------
-    REAL(8):: a1,b1,c1
+    REAL(8):: a1,b1,c1,N_bad_prob,N_good_prob
     REAL(8), ALLOCATABLE, DIMENSION(:,:):: a_mat,b_mat,c_mat
     REAL(8), ALLOCATABLE, DIMENSION(:):: a_vec,b_vec,c_vec
     INTEGER, ALLOCATABLE, DIMENSION(:):: i_temp_vec
@@ -333,6 +333,9 @@ PROGRAM MAIN
     WRITE(*,*) "computation time (saving)=",t_save
 
     WRITE(*,*) "flux down, up = ",SUM(flux_downstream_total),SUM(flux_upstream_total)
+
+    WRITE(*,*) "N_good_prob,N_bad_prob, frac =",N_good_prob,N_bad_prob, N_bad_prob/(N_bad_prob+N_good_prob)
+
 
     ! WRITE(*,*) "t0_BC1 = ",t_BC1
     ! WRITE(*,*) "t0_BC2 = ",t_BC2

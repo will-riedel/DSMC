@@ -69,6 +69,10 @@ SUBROUTINE INPUT_PARAMETERS_READIN
           ! cartesian geometry or cylindrical/axial symmetry
           ! either CYLINDRICAL or CARTESIAN right now, although really anything but cylindrical is the same
           READ(100,*) geometry_type
+        ELSE IF (line == '*GAS_TYPE______') THEN
+          ! gas type
+          ! either HYDROGEN or NITROGEN right now
+          READ(100,*) gas_type
         ELSE IF (line == '*RADIAL_WEIGHTF') THEN
           ! cartesian geometry or cylindrical/axial symmetry
           READ(100,*) RWF_input
@@ -143,8 +147,10 @@ SUBROUTINE INPUT_PARAMETERS_READIN
           ! directory of current data
           READ(100,*) dir_cur
           ! WRITE(*,*) "found directory"
-          ! dir_cur = "Output/" // dir_cur
+          !dir_cur = "Output/" // dir_cur
           dir_cur = "/Users/willriedel/DSMC_FORTRAN_Output/" // dir_cur
+          !dir_cur = "/home/users/wriedel/DSMC_FORTRAN_Output/" // dir_cur
+          !dir_cur = "~/DSMC_FORTRAN_Output/" // dir_cur
           dir_cur_length = LEN_TRIM(dir_cur)
           EXIT
         ELSE

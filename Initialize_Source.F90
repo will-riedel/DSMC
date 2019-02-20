@@ -63,6 +63,7 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM
     ! CALL RANDOM_NUMBER(xs_vec(:,1))
     xs_vec(1:Num_s,1) = xs_vec(1:Num_s,1)*(xs_max-xs_min) + xs_min
     xs_vec(1:Num_s,2) = xs_vec(1:Num_s,2)*(ys_max-ys_min) + ys_min
+    !xs_vec(1:Num_s,3) = 0
     ! xs_vec(:,2) = 0.5
     ! WRITE(*,*) "GH 5.4"
 
@@ -77,6 +78,7 @@ SUBROUTINE INITIALIZE_SOURCE_ONE_STREAM
     xs_vec_prev = xs_vec
     vs_vec_prev = vs_vec
     xs_vec = xs_vec + dt*vs_vec(:,1:2)
+    !xs_vec = xs_vec + dt*vs_vec(:,:)
 
 
     IF (geometry_type(1:11) == "CYLINDRICAL") THEN   

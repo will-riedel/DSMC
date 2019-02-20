@@ -8,8 +8,8 @@ SUBROUTINE ROTATE_TO_AXIAL_PLANE
     ! calculate new radius, then rotate back to axial plane
 
 
-    x_vec(1:N_simulated,2) =  SQRT( (x_vec_prev(1:N_simulated,2)+dt*v_vec(1:N_simulated,2))**2   &
-                                 + (dt*v_vec(1:N_simulated,3))**2 )
+    x_vec(1:N_simulated,2) =  SQRT( (x_vec_prev(1:N_simulated,2)+dt*v_vec_prev(1:N_simulated,2))**2   &
+                                 + (dt*v_vec_prev(1:N_simulated,3))**2 )
 
     ! DO i = 1,N_simulated
     !     IF (x_vec(i,2) > ymax) THEN
@@ -18,11 +18,11 @@ SUBROUTINE ROTATE_TO_AXIAL_PLANE
     ! END DO
 
     ! v = (v1(y1+v1*dt) + w1^2*dt)/y
-    v_vec(1:N_simulated,2) =  (v_vec_prev(1:N_simulated,2)*(x_vec_prev(1:N_simulated,2)+dt*v_vec(1:N_simulated,2))   &
-                                 + (dt*v_vec(1:N_simulated,3)**2) ) / x_vec(1:N_simulated,2)
+    v_vec(1:N_simulated,2) =  (v_vec_prev(1:N_simulated,2)*(x_vec_prev(1:N_simulated,2)+dt*v_vec_prev(1:N_simulated,2))   &
+                                 + (dt*v_vec_prev(1:N_simulated,3)**2) ) / x_vec(1:N_simulated,2)
     ! w = (w1(y1+v1*dt) - v1*w1*dt)/y
-    v_vec(1:N_simulated,3) =  (v_vec_prev(1:N_simulated,3)*(x_vec_prev(1:N_simulated,2)+dt*v_vec(1:N_simulated,2))   &
-                                 - (dt*v_vec(1:N_simulated,2)*v_vec(1:N_simulated,3)) ) / x_vec(1:N_simulated,2)
+    v_vec(1:N_simulated,3) =  (v_vec_prev(1:N_simulated,3)*(x_vec_prev(1:N_simulated,2)+dt*v_vec_prev(1:N_simulated,2))   &
+                                 - (dt*v_vec_prev(1:N_simulated,2)*v_vec_prev(1:N_simulated,3)) ) / x_vec(1:N_simulated,2)
 
 
 END SUBROUTINE ROTATE_TO_AXIAL_PLANE
@@ -38,15 +38,16 @@ SUBROUTINE ROTATE_SOURCE_TO_AXIAL_PLANE
     ! calculate new radius, then rotate back to axial plane
 
 
-    xs_vec(1:Num_s,2) =  SQRT( (xs_vec_prev(1:Num_s,2)+dt*vs_vec(1:Num_s,2))**2   &
-                                 + (dt*vs_vec(1:Num_s,3))**2 )
+    xs_vec(1:Num_s,2) =  SQRT( (xs_vec_prev(1:Num_s,2)+dt*vs_vec_prev(1:Num_s,2))**2   &
+                                 + (dt*vs_vec_prev(1:Num_s,3))**2 )
 
     ! v = (v1(y1+v1*dt) + w1^2*dt)/y
-    vs_vec(1:Num_s,2) =  (vs_vec_prev(1:Num_s,2)*(xs_vec_prev(1:Num_s,2)+dt*vs_vec(1:Num_s,2))   &
+    vs_vec(1:Num_s,2) =  (vs_vec_prev(1:Num_s,2)*(xs_vec_prev(1:Num_s,2)+dt*vs_vec_prev(1:Num_s,2))   &
                                  + (dt*vs_vec(1:Num_s,3)**2) ) / xs_vec(1:Num_s,2)
     ! w = (w1(y1+v1*dt) - v1*w1*dt)/y
-    vs_vec(1:Num_s,3) =  (vs_vec_prev(1:Num_s,3)*(xs_vec_prev(1:Num_s,2)+dt*vs_vec(1:Num_s,2))   &
-                                 - (dt*vs_vec(1:Num_s,2)*vs_vec(1:Num_s,3)) ) / xs_vec(1:Num_s,2)
+    vs_vec(1:Num_s,3) =  (vs_vec_prev(1:Num_s,3)*(xs_vec_prev(1:Num_s,2)+dt*vs_vec_prev(1:Num_s,2))   &
+                                 - (dt*vs_vec_prev(1:Num_s,2)*vs_vec_prev(1:Num_s,3)) ) / xs_vec(1:Num_s,2)
+
 
 
 END SUBROUTINE ROTATE_SOURCE_TO_AXIAL_PLANE
@@ -101,7 +102,12 @@ SUBROUTINE UPDATE_WEIGHTS
             CALL RANDOM_NUMBER(rn)
             IF (rn < (w1-w2)/w2) THEN
                 ! Duplicate particle
-
+                
+                IF (w1 > 2*w2) then ! probability of duplication > 1
+                    N_bad_prob = N_bad_prob + 1
+                ELSE
+                    N_good_prob = N_good_prob + 1
+                END IF
 
                 x_vec(i_duplicated,:) = x_vec(i,:)
                 v_vec(i_duplicated,1:2) = v_vec(i,1:2)

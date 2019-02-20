@@ -8,7 +8,7 @@ SUBROUTINE SAVE_DATA
 
     ! use format = ES11.2E3 for output?
 
-    ! WRITE(*,*) "GH 8.1"
+    !WRITE(*,*) "GH 8.1"
 
     ! save position data
     WRITE(filename,"('/x_',I7.7,'.txt')") (ii-1)
@@ -21,7 +21,7 @@ SUBROUTINE SAVE_DATA
     WRITE(1,"(E12.5E3)") x_vec(1:N_simulated,:)
     CLOSE(1)
 
-    ! WRITE(*,*) "GH 8.2"
+    !WRITE(*,*) "GH 8.2"
 
     ! save velocity data
     WRITE(filename,"('/v_',I7.7,'.txt')") (ii-1)
@@ -157,6 +157,17 @@ SUBROUTINE SAVE_DATA
     ! WRITE(1) nt
     ! WRITE(1) N_total
     WRITE(1,"(I0)") N_total
+    CLOSE(1)
+
+    WRITE(filename,"('/NWF_escaped_total.txt')")
+    filename = dir_cur(1:dir_cur_length) // filename
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    OPEN(UNIT=1,FILE=filename,FORM="FORMATTED")
+    ! OPEN(UNIT=1,FILE=filename,FORM="UNFORMATTED",access='stream')
+    ! WRITE(1) nt
+    ! WRITE(1) N_total
+    WRITE(1,"(E12.5E3)") NWF_escaped_total
     CLOSE(1)
 
     ! WRITE(*,*) "GH 8.10"

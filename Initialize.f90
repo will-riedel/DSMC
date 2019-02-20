@@ -19,12 +19,22 @@ SUBROUTINE INITIALIZE
 
     ! simulation geometry and gas properties -----------------------------------------    
 
+    IF (gas_type(1:8) == "NITROGEN") THEN
+        m_g = 28*m_p
+        d_g = dN2
+        WRITE(*,*) "Note: using Nitrogen"
+    ELSE
+        m_g = 2*m_p
+        d_g = dH2
+        WRITE(*,*) "Note: using Hydrogen"
+    END IF
+
     ! m_g = 2*m_p
     ! d_g = dH2
     ! WRITE(*,*) "Note: using Hydrogen"
-    m_g = 28*m_p
-    d_g = dN2
-    WRITE(*,*) "Note: using Nitrogen"
+    ! m_g = 28*m_p
+    ! d_g = dN2
+    ! WRITE(*,*) "Note: using Nitrogen"
 
     vth = SQRT(k_b*T_g/m_g)
     c_s = Pi*d_g**2
@@ -337,11 +347,11 @@ SUBROUTINE INITIALIZE
         ALLOCATE(Vs_cell_vec(nx,ny))
         ! Vs_cell_vec = dy*2*Pi*(y_cells_vec+dy/2)*ws
         ! Num_s_exact = SUM(ns*Vs_cell_vec/(Fn*WF_cell_vec))
-        ! Num_s_exact = SUM(ns_b*Vs_cell_vec/(Fn*WF_cell_vec))
+        ! Num_s_exact_b = SUM(ns_b*Vs_cell_vec/(Fn*WF_cell_vec))
         WF_avg = 1 + RWF*(.5*(ys_min + ys_max)/ymax)
         Vs = Pi*(ys_max**2 - ys_min**2)*ws
         Num_s_exact = ns*Vs/(Fn*WF_avg)
-        Num_s_exact = ns_b*Vs/(Fn*WF_avg)
+        Num_s_exact_b = ns_b*Vs/(Fn*WF_avg)
     ELSE
         WRITE(*,*) "Error: can't parse geometry type"
     END IF
@@ -350,6 +360,7 @@ SUBROUTINE INITIALIZE
     Num_s_frac = Num_s_exact - FLOOR(Num_s_exact)
     Num_s_b = CEILING(Num_s_exact_b)
     Num_s_frac_b = Num_s_exact_b - FLOOR(Num_s_exact_b)
+
 
 
     ! Set up wall geometry ---------------------------------------------------------
@@ -455,9 +466,13 @@ SUBROUTINE INITIALIZE
         ELSE
             v_avg = SQRT(8*k_b*T_g/(Pi*m_g))
             IF (geometry_type(1:9) == "CARTESIAN") THEN    
-                N_expected = INT( ns*v_avg*MIN(tmax,ts)*(hs*1)/(4*Fn) )     ! hs*1 = cross-sectional area of inlet
+                N_expected = INT( ns*v_avg*MIN(tmax,ts)*(hs*1)/(4*Fn) )     ! (nc/4)*(ts)*(A) , hs*1 = cross-sectional area of inlet
             ELSE IF (geometry_type(1:11) == "CYLINDRICAL") THEN    
-                N_expected = INT( ns*v_avg*MIN(tmax,ts)*(hs*1)/(4*Fn*RWF) )     ! hs*1 = cross-sectional area of inlet
+                !N_expected = INT( ns*v_avg*MIN(tmax,ts)*(hs*1)/(4*Fn*RWF) )     ! hs*1 = cross-sectional area of inlet
+                N_expected = INT( ns*v_avg*MIN(tmax,ts)*(Pi*(ys_max**2 - ys_min**2))/(4*Fn*WF_avg) )     ! (nc/4)*(ts)*(A)
+                
+
+                N_expected = N_expected / 2. ! getting a lot less
             END IF
 
         END IF
@@ -469,11 +484,24 @@ SUBROUTINE INITIALIZE
         N_expected = N_simulated
         N_array = N_expected+1
 
+        IF (geometry_type(1:11) == "CYLINDRICAL") THEN    
+            N_array = INT(N_array*1.25)
+        END IF
+
     END IF
-    IF (geometry_type(1:11) == "CYLINDRICAL") THEN    
-        N_array = N_array*1.5    
-    END IF    
+    !IF (geometry_type(1:11) == "CYLINDRICAL") THEN    
+    !    N_array = N_array*1.5    
+    !END IF    
     Npc_max = N_array
+
+
+    ! WRITE(*,*) "ns,Fn,ys_min,ys_max = ",ns,Fn,ys_min,ys_max
+    ! WRITE(*,*) "Num_s = ",Num_s
+    ! WRITE(*,*) "WF_avg, RWF = ",WF_avg, RWF
+    ! WRITE(*,*) "v_avg,tmax,ts,ws = ",v_avg,tmax,ts,ws
+
+
+
 
     WRITE(*,*) "N_init_a,N_simulated,N_expected,N_array=",N_init_a,N_simulated,N_expected,N_array
 
@@ -564,6 +592,7 @@ SUBROUTINE INITIALIZE
     ALLOCATE(N_accepted_pairs_total(nt))
     ALLOCATE(N_collisions_total(nt))
     ALLOCATE(N_added_total(nt))
+    ALLOCATE(NWF_escaped_total(nt))
     ALLOCATE(flux_upstream_total(nt))
     ALLOCATE(flux_downstream_total(nt))
     ALLOCATE(Npc_slice(nx,ny))
@@ -579,6 +608,7 @@ SUBROUTINE INITIALIZE
     N_accepted_pairs_total(:) = 0
     N_collisions_total(:) = 0
     N_added_total(:) = 0
+    NWF_escaped_total(:) = 0
     flux_upstream_total(:) = 0
     flux_downstream_total(:) = 0
     Npc_slice(:,:) = 0
@@ -647,7 +677,8 @@ SUBROUTINE INITIALIZE
     i_first(:) = 0
 
     N_entered = 0
-
+    N_good_prob = 0
+    N_bad_prob = 0
 
     IF (restart_simulation .EQV. .false.) THEN
 

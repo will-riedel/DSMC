@@ -165,6 +165,7 @@ SUBROUTINE COMPUTE_REFLECTION
                             ! remove(ignore) exiting particles from simulation
                             IF ( (close_outlet .EQV. .false.) .and. ((xw1==xmax).and.(xw2==xmax)) ) THEN
                                     removed_from_sim(j) = .true.
+                                    NWF_escaped_total(ii) = NWF_escaped_total(ii) + weight_factor_vec(j)  ! record mass escaping out the outlet
                                 ! END IF
                             ! ! ELSE IF ( (close_inlet .EQV. .false.) .and. (x_vec(j,2) < ((-1)*x_vec(j,1) + b_source_barrier)) ) THEN
                             !         removed_from_sim(j) = .true.
