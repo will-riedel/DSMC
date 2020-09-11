@@ -333,6 +333,8 @@ PROGRAM MAIN
     WRITE(*,*) "computation time (saving)=",t_save
 
     WRITE(*,*) "flux down, up = ",SUM(flux_downstream_total),SUM(flux_upstream_total)
+    WRITE(*,*) "N_duplicated (not cumulative) = ",N_duplicated
+    WRITE(*,*) "N_deleted (not cumulative) = ",N_deleted
 
     WRITE(*,*) "N_good_prob,N_bad_prob, frac =",N_good_prob,N_bad_prob, N_bad_prob/(N_bad_prob+N_good_prob)
 

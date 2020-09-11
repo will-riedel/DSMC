@@ -299,6 +299,10 @@ SUBROUTINE SAVE_DATA
     WRITE(1,"(A)") "*"
     WRITE(1,"(A)") "*N_simulated"   
     WRITE(1,"(I0)") N_simulated
+    WRITE(1,"(A)") "*N_duplicated"   
+    WRITE(1,"(I0)") N_duplicated
+    WRITE(1,"(A)") "*N_deleted"   
+    WRITE(1,"(I0)") N_deleted
     WRITE(1,"(A)") "*"
     WRITE(1,"(A)") "*x_lim"   
     WRITE(1,"(E12.5)") x_lim

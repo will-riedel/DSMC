@@ -97,6 +97,9 @@ SUBROUTINE INPUT_PARAMETERS_READIN
         ELSE IF (line == '*CLOSE_INLET___') THEN
           ! whether to put boundary at inlet (after any source is turned off)
           READ(100,*) close_inlet
+        ELSE IF (line == '*T_CLOSE_SOURCE') THEN
+          ! end time of the simulation
+          READ(100,*) ts
         ELSE IF (line == '*CLOSE_OUTLET__') THEN
           ! whether to put boundary at the outlet
           READ(100,*) close_outlet

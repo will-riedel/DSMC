@@ -43,7 +43,9 @@ SUBROUTINE INITIALIZE
     ! x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,.05d0 /) , (/2,2/) ))  ! full-gun geometry, I think
     ! x_lim = transpose(reshape( (/ 0.d0,0.61d0,   0.d0,.025d0 /) , (/2,2/) ))  ! half-gun geometry, I think
     ! x_lim = transpose(reshape( (/ 0.d0,0.8d0,   0.d0,0.2d0 /) , (/2,2/) ))      ! split problem
-    x_lim = transpose(reshape( (/ 0.d0,0.2761d0,   0.d0,.025d0 /) , (/2,2/) ))  ! updated gun-geometry
+    
+    !x_lim = transpose(reshape( (/ 0.d0,0.2761d0,   0.d0,.025d0 /) , (/2,2/) ))  ! updated gun-geometry
+    x_lim = transpose(reshape( (/ 0.d0,0.2761d0+.045,   0.d0,.025d0 /) , (/2,2/) ))  ! updated gun-geometry extended to target
 
     xmin = x_lim(1,1)
     xmax = x_lim(1,2)
@@ -290,7 +292,7 @@ SUBROUTINE INITIALIZE
     ! source/reservoir parameters --------------------------------------------------
     
     ! ts = 5.d-4                                                                      ! pulse width of source valve opening
-    ts = 1.d10                                                                    ! pulse width of source valve opening
+    ! ts = 1.d10                                                                    ! pulse width of source valve opening
 
 
     ! IF (include_two_beams .EQV. .true.) THEN
@@ -477,7 +479,8 @@ SUBROUTINE INITIALIZE
 
         END IF
 
-        N_array = INT(N_expected*1.25) + N_simulated
+        N_array = INT(N_expected*1.5) + N_simulated
+        !N_array = INT(N_expected*2.5) + N_simulated
         N_expected = N_expected + N_simulated
 
     ELSE
@@ -485,7 +488,8 @@ SUBROUTINE INITIALIZE
         N_array = N_expected+1
 
         IF (geometry_type(1:11) == "CYLINDRICAL") THEN    
-            N_array = INT(N_array*1.25)
+            N_array = INT(N_array*1.5)
+            ! N_array = INT(N_array*2)
         END IF
 
     END IF
