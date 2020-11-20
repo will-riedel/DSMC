@@ -38,16 +38,16 @@ SUBROUTINE INPUT_PARAMETERS_READIN
         ! WRITE(*,*) "reading..."
         READ(100,*) line
         IF      (line == '*N_INITIAL_____') THEN
-          ! initial density
+          ! initial density (of any particles that are initialized at time 0)
           READ(100,*) n
         ELSE IF (line == '*NS_INITIAL____') THEN
-          ! density of the source
+          ! density of the source (if using a source to supply particles)
           READ(100,*) ns
         ELSE IF (line == '*N_INITIAL_B___') THEN
-          ! initial density
+          ! initial density of region B if doing a split test problem. If so, other N,NS values are for region A.
           READ(100,*) n_b
         ELSE IF (line == '*NS_INITIAL_B__') THEN
-          ! density of the source
+          ! density of the source of region B if doinga  split test problem.
           READ(100,*) ns_b
         ELSE IF (line == '*FN____________') THEN
           ! number of particles represented by each superparticle
@@ -67,14 +67,15 @@ SUBROUTINE INPUT_PARAMETERS_READIN
           READ(100,*) initial_distribution
         ELSE IF (line == '*GEOMETRY_TYPE_') THEN
           ! cartesian geometry or cylindrical/axial symmetry
-          ! either CYLINDRICAL or CARTESIAN right now, although really anything but cylindrical is the same
+          ! either CYLINDRICAL or CARTESIAN right now
           READ(100,*) geometry_type
         ELSE IF (line == '*GAS_TYPE______') THEN
           ! gas type
-          ! either HYDROGEN or NITROGEN right now
+          ! either HYDROGEN or NITROGEN right now.
           READ(100,*) gas_type
         ELSE IF (line == '*RADIAL_WEIGHTF') THEN
-          ! cartesian geometry or cylindrical/axial symmetry
+          ! if cylindrical symmetry, set the Radial Weight Factor constant for the radial weight function
+          ! weight of a particle = 1 + RWF*(y + dy/2)/ymax
           READ(100,*) RWF_input
         ELSE IF (line == '*T_MAX_________') THEN
           ! end time of the simulation
@@ -89,16 +90,17 @@ SUBROUTINE INPUT_PARAMETERS_READIN
           ! whether to include source at inlet
           READ(100,*) include_source
         ELSE IF (line == '*USE_TWO_BEAMS_') THEN
-          ! whether to include source at inlet
+          ! I think this term was replaced by setting "source_type"
           READ(100,*) include_two_beams
         ELSE IF (line == '*BEAM_VELOCITY_') THEN
-          ! whether to include source at inlet
+          ! 
           READ(100,*) v_beam
         ELSE IF (line == '*CLOSE_INLET___') THEN
-          ! whether to put boundary at inlet (after any source is turned off)
+          ! whether to put boundary at inlet (after source is turned off) to prevent particle from escaping
+          ! if close_inlet = false, then particles can escape through inlet at all times
           READ(100,*) close_inlet
         ELSE IF (line == '*T_CLOSE_SOURCE') THEN
-          ! end time of the simulation
+          ! how long the source is open/"on" for
           READ(100,*) ts
         ELSE IF (line == '*CLOSE_OUTLET__') THEN
           ! whether to put boundary at the outlet
@@ -107,44 +109,50 @@ SUBROUTINE INPUT_PARAMETERS_READIN
           ! include the boundaries of the gun geometry
           READ(100,*) include_gun_boundaries
         ELSE IF (line == '*ACCOMMODATION_') THEN
-          ! include the boundaries of the gun geometry
+          ! sets the accommodation coefficient in the maxwell model of wall collisions (probability of a diffuse reflection event)
           READ(100,*) accommodation
         ! ELSE IF (line == '*USE_HOMOG_GRID') THEN
         !   ! whether to use a homogeneous grid or the geometric one
         !   READ(100,*) use_homogenous_grid
         ! use_homogenous_grid = .false.
         ELSE IF (line == '*INCLUDE_COLL__') THEN
-          ! whether to include source at inlet
+          ! whether to model particle-particle collisions. If false, then particles are free stream except for interacting with walls/boundaries
           READ(100,*) include_collisions
         ELSE IF (line == '*DX_INIT_______') THEN
-          ! initial cell-size (at center of inlet)
+          ! used for exponentially varying cell grid
+          ! initial cell-size (at center of inlet) in x-direction
           READ(100,*) dx_0
         ELSE IF (line == '*DY_INIT_______') THEN
-          ! initial cell-size (at center of inlet)
+          ! used for exponentially varying cell grid
+          ! initial cell-size (at center of inlet) in y-direction
           READ(100,*) dy_0
         ELSE IF (line == '*DX_FACTOR_____') THEN
+          ! used for exponentially varying cell grid
           ! relative cell-size at the outlet in the x-direction
           READ(100,*) dx_factor
         ELSE IF (line == '*DY_FACTOR_____') THEN
+          ! used for exponentially varying cell grid
           ! relative cell-size at edges in the y-direction
           READ(100,*) dy_factor
         ELSE IF (line == '*DX_INLET______') THEN
+          ! used for exponentially varying cell grid
           ! dx in high-density inlet region
           READ(100,*) dx_inlet
         ELSE IF (line == '*RESTART_SIM___') THEN
           ! whether or not to restart a partially-completed simulation
+          ! if false, simulation will start from t = 0
           READ(100,*) restart_simulation
         ELSE IF (line == '*X_GRID_TYPE___') THEN
-          ! type of grid to use for columns
+          ! type of grid to use for columns ("HOMOG", "EXP_1")
           READ(100,*) x_grid_type
         ELSE IF (line == '*Y_GRID_TYPE___') THEN
-          ! type of grid to use for columns
+          ! type of grid to use for rows (! "HOMOG", "EXP_1", "EXP_2" , "SPLIT")
           READ(100,*) y_grid_type
         ELSE IF (line == '*SOURCE_TYPE___') THEN
-          ! type of source input
+          ! type of source input ("NORMAL", "2BEAM", "DOWNSTREAM")
           READ(100,*) source_type
         ELSE IF (line == '*RESTART_INDEX_') THEN
-          ! index to restart from
+          ! if restarting simulation, index to restart from
           READ(100,*) it_restart
         ELSE IF (line == '*DIRECTORY_CUR_') THEN
           ! directory of current data
